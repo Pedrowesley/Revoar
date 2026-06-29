@@ -19,7 +19,7 @@ test-results/
 blob-report/
 
 # PDF export artifacts (generate with npm run pdf)
-pdf/
+pdf/*
 !pdf/.gitkeep
 *.zip
 

@@ -12,7 +12,7 @@
 | **Fase atual** | Release 0.0 — **implementação concluída** (fases 0–6) |
 | **Próximo passo** | Release 0.1 — busca pública read-only (+ spec nova) |
 | **Última atualização** | 2026-06-27 |
-| **Git** | Repositório ainda não inicializado (LOTE 2 pendente) |
+| **Git** | Inicializado — branch `main`, commit inicial feito; push para `github.com/Pedrowesley/Revoar` |
 
 ### O que já existe no disco
 
