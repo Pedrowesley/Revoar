@@ -1,0 +1,52 @@
+# Staging: infra + API + frontends containerizados
+# Uso: docker compose -f docker-compose.yml -f docker-compose.staging.yml up --build
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.api
+    container_name: revoar-api
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://revoar:revoar@postgres:5432/revoar?schema=public
+      AWS_S3_ENDPOINT: http://localstack:4566
+      EXTRANET_URL: http://localhost:3000
+      ADMIN_URL: http://localhost:3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+
+  extranet:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.web
+      args:
+        APP_NAME: extranet
+        APP_PORT: 3000
+    container_name: revoar-extranet
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3002
+
+  admin:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.web
+      args:
+        APP_NAME: admin
+        APP_PORT: 3001
+    container_name: revoar-admin
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3002

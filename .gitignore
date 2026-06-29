@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.next/
+.turbo/
+.env
+.env.local
+.env.*.local
+!.env.example
+!**/.env.local.example
+*.log
+.DS_Store
+coverage/
+packages/database/prisma/*.db
+packages/database/prisma/*.db-journal
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+
+# PDF export artifacts (generate with npm run pdf)
+pdf/
+!pdf/.gitkeep
+*.zip
+
+# IDE
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  OPERATOR
+  SUPER_ADMIN
+}
+
+enum PartnerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum HotelStatus {
+  DRAFT
+  IN_REVIEW
+  ACTIVE
+  INACTIVE
+  REJECTED
+}
+
+enum SupplierType {
+  DIRECT
+  HOTELBEDS
+  OMNIBEES
+}
+
+enum ActorType {
+  PARTNER
+  ADMIN
+}
+
+model AdminUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  role         AdminRole @default(OPERATOR)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+model Partner {
+  id          String        @id @default(uuid())
+  legalName   String        @map("legal_name")
+  tradeName   String?       @map("trade_name")
+  cnpj        String        @unique
+  email       String
+  phone       String
+  contactName String        @map("contact_name")
+  status      PartnerStatus @default(PENDING)
+  users       PartnerUser[]
+  hotels      Hotel[]
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@map("partners")
+}
+
+model PartnerUser {
+  id           String   @id @default(uuid())
+  partnerId    String   @map("partner_id")
+  partner      Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("partner_users")
+}
+
+model Hotel {
+  id              String               @id @default(uuid())
+  partnerId       String               @map("partner_id")
+  partner         Partner              @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String               @unique
+  description     String
+  starRating      Decimal?             @map("star_rating") @db.Decimal(2, 1)
+  addressLine     String               @map("address_line")
+  city            String
+  state           String               @db.Char(2)
+  zipCode         String               @map("zip_code")
+  country         String               @default("BR") @db.Char(2)
+  latitude        Decimal?             @db.Decimal(10, 7)
+  longitude       Decimal?             @db.Decimal(10, 7)
+  phone           String
+  checkInTime     String               @default("14:00") @map("check_in_time")
+  checkOutTime    String               @default("12:00") @map("check_out_time")
+  supplierType    SupplierType         @default(DIRECT) @map("supplier_type")
+  status          HotelStatus          @default(DRAFT)
+  rejectionReason String?              @map("rejection_reason")
+  roomTypes       RoomType[]
+  images          HotelImage[]
+  statusHistory   HotelStatusHistory[]
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  @@index([partnerId])
+  @@index([status])
+  @@index([city])
+  @@map("hotels")
+}
+
+model RoomType {
+  id               String @id @default(uuid())
+  hotelId          String @map("hotel_id")
+  hotel            Hotel  @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  name             String
+  description      String
+  maxAdults        Int    @map("max_adults")
+  maxChildren      Int    @default(0) @map("max_children")
+  maxOccupancy     Int    @map("max_occupancy")
+  bedConfiguration String @map("bed_configuration")
+  amenities        Json   @default("[]")
+  sizeSqm          Int?   @map("size_sqm")
+  sortOrder        Int    @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([hotelId])
+  @@map("room_types")
+}
+
+model HotelImage {
+  id        String  @id @default(uuid())
+  hotelId   String  @map("hotel_id")
+  hotel     Hotel   @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int     @default(0) @map("sort_order")
+  isPrimary Boolean @default(false) @map("is_primary")
+  altText   String? @map("alt_text")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([hotelId])
+  @@map("hotel_images")
+}
+
+model HotelStatusHistory {
+  id         String       @id @default(uuid())
+  hotelId    String       @map("hotel_id")
+  hotel      Hotel        @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  fromStatus HotelStatus? @map("from_status")
+  toStatus   HotelStatus  @map("to_status")
+  reason     String?
+  actorType  ActorType    @map("actor_type")
+  actorId    String       @map("actor_id")
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  @@index([hotelId])
+  @@map("hotel_status_history")
+}

@@ -1,0 +1,34 @@
+{
+  "name": "revoar",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "db:generate": "npm run generate -w @revoar/database",
+    "db:migrate": "npm run migrate -w @revoar/database",
+    "db:seed": "npm run seed -w @revoar/database",
+    "db:studio": "npm run studio -w @revoar/database",
+    "pdf": "node scripts/export-pdfs.mjs",
+    "pdf:single": "node scripts/export-pdfs.mjs --",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "staging:up": "docker compose -f docker-compose.yml -f docker-compose.staging.yml up --build -d",
+    "staging:down": "docker compose -f docker-compose.yml -f docker-compose.staging.yml down"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.4.2",
+    "@playwright/test": "^1.53.2",
+    "md-to-pdf": "^5.2.4",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "npm@10.9.2"
+}
