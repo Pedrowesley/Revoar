@@ -13,7 +13,13 @@ import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useHotel } from "@/hooks/use-hotel";
 import { HotelDetailHeader } from "@/components/hotels/hotel-detail-header";
 import { HotelDetailNav } from "@/components/hotels/hotel-detail-nav";
+import { HotelSetupChecklist } from "@/components/hotels/hotel-setup-checklist";
+import { PageShell } from "@/components/layout/page-shell";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageSkeleton } from "@/components/ui/skeleton";
+import { Surface } from "@/components/ui/surface";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 
@@ -74,26 +80,22 @@ export default function HotelRoomsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center text-muted-foreground">
-        Carregando...
-      </div>
-    );
+    return <PageSkeleton rows={4} />;
   }
 
   if (error || !hotel) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-red-600">{error ?? "Hotel não encontrado"}</p>
+      <PageShell width="md" className="py-16 text-center">
+        <p className="text-danger">{error ?? "Hotel não encontrado"}</p>
         <Link href="/hotels" className="mt-4 inline-block text-primary hover:underline">
           Voltar para meus hotéis
         </Link>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <PageShell width="md">
       <HotelDetailHeader hotel={hotel} />
       <HotelDetailNav
         hotelId={hotel.id}
@@ -101,8 +103,9 @@ export default function HotelRoomsPage() {
         roomCount={hotel.roomCount}
         imageCount={hotel.imageCount}
       />
+      <HotelSetupChecklist hotel={hotel} />
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Tipos de quarto</h2>
           <p className="text-sm text-muted-foreground">
@@ -119,30 +122,31 @@ export default function HotelRoomsPage() {
         )}
       </div>
 
-      {roomsLoading && <p className="text-muted-foreground">Carregando quartos...</p>}
-      {roomsError && <p className="text-sm text-red-600">{roomsError}</p>}
+      {roomsLoading && <PageSkeleton rows={2} />}
+      {roomsError && (
+        <Alert variant="danger" className="mb-4">
+          {roomsError}
+        </Alert>
+      )}
 
       {!roomsLoading && rooms.length === 0 && (
-        <div className="rounded-xl border border-dashed border-border p-10 text-center">
-          <p className="font-medium">Nenhum quarto cadastrado</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Adicione ao menos 1 quarto para enviar o hotel para revisão.
-          </p>
-          {!readOnly && (
-            <Link href={`/hotels/${hotel.id}/rooms/new`} className="mt-4 inline-block">
-              <Button>Cadastrar quarto</Button>
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          title="Nenhum quarto cadastrado"
+          description="Adicione ao menos 1 quarto para enviar o hotel para revisão."
+          action={
+            !readOnly ? (
+              <Link href={`/hotels/${hotel.id}/rooms/new`}>
+                <Button>Cadastrar quarto</Button>
+              </Link>
+            ) : undefined
+          }
+        />
       )}
 
       {!roomsLoading && rooms.length > 0 && (
         <ul className="space-y-3">
           {rooms.map((room) => (
-            <li
-              key={room.id}
-              className="rounded-xl border border-border p-4"
-            >
+            <Surface as="li" key={room.id} className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <Link
@@ -163,7 +167,7 @@ export default function HotelRoomsPage() {
                     {room.amenities.map((amenity) => (
                       <span
                         key={amenity}
-                        className="rounded-full bg-muted px-2 py-0.5 text-xs"
+                        className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground"
                       >
                         {ROOM_AMENITY_LABELS[amenity as RoomAmenity]}
                       </span>
@@ -180,20 +184,20 @@ export default function HotelRoomsPage() {
                   </Button>
                 )}
               </div>
-            </li>
+            </Surface>
           ))}
         </ul>
       )}
 
       {!readOnly && hotel.status === "DRAFT" && (
-        <div className="mt-8 rounded-xl border border-border p-4 text-sm text-muted-foreground">
+        <Alert variant="info" className="mt-8">
           Quando terminar o cadastro de quartos, adicione fotos na aba{" "}
-          <Link href={`/hotels/${hotel.id}/photos`} className="font-medium text-primary hover:underline">
+          <Link href={`/hotels/${hotel.id}/photos`} className="font-medium underline">
             Fotos
           </Link>{" "}
           e envie o hotel para revisão.
-        </div>
+        </Alert>
       )}
-    </div>
+    </PageShell>
   );
 }

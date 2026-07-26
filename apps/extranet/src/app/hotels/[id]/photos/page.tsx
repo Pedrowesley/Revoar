@@ -11,8 +11,13 @@ import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useHotel } from "@/hooks/use-hotel";
 import { HotelDetailHeader } from "@/components/hotels/hotel-detail-header";
 import { HotelDetailNav } from "@/components/hotels/hotel-detail-nav";
+import { HotelSetupChecklist } from "@/components/hotels/hotel-setup-checklist";
 import { PhotoGallery } from "@/components/photos/photo-gallery";
+import { PageShell } from "@/components/layout/page-shell";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { PageSkeleton } from "@/components/ui/skeleton";
+import { Surface } from "@/components/ui/surface";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 
@@ -78,26 +83,22 @@ export default function HotelPhotosPage() {
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center text-muted-foreground">
-        Carregando...
-      </div>
-    );
+    return <PageSkeleton rows={4} />;
   }
 
   if (error || !hotel) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-red-600">{error ?? "Hotel não encontrado"}</p>
+      <PageShell width="md" className="py-16 text-center">
+        <p className="text-danger">{error ?? "Hotel não encontrado"}</p>
         <Link href="/hotels" className="mt-4 inline-block text-primary hover:underline">
           Voltar para meus hotéis
         </Link>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <PageShell width="md">
       <HotelDetailHeader hotel={hotel} />
       <HotelDetailNav
         hotelId={hotel.id}
@@ -105,6 +106,7 @@ export default function HotelPhotosPage() {
         roomCount={hotel.roomCount}
         imageCount={hotel.imageCount}
       />
+      <HotelSetupChecklist hotel={hotel} />
 
       <div className="mb-6">
         <h2 className="text-lg font-semibold">Galeria de fotos</h2>
@@ -114,7 +116,7 @@ export default function HotelPhotosPage() {
       </div>
 
       {imagesLoading ? (
-        <p className="text-muted-foreground">Carregando fotos...</p>
+        <PageSkeleton rows={2} />
       ) : (
         <PhotoGallery
           hotelId={hotel.id}
@@ -125,13 +127,15 @@ export default function HotelPhotosPage() {
       )}
 
       {!readOnly && hotel.status === "DRAFT" && (
-        <div className="mt-8 rounded-xl border border-border p-4">
-          <p className="text-sm font-medium">Enviar para revisão</p>
+        <Surface className="mt-8 border-primary/20 bg-primary-soft/40 p-5">
+          <p className="text-sm font-semibold text-foreground">Enviar para revisão</p>
           <p className="mt-1 text-sm text-muted-foreground">
             O hotel precisa ter endereço completo, ao menos 1 quarto, 1 foto e uma foto principal.
           </p>
           {submitError && (
-            <p className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{submitError}</p>
+            <Alert variant="danger" className="mt-3">
+              {submitError}
+            </Alert>
           )}
           <Button
             className="mt-4"
@@ -146,14 +150,14 @@ export default function HotelPhotosPage() {
             {submitting ? "Enviando..." : "Enviar para revisão"}
           </Button>
           {(hotel.roomCount < 1 || images.length === 0 || !hasPrimary) && (
-            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+            <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
               {hotel.roomCount < 1 && <li>· Cadastre ao menos 1 quarto</li>}
               {images.length === 0 && <li>· Adicione ao menos 1 foto</li>}
               {images.length > 0 && !hasPrimary && <li>· Defina uma foto principal</li>}
             </ul>
           )}
-        </div>
+        </Surface>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -3,6 +3,7 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import { HotelDetail } from "@/lib/hotel";
 import { HOTEL_STATUS_LABELS, HotelStatus } from "@/lib/hotel.const";
 import { HotelStatusBadge } from "@/components/hotels/hotel-status-badge";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
 type HotelDetailHeaderProps = {
@@ -18,7 +19,7 @@ export function HotelDetailHeader({ hotel, onDelete, deleting }: HotelDetailHead
     <>
       <Link
         href="/hotels"
-        className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+        className="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="mr-1 h-4 w-4" />
         Voltar para meus hotéis
@@ -26,8 +27,8 @@ export function HotelDetailHeader({ hotel, onDelete, deleting }: HotelDetailHead
 
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">{hotel.name}</h1>
-          <div className="mt-2">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{hotel.name}</h1>
+          <div className="mt-3">
             <HotelStatusBadge status={hotel.status} />
           </div>
         </div>
@@ -40,23 +41,22 @@ export function HotelDetailHeader({ hotel, onDelete, deleting }: HotelDetailHead
       </div>
 
       {hotel.status === "IN_REVIEW" && (
-        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+        <Alert variant="info" className="mb-6">
           Hotel em análise. Alguns campos podem ser editados na aba Dados.
-        </div>
+        </Alert>
       )}
 
       {fullyLocked && (
-        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <Alert variant="warning" className="mb-6">
           Este hotel está {HOTEL_STATUS_LABELS[hotel.status].toLowerCase()} e não pode ser editado
           no momento.
-        </div>
+        </Alert>
       )}
 
       {hotel.rejectionReason && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          <p className="font-medium">Motivo da rejeição</p>
-          <p className="mt-1">{hotel.rejectionReason}</p>
-        </div>
+        <Alert variant="danger" title="Motivo da rejeição" className="mb-6">
+          {hotel.rejectionReason}
+        </Alert>
       )}
     </>
   );

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,9 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { adminLoginSchema, AdminLoginInput } from "@revoar/shared";
 import { apiFetch, AdminAuthResponse, ApiError } from "@/lib/api";
 import { saveToken } from "@/lib/auth";
+import { PageShell } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldError, Label } from "@/components/ui/label";
+import { Surface } from "@/components/ui/surface";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -43,9 +44,10 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-md items-center px-4 py-12">
-      <div className="w-full rounded-xl border border-border p-8">
-        <h1 className="mb-1 text-2xl font-bold">Admin Revoar</h1>
+    <PageShell width="sm" className="flex min-h-[calc(100vh-4rem)] items-center py-12">
+      <Surface className="w-full p-8">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">Admin</p>
+        <h1 className="mb-1 text-2xl font-bold tracking-tight">Entrar</h1>
         <p className="mb-6 text-sm text-muted-foreground">Acesso restrito à equipe Revoar.</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -57,19 +59,24 @@ export default function AdminLoginPage() {
 
           <div>
             <Label htmlFor="password">Senha</Label>
-            <Input id="password" type="password" autoComplete="current-password" {...register("password")} />
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              {...register("password")}
+            />
             <FieldError message={errors.password?.message} />
           </div>
 
           {serverError && (
-            <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{serverError}</p>
+            <p className="rounded-lg bg-danger-soft p-3 text-sm text-danger">{serverError}</p>
           )}
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Entrando..." : "Entrar"}
           </Button>
         </form>
-      </div>
-    </div>
+      </Surface>
+    </PageShell>
   );
 }

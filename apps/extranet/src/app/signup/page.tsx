@@ -8,9 +8,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { partnerSignupSchema, PartnerSignupInput } from "@revoar/shared";
 import { apiFetch, AuthResponse } from "@/lib/api";
 import { formatCnpj, formatPhone, saveToken } from "@/lib/auth";
+import { PageShell } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldError, Label } from "@/components/ui/label";
+import { Surface } from "@/components/ui/surface";
 import { ApiError } from "@/lib/api";
 
 export default function SignupPage() {
@@ -59,9 +61,12 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-12">
-      <div className="rounded-xl border border-border p-8">
-        <h1 className="mb-1 text-2xl font-bold">Cadastrar parceiro</h1>
+    <PageShell width="sm" className="max-w-lg py-12">
+      <Surface className="p-8">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+          Extranet
+        </p>
+        <h1 className="mb-1 text-2xl font-bold tracking-tight">Cadastrar parceiro</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Crie sua conta com CNPJ. Após aprovação da Revoar, você poderá cadastrar hotéis.
         </p>
@@ -127,7 +132,7 @@ export default function SignupPage() {
           </div>
 
           {serverError && (
-            <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{serverError}</p>
+            <p className="rounded-lg bg-danger-soft p-3 text-sm text-danger">{serverError}</p>
           )}
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -135,13 +140,13 @@ export default function SignupPage() {
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-muted-foreground">
+        <p className="mt-5 text-center text-sm text-muted-foreground">
           Já tem conta?{" "}
           <Link href="/login" className="font-medium text-primary hover:underline">
             Entrar
           </Link>
         </p>
-      </div>
-    </div>
+      </Surface>
+    </PageShell>
   );
 }

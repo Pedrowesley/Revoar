@@ -1,29 +1,32 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "outline" | "danger";
-};
+const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        primary: "bg-primary text-primary-foreground shadow-soft hover:opacity-90",
+        outline: "border border-border bg-surface text-foreground hover:bg-muted",
+        ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
+        danger: "bg-danger text-white shadow-soft hover:opacity-90",
+      },
+      size: {
+        default: "h-10 px-4",
+        sm: "h-9 px-3 text-sm",
+        lg: "h-11 px-5",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      size: "default",
+    },
+  },
+);
 
-export function Button({
-  className,
-  variant = "primary",
-  disabled,
-  children,
-  ...props
-}: ButtonProps) {
-  return (
-    <button
-      className={cn(
-        "inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium transition-opacity disabled:opacity-50",
-        variant === "primary" && "bg-primary text-primary-foreground hover:opacity-90",
-        variant === "outline" && "border border-border bg-white hover:bg-muted",
-        variant === "danger" && "bg-red-600 text-white hover:opacity-90",
-        className,
-      )}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
-  );
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof buttonVariants>;
+
+export function Button({ className, variant, size, ...props }: ButtonProps) {
+  return <button className={cn(buttonVariants({ variant, size }), className)} {...props} />;
 }

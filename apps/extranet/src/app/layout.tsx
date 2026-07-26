@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import { AppHeader } from "@/components/layout/app-header";
 import "./globals.css";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Revoar Extranet",
@@ -10,25 +17,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-screen antialiased">
-        <header className="border-b border-border bg-white">
-          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-            <Link href="/" className="text-lg font-semibold text-primary">
-              Revoar Extranet
-            </Link>
-            <nav className="flex gap-4 text-sm">
-              <Link href="/login" className="text-muted-foreground hover:text-foreground">
-                Entrar
-              </Link>
-              <Link
-                href="/signup"
-                className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
-              >
-                Cadastrar
-              </Link>
-            </nav>
-          </div>
-        </header>
+      <body className={`${plusJakarta.variable} min-h-screen font-sans antialiased`}>
+        <AppHeader />
         <main>{children}</main>
       </body>
     </html>

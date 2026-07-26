@@ -12,6 +12,11 @@ import { RoomTypeDetail } from "@/lib/room";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useHotel } from "@/hooks/use-hotel";
 import { RoomForm } from "@/components/rooms/room-form";
+import { PageHeader } from "@/components/layout/page-header";
+import { PageShell } from "@/components/layout/page-shell";
+import { Alert } from "@/components/ui/alert";
+import { PageSkeleton } from "@/components/ui/skeleton";
+import { Surface } from "@/components/ui/surface";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 
@@ -80,45 +85,42 @@ export default function EditRoomPage() {
   }
 
   if (hotelLoading || loading) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center text-muted-foreground">
-        Carregando...
-      </div>
-    );
+    return <PageSkeleton rows={4} />;
   }
 
   if (hotelError || error || !hotel || !room) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-red-600">{hotelError ?? error ?? "Quarto não encontrado"}</p>
+      <PageShell width="md" className="py-16 text-center">
+        <p className="text-danger">{hotelError ?? error ?? "Quarto não encontrado"}</p>
         <Link
           href={`/hotels/${params.id}/rooms`}
           className="mt-4 inline-block text-primary hover:underline"
         >
           Voltar para quartos
         </Link>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <PageShell width="md">
       <Link
         href={`/hotels/${params.id}/rooms`}
-        className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+        className="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="mr-1 h-4 w-4" />
         Voltar para quartos
       </Link>
 
-      <h1 className="mb-2 text-2xl font-bold">{room.name}</h1>
-      <p className="mb-6 text-sm text-muted-foreground">{hotel.name}</p>
+      <PageHeader title={room.name} description={hotel.name} />
 
       {saveError && (
-        <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{saveError}</p>
+        <Alert variant="danger" className="mb-4">
+          {saveError}
+        </Alert>
       )}
 
-      <div className="rounded-xl border border-border p-6">
+      <Surface className="p-6">
         <RoomForm
           readOnly={readOnly}
           submitLabel="Salvar alterações"
@@ -134,7 +136,7 @@ export default function EditRoomPage() {
             sizeSqm: room.sizeSqm ?? undefined,
           }}
         />
-      </div>
-    </div>
+      </Surface>
+    </PageShell>
   );
 }

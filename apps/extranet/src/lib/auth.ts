@@ -1,8 +1,16 @@
 const TOKEN_KEY = "revoar_partner_token";
+export const AUTH_CHANGE_EVENT = "revoar-auth-change";
+
+function notifyAuthChange() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+  }
+}
 
 export function saveToken(token: string) {
   if (typeof window !== "undefined") {
     localStorage.setItem(TOKEN_KEY, token);
+    notifyAuthChange();
   }
 }
 
@@ -14,6 +22,7 @@ export function getToken(): string | null {
 export function clearToken() {
   if (typeof window !== "undefined") {
     localStorage.removeItem(TOKEN_KEY);
+    notifyAuthChange();
   }
 }
 
