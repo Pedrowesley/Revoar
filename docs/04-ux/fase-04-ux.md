@@ -248,7 +248,7 @@ E-mail confirmação + status Minhas viagens = CANCELLED
 | Success | `#059669` |
 | Error | `#DC2626` |
 | Neutral | Escala slate |
-| Font | Inter / system-ui |
+| Font | **Plus Jakarta Sans** (extranet/admin implementados); Inter/system aceitável no app viajante futuro |
 | Radius | 8px cards, 12px modals |
 | Shadow | Sutil; elevado em modals |
 

@@ -1,8 +1,8 @@
 # Validation — Release 0.0 (extranet-cadastro-parceiros)
 
-**Data:** 2026-06-27  
+**Data:** 2026-07-26 (rev. UI + TanStack Query)  
 **Verdict:** **PASS (condicional)** — requisitos P1 de software atendidos; DoD de negócio e deploy staging pendentes  
-**Diff range:** Implementação completa fases 0–6 (monorepo inicial → E2E + CI)  
+**Diff range:** Implementação completa fases 0–6 + modernização UI + React Query polling  
 **Verifier:** Revisão pós-implementação (handoff documental; author = implementador)
 
 ---
@@ -28,6 +28,8 @@ Gaps documentados não bloqueiam o código local nem CI, mas impedem considerar 
 | ADM-AUTH-01 | Login admin separado | `admin-auth` module; JWT distinto | ✅ PASS |
 | ADM-APPROVE-01 | Aprovar/rejeitar parceiro e hotel | E2E full-flow; `HotelStatusHistory` | ✅ PASS |
 | ADM-DASH-01 | Dashboard contadores + filas (P2) | `/dashboard` com pending counts | ✅ PASS (escopo mínimo P2) |
+| UI-FRESH-01 | Filas admin atualizam sem F5 | TanStack Query `refetchInterval` 15s + invalidate após approve | ✅ PASS (código; validar manual 2 browsers) |
+| UI-FRESH-02 | Status parceiro/hotel muda sem F5 na extranet | Poll 30s condicional + invalidate em mutações locais | ✅ PASS (código) |
 
 ### Edge cases
 
@@ -77,6 +79,7 @@ Testes E2E devem falhar se comportamentos críticos forem removidos:
 5. **E2E rejeição hotel** — cenário não coberto
 6. **Testes unitários** — ausentes (design mencionava Vitest)
 7. **Fotos de quarto** — fora do escopo P1 confirmado
+8. **E2E data freshness** — critérios UI-FRESH cobertos por código/poll; sem assert E2E de polling ainda
 
 ---
 

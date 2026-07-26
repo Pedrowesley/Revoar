@@ -1,41 +1,47 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { HotelDetail } from "@/lib/hotel";
+import { extranetKeys } from "@/lib/query-keys";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 
 export function useHotel(hotelId: string) {
-  const [hotel, setHotel] = useState<HotelDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const token = useRequireAuth();
+  const queryClient = useQueryClient();
 
-  const reload = useCallback(async () => {
-    const token = getToken();
-    if (!token) return;
+  const query = useQuery({
+    queryKey: extranetKeys.hotel(hotelId),
+    enabled: Boolean(hotelId && token),
+    refetchInterval: (q) => {
+      const status = q.state.data?.status;
+      return status === "IN_REVIEW" ? 30_000 : false;
+    },
+    queryFn: async () => {
+      const authToken = getToken();
+      if (!authToken) throw new Error("Não autenticado");
+      return apiFetch<HotelDetail>(`/extranet/hotels/${hotelId}`, { token: authToken });
+    },
+  });
 
-    setLoading(true);
-    setError(null);
+  const error =
+    query.error instanceof ApiError && query.error.status === 403
+      ? "Você não tem acesso a este hotel."
+      : query.error instanceof ApiError
+        ? query.error.message
+        : query.isError
+          ? "Hotel não encontrado."
+          : null;
 
-    try {
-      const data = await apiFetch<HotelDetail>(`/extranet/hotels/${hotelId}`, { token });
-      setHotel(data);
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 403) {
-        setError("Você não tem acesso a este hotel.");
-      } else if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Hotel não encontrado.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [hotelId]);
+  async function reload() {
+    await queryClient.invalidateQueries({ queryKey: extranetKeys.hotel(hotelId) });
+  }
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
-
-  return { hotel, loading, error, reload };
+  return {
+    hotel: query.data ?? null,
+    loading: !token || query.isLoading,
+    error,
+    reload,
+  };
 }

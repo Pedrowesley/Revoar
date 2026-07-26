@@ -40,8 +40,10 @@ Admin aprova → ACTIVE (visível Release 0.1)
 
 | Camada | Tecnologia |
 |--------|------------|
-| Extranet UI | Next.js 15 + shadcn/ui + Tailwind |
-| Admin UI | Next.js 15 + shadcn/ui (mesmo design system) |
+| Extranet UI | Next.js 15 + Tailwind 4 + primitives estilo shadcn |
+| Admin UI | Next.js 15 + Tailwind 4 (mesmo design system) |
+| Data fetching | TanStack Query — polling + invalidação (AD-009); sem WebSockets |
+| Tipografia | Plus Jakarta Sans |
 | API | NestJS + Prisma |
 | Banco | PostgreSQL 16 |
 | Auth parceiro | JWT (PartnerUser) |
@@ -50,8 +52,8 @@ Admin aprova → ACTIVE (visível Release 0.1)
 | CEP | ViaCEP API |
 | CNPJ | cpf-cnpj-validator |
 | Fotos | S3 presigned URL |
-| Monorepo | Turborepo + pnpm |
-| Testes | Vitest + Playwright (fluxo parceiro + aprovação admin) |
+| Monorepo | Turborepo + **npm** workspaces |
+| Testes | Playwright E2E (Vitest não implementado) |
 
 ---
 
@@ -225,14 +227,19 @@ enum ActorType {
 ## Extranet UI — Páginas
 
 ```
-/signup                    Cadastro parceiro (CNPJ)
+/signup                      Cadastro parceiro (CNPJ)
 /login
-/dashboard                 Resumo + atalhos
-/hotels                      Meus hotéis
-/hotels/new                  Wizard hotel
-/hotels/[id]                 Tabs: Dados | Quartos | Fotos | Status
+/dashboard                   Resumo + atalhos (poll 30s se PENDING)
+/hotels                      Meus hotéis (TanStack Query)
+/hotels/new                  Form hotel
+/hotels/[id]                 Dados (+ steps nav + checklist progresso)
+/hotels/[id]/rooms           Lista quartos
 /hotels/[id]/rooms/new       Form quarto completo
+/hotels/[id]/rooms/[roomId]  Editar quarto
+/hotels/[id]/photos          Galeria + enviar para revisão
 ```
+
+Shell: `AppHeader` autenticado (Painel · Hotéis · Sair), `PageShell`/`PageHeader`/`Surface`/`Skeleton`.
 
 ### Formulário quarto (campos obrigatórios para viajante)
 
@@ -252,12 +259,14 @@ enum ActorType {
 ## Admin UI — Páginas
 
 ```
-/admin/login
-/admin/dashboard           Fila aprovações (P2)
-/admin/partners/pending    Aprovar parceiros
-/admin/hotels/pending      Aprovar hotéis
-/admin/hotels/[id]         Preview + aprovar/rejeitar
+/login                     Login admin
+/dashboard                 Contadores + atalhos (poll 15s)
+/partners/pending          Aprovar parceiros (poll 15s)
+/hotels/pending            Aprovar hotéis (poll 15s)
+/hotels/[id]               Preview + aprovar/rejeitar (poll 15s se IN_REVIEW)
 ```
+
+Filas e preview usam TanStack Query: atualizam sem F5 quando outro admin age ou um parceiro envia hotel.
 
 ---
 

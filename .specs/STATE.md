@@ -9,10 +9,10 @@
 | Campo | Valor |
 |-------|-------|
 | **Feature ativa** | `extranet-cadastro-parceiros` (Release 0.0) |
-| **Fase atual** | Release 0.0 — **implementação concluída** (fases 0–6) |
+| **Fase atual** | Release 0.0 — **implementação concluída** + UI moderna + TanStack Query |
 | **Próximo passo** | Release 0.1 — busca pública read-only (+ spec nova) |
-| **Última atualização** | 2026-06-27 |
-| **Git** | Inicializado — branch `main`, commit inicial feito; push para `github.com/Pedrowesley/Revoar` |
+| **Última atualização** | 2026-07-26 |
+| **Git** | `main` em `github.com/Pedrowesley/Revoar`; evolução UI/data-fetch em branches `cursor/*` |
 
 ### O que já existe no disco
 
@@ -73,6 +73,8 @@ npm run test:e2e
 | AD-006 | Release 0.0 → inventário cadastrado → Release 0.1 busca pública | active | 2026-06 |
 | AD-007 | **Extranet self-service:** parceiro cadastra hotel, quartos e fotos; Revoar aprova via admin interno | active | 2026-06 |
 | AD-008 | **Quartos no P1:** cadastro completo de room types com dados necessários para o viajante | active | 2026-06 |
+| AD-009 | **TanStack Query + polling** para filas/status (admin 15s, parceiro 30s condicional); `refetchOnWindowFocus` + invalidação pós-mutação. **Sem WebSockets/SSE** nesta fase (SSE reservado a PIX/booking no Master Plan) | active | 2026-07 |
+| AD-010 | **UI shell moderno** extranet/admin: header autenticado, Plus Jakarta Sans, tokens `#0E7490`, componentes `PageShell`/`Surface`/`Skeleton`/`EmptyState`/`Alert`, checklist de progresso do hotel | active | 2026-07 |
 
 ---
 
@@ -91,4 +93,4 @@ Release 1.0  GA              → Lançamento 5 destinos
 
 | Feature | Spec | Design | Tasks | Validation | Status |
 |---------|------|--------|-------|------------|--------|
-| extranet-cadastro-parceiros | ✅ | ✅ | ✅ | ✅ | Release 0.0 — software complete |
+| extranet-cadastro-parceiros | ✅ | ✅ | ✅ | ✅ | Release 0.0 — software complete (+ UI/RQ Jul/2026) |

@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Hotel, Plus } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { HotelSummary } from "@/lib/hotel";
 import { HOTEL_STATUS_FILTERS, HotelStatus } from "@/lib/hotel.const";
+import { extranetKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageShell } from "@/components/layout/page-shell";
@@ -26,33 +27,18 @@ export default function HotelsList() {
 
   const statusFilter = (searchParams.get("status") as HotelStatus | null) ?? "ALL";
 
-  const [hotels, setHotels] = useState<HotelSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadHotels = useCallback(async () => {
-    if (!token) return;
-    setLoading(true);
-    setError(null);
-
-    try {
+  const hotelsQuery = useQuery({
+    queryKey: extranetKeys.hotels(statusFilter),
+    enabled: Boolean(token),
+    refetchInterval: (query) => {
+      const hasInReview = query.state.data?.some((hotel) => hotel.status === "IN_REVIEW");
+      return hasInReview ? 30_000 : false;
+    },
+    queryFn: async () => {
       const query = statusFilter !== "ALL" ? `?status=${statusFilter}` : "";
-      const data = await apiFetch<HotelSummary[]>(`/extranet/hotels${query}`, { token: getToken()! });
-      setHotels(data);
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Não foi possível carregar os hotéis.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [token, statusFilter]);
-
-  useEffect(() => {
-    loadHotels();
-  }, [loadHotels]);
+      return apiFetch<HotelSummary[]>(`/extranet/hotels${query}`, { token: getToken()! });
+    },
+  });
 
   function setStatusFilter(status: HotelStatus | "ALL") {
     const params = new URLSearchParams(searchParams.toString());
@@ -65,7 +51,15 @@ export default function HotelsList() {
   }
 
   if (!token) return null;
-  if (loading) return <PageSkeleton rows={4} />;
+  if (hotelsQuery.isLoading) return <PageSkeleton rows={4} />;
+
+  const hotels = hotelsQuery.data ?? [];
+  const error =
+    hotelsQuery.error instanceof ApiError
+      ? hotelsQuery.error.message
+      : hotelsQuery.isError
+        ? "Não foi possível carregar os hotéis."
+        : null;
 
   return (
     <PageShell>

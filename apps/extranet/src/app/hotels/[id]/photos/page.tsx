@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { HotelImageDetail } from "@/lib/image";
 import { HotelStatus } from "@/lib/hotel.const";
+import { extranetKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useHotel } from "@/hooks/use-hotel";
 import { HotelDetailHeader } from "@/components/hotels/hotel-detail-header";
@@ -24,63 +26,49 @@ const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 export default function HotelPhotosPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   useRequireAuth();
 
   const { hotel, loading, error, reload } = useHotel(params.id);
-  const [images, setImages] = useState<HotelImageDetail[]>([]);
-  const [imagesLoading, setImagesLoading] = useState(true);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   const readOnly = hotel ? !EDITABLE_STATUSES.includes(hotel.status) : true;
+
+  const imagesQuery = useQuery({
+    queryKey: extranetKeys.images(params.id),
+    enabled: Boolean(hotel),
+    queryFn: () =>
+      apiFetch<HotelImageDetail[]>(`/extranet/hotels/${params.id}/images`, {
+        token: getToken()!,
+      }),
+  });
+
+  const images = imagesQuery.data ?? [];
   const hasPrimary = images.some((image) => image.isPrimary);
 
-  const loadImages = useCallback(async () => {
-    const token = getToken();
-    if (!token) return;
-
-    setImagesLoading(true);
-    try {
-      const data = await apiFetch<HotelImageDetail[]>(
-        `/extranet/hotels/${params.id}/images`,
-        { token },
-      );
-      setImages(data);
-    } finally {
-      setImagesLoading(false);
-    }
-  }, [params.id]);
-
-  useEffect(() => {
-    if (hotel) loadImages();
-  }, [hotel, loadImages]);
-
   async function handleRefresh() {
-    await loadImages();
+    await queryClient.invalidateQueries({ queryKey: extranetKeys.images(params.id) });
     await reload();
+    await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
   }
 
-  async function handleSubmitForReview() {
-    const token = getToken();
-    if (!token) return;
-
-    setSubmitting(true);
-    setSubmitError(null);
-
-    try {
-      await apiFetch(`/extranet/hotels/${params.id}/submit`, { method: "POST", token });
+  const submitMutation = useMutation({
+    mutationFn: () =>
+      apiFetch(`/extranet/hotels/${params.id}/submit`, {
+        method: "POST",
+        token: getToken()!,
+      }),
+    onSuccess: async () => {
       await reload();
+      await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
       router.refresh();
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setSubmitError(err.message);
-      } else {
-        setSubmitError("Não foi possível enviar para revisão.");
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    },
+    onError: (err) => {
+      setSubmitError(
+        err instanceof ApiError ? err.message : "Não foi possível enviar para revisão.",
+      );
+    },
+  });
 
   if (loading) {
     return <PageSkeleton rows={4} />;
@@ -115,7 +103,7 @@ export default function HotelPhotosPage() {
         </p>
       </div>
 
-      {imagesLoading ? (
+      {imagesQuery.isLoading ? (
         <PageSkeleton rows={2} />
       ) : (
         <PhotoGallery
@@ -139,15 +127,18 @@ export default function HotelPhotosPage() {
           )}
           <Button
             className="mt-4"
-            onClick={handleSubmitForReview}
+            onClick={() => {
+              setSubmitError(null);
+              submitMutation.mutate();
+            }}
             disabled={
-              submitting ||
+              submitMutation.isPending ||
               hotel.roomCount < 1 ||
               images.length === 0 ||
               !hasPrimary
             }
           >
-            {submitting ? "Enviando..." : "Enviar para revisão"}
+            {submitMutation.isPending ? "Enviando..." : "Enviar para revisão"}
           </Button>
           {(hotel.roomCount < 1 || images.length === 0 || !hasPrimary) && (
             <ul className="mt-3 space-y-1 text-xs text-muted-foreground">

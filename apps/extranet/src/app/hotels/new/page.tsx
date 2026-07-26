@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { CreateHotelInput } from "@revoar/shared";
 import { apiFetch, ApiError } from "@/lib/api";
@@ -17,6 +18,7 @@ import { Surface } from "@/components/ui/surface";
 
 export default function NewHotelPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const token = useRequireAuth();
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +32,7 @@ export default function NewHotelPage() {
         token,
         body: JSON.stringify(data),
       });
+      await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
       router.push(`/hotels/${hotel.id}`);
     } catch (err) {
       if (err instanceof ApiError) {

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Clock, Hotel } from "lucide-react";
 import { apiFetch, PartnerProfile } from "@/lib/api";
 import { clearToken, getToken } from "@/lib/auth";
+import { extranetKeys } from "@/lib/query-keys";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageShell } from "@/components/layout/page-shell";
 import { Alert } from "@/components/ui/alert";
@@ -20,27 +22,38 @@ const STATUS_LABELS = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<PartnerProfile | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
+    const authToken = getToken();
+    if (!authToken) {
       router.replace("/login");
       return;
     }
-
-    apiFetch<PartnerProfile>("/extranet/auth/me", { token })
-      .then(setProfile)
-      .catch(() => {
-        clearToken();
-        router.replace("/login");
-      });
+    setToken(authToken);
   }, [router]);
 
-  if (!profile) {
+  const profileQuery = useQuery({
+    queryKey: extranetKeys.me,
+    enabled: Boolean(token),
+    refetchInterval: (query) =>
+      query.state.data?.partner.status === "PENDING" ? 30_000 : false,
+    queryFn: () => apiFetch<PartnerProfile>("/extranet/auth/me", { token: getToken()! }),
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (profileQuery.isError) {
+      clearToken();
+      router.replace("/login");
+    }
+  }, [profileQuery.isError, router]);
+
+  if (!token || profileQuery.isLoading || !profileQuery.data) {
     return <PageSkeleton rows={2} />;
   }
 
+  const profile = profileQuery.data;
   const status = STATUS_LABELS[profile.partner.status];
 
   return (
@@ -61,7 +74,7 @@ export default function DashboardPage() {
       {profile.partner.status === "PENDING" && (
         <Alert variant="warning" className="mb-8">
           Sua conta está em análise pela equipe Revoar. Você já pode preparar o cadastro do hotel,
-          mas só poderá enviar para revisão após aprovação.
+          mas só poderá enviar para revisão após aprovação. Este status atualiza automaticamente.
         </Alert>
       )}
 

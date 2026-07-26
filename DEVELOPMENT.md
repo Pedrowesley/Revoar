@@ -62,6 +62,27 @@ Credencial seed admin: `admin@revoar.com.br` / `revoar123`
 
 Páginas admin: `/login`, `/dashboard`, `/partners/pending`, `/hotels/pending`, `/hotels/[id]`.
 
+## Data fetching (TanStack Query — AD-009)
+
+Ambas as apps usam `@tanstack/react-query` com transport `apiFetch` (sem mudar contratos REST).
+
+| Default | Valor |
+|---------|--------|
+| `staleTime` | 10s |
+| `refetchOnWindowFocus` | true |
+| Retry | limitado (padrão TQ) |
+
+| Área | Polling | Invalidação |
+|------|---------|-------------|
+| Admin dashboard + filas pendentes | 15s | após approve partner/hotel |
+| Admin preview hotel (`IN_REVIEW`) | 15s enquanto em revisão | após approve/reject → filas |
+| Extranet dashboard (parceiro `PENDING`) | 30s | — |
+| Lista/detalhe hotel (`IN_REVIEW`) | 30s | após PATCH/DELETE/submit/CRUD rooms/images |
+
+**Não usar WebSockets/SSE** para extranet/admin nesta fase. SSE/poll de pagamento fica no Master Plan (app viajante).
+
+Provider: `components/providers/query-provider.tsx` envolvido no `layout.tsx` de cada app.
+
 ## Auth parceiro (Fase 1)
 
 | Endpoint | Método | Descrição |
@@ -71,6 +92,8 @@ Páginas admin: `/login`, `/dashboard`, `/partners/pending`, `/hotels/pending`, 
 | `/extranet/auth/me` | GET | Perfil (Bearer token) |
 
 Fluxo na extranet: `/signup` ou `/login` → token em `localStorage` → `/dashboard`.
+
+Header autenticado: Painel · Hotéis · Sair (some Entrar/Cadastrar após login).
 
 ## Hotéis parceiro (Fase 2)
 
@@ -82,7 +105,8 @@ Fluxo na extranet: `/signup` ou `/login` → token em `localStorage` → `/dashb
 | `/extranet/hotels/:id` | PATCH | Editar (DRAFT/REJECTED) |
 | `/extranet/hotels/:id` | DELETE | Excluir (apenas DRAFT) |
 
-Páginas extranet: `/hotels`, `/hotels/new`, `/hotels/[id]`. CEP preenchido via ViaCEP no cliente.
+Páginas extranet: `/hotels`, `/hotels/new`, `/hotels/[id]` (Dados), `/hotels/[id]/rooms`, `/hotels/[id]/photos`.  
+Nav do hotel em steps + checklist de progresso. CEP via ViaCEP no cliente.
 
 ## Quartos parceiro (Fase 3)
 
@@ -161,3 +185,9 @@ npm run staging:down
 | `.specs/STATE.md` | Decisões + handoff (leia primeiro) |
 | `.specs/features/admin-cadastro-parceiros/` | Spec, design, tasks, validation |
 | `docs/` | Master Plan (11 fases) |
+
+## UI shell (AD-010)
+
+- Tipografia: Plus Jakarta Sans (`next/font`)
+- Tokens: primary `#0E7490`, surface branca, background `#F4F7FB`
+- Layout: `AppHeader`, `PageShell`, `PageHeader`, `Surface`, `Alert`, `EmptyState`, `Skeleton`

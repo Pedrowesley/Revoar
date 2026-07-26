@@ -1,8 +1,8 @@
 # Release 0.0 — Extranet MVP (Entrega)
 
-**Data:** Junho/2026  
+**Data:** Junho/2026 (UI + data-fetch atualizados Jul/2026)  
 **Feature ID:** `extranet-cadastro-parceiros`  
-**Status:** Código completo (fases 0–6) · DoD de negócio parcial
+**Status:** Código completo (fases 0–6) · UI moderna + TanStack Query · DoD de negócio parcial
 
 Este documento consolida **o que foi feito**, **o que ficou de fora** e **como retomar o trabalho** — especialmente para agentes Cursor ou desenvolvedores em uma máquina nova.
 
@@ -91,6 +91,14 @@ Próximo — Release 0.1: busca pública read-only
 - `docker-compose.staging.yml` para stack containerizada local
 - `DEVELOPMENT.md` + este documento
 
+### Pós-entrega — UI + data freshness (Jul/2026)
+
+- Shell autenticado (header sticky): nav Painel/Hotéis (extranet) e Painel/Parceiros/Hotéis (admin); logout no header
+- Design system alinhado: primary `#0E7490`, accent `#EA580C`, tipografia **Plus Jakarta Sans**, fundo atmosférico, shadows suaves
+- Componentes de layout: `AppHeader`, `PageShell`, `PageHeader`, `Surface`, `Alert`, `EmptyState`, `Skeleton`
+- Nav do hotel em steps + `HotelSetupChecklist` (progresso Dados → Quartos → Fotos)
+- **TanStack Query (AD-009):** `QueryClientProvider` nas duas apps; polling 15s nas filas admin; poll 30s condicional no status do parceiro/hotel; invalidação pós-mutação; sem WebSockets
+
 ---
 
 ## 4. O que NÃO foi entregue (gaps conhecidos)
@@ -131,9 +139,9 @@ plan-revoar/
 └── RELEASE-0.0.md         Este arquivo
 ```
 
-**Stack:** Node ≥20, npm workspaces, Turborepo, Next.js 15, NestJS, Prisma, PostgreSQL, Tailwind 4, Zod, AWS SDK (S3), Playwright.
+**Stack:** Node ≥20, npm workspaces, Turborepo, Next.js 15, NestJS, Prisma, PostgreSQL, Tailwind 4, TanStack Query, Zod, AWS SDK (S3), Playwright.
 
-> **Nota:** `design.md` menciona pnpm e Vitest; o monorepo usa **npm** e testes **E2E apenas**.
+> **Nota:** monorepo usa **npm** e testes **E2E apenas** (Vitest não implementado).
 
 ---
 
@@ -160,7 +168,7 @@ sequenceDiagram
 
 ## 7. Decisões de produto (resumo)
 
-Detalhes completos em `.specs/STATE.md` (AD-001 … AD-008).
+Detalhes completos em `.specs/STATE.md` (AD-001 … AD-010).
 
 | ID | Decisão |
 |----|---------|
@@ -169,6 +177,8 @@ Detalhes completos em `.specs/STATE.md` (AD-001 … AD-008).
 | AD-003 | Parceiro = PJ com CNPJ obrigatório |
 | AD-007 | Extranet self-service + aprovação Revoar via admin |
 | AD-008 | Quartos completos no P1 (dados para viajante futuro) |
+| AD-009 | TanStack Query + polling (sem WebSockets nesta fase) |
+| AD-010 | UI shell moderno (header auth, Plus Jakarta Sans, checklist hotel) |
 
 **Roadmap revisado:**
 

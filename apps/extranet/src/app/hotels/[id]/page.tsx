@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CreateHotelInput } from "@revoar/shared";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
@@ -24,6 +25,7 @@ const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 export default function HotelDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   useRequireAuth();
 
   const { hotel, loading, error, reload } = useHotel(params.id);
@@ -57,6 +59,7 @@ export default function HotelDetailPage() {
         body: JSON.stringify(payload),
       });
       await reload();
+      await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
     } catch (err) {
       if (err instanceof ApiError) {
         setSaveError(err.message);
@@ -74,6 +77,7 @@ export default function HotelDetailPage() {
     setDeleting(true);
     try {
       await apiFetch(`/extranet/hotels/${hotel.id}`, { method: "DELETE", token });
+      await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
       router.push("/hotels");
     } catch (err) {
       if (err instanceof ApiError) {

@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { RoomTypeInput } from "@revoar/shared";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { HotelStatus } from "@/lib/hotel.const";
 import { RoomTypeDetail } from "@/lib/room";
+import { extranetKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useHotel } from "@/hooks/use-hotel";
 import { RoomForm } from "@/components/rooms/room-form";
@@ -23,6 +25,7 @@ const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 export default function NewRoomPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   useRequireAuth();
 
   const { hotel, loading, error } = useHotel(params.id);
@@ -41,6 +44,9 @@ export default function NewRoomPage() {
         token,
         body: JSON.stringify(data),
       });
+      await queryClient.invalidateQueries({ queryKey: extranetKeys.rooms(params.id) });
+      await queryClient.invalidateQueries({ queryKey: extranetKeys.hotel(params.id) });
+      await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
       router.push(`/hotels/${params.id}/rooms/${room.id}`);
     } catch (err) {
       if (err instanceof ApiError) {

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, Users } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { formatCnpj, getToken } from "@/lib/auth";
+import { adminKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageShell } from "@/components/layout/page-shell";
@@ -27,49 +28,42 @@ type PendingPartner = {
 };
 
 export default function PendingPartnersPage() {
-  useRequireAuth();
-  const [partners, setPartners] = useState<PendingPartner[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const token = useRequireAuth();
+  const queryClient = useQueryClient();
 
-  const loadPartners = useCallback(async () => {
-    const token = getToken();
-    if (!token) return;
+  const partnersQuery = useQuery({
+    queryKey: adminKeys.pendingPartners,
+    enabled: Boolean(token),
+    refetchInterval: 15_000,
+    queryFn: () =>
+      apiFetch<PendingPartner[]>("/admin/partners/pending", { token: getToken()! }),
+  });
 
-    setLoading(true);
-    setError(null);
+  const approveMutation = useMutation({
+    mutationFn: (partnerId: string) =>
+      apiFetch(`/admin/partners/${partnerId}/approve`, {
+        method: "PATCH",
+        token: getToken()!,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.pendingPartners });
+      await queryClient.invalidateQueries({ queryKey: adminKeys.pendingHotels });
+    },
+  });
 
-    try {
-      const data = await apiFetch<PendingPartner[]>("/admin/partners/pending", { token });
-      setPartners(data);
-    } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  if (!token || partnersQuery.isLoading) return <PageSkeleton rows={3} />;
 
-  useEffect(() => {
-    loadPartners();
-  }, [loadPartners]);
-
-  async function handleApprove(partnerId: string) {
-    const token = getToken();
-    if (!token) return;
-
-    setApprovingId(partnerId);
-    try {
-      await apiFetch(`/admin/partners/${partnerId}/approve`, { method: "PATCH", token });
-      await loadPartners();
-    } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
-    } finally {
-      setApprovingId(null);
-    }
-  }
-
-  if (loading) return <PageSkeleton rows={3} />;
+  const partners = partnersQuery.data ?? [];
+  const error =
+    partnersQuery.error instanceof ApiError
+      ? partnersQuery.error.message
+      : approveMutation.error instanceof ApiError
+        ? approveMutation.error.message
+        : partnersQuery.isError
+          ? "Não foi possível carregar os parceiros."
+          : approveMutation.isError
+            ? "Não foi possível aprovar o parceiro."
+            : null;
 
   return (
     <PageShell>
@@ -83,7 +77,7 @@ export default function PendingPartnersPage() {
 
       <PageHeader
         title="Parceiros pendentes"
-        description="Analise e aprove contas de parceiros hoteleiros."
+        description="Analise e aprove contas de parceiros hoteleiros. A lista atualiza sozinha."
       />
 
       {error && (
@@ -117,11 +111,13 @@ export default function PendingPartnersPage() {
                 </p>
               </div>
               <Button
-                onClick={() => handleApprove(partner.id)}
-                disabled={approvingId === partner.id}
+                onClick={() => approveMutation.mutate(partner.id)}
+                disabled={approveMutation.isPending && approveMutation.variables === partner.id}
               >
                 <Check className="mr-2 h-4 w-4" />
-                {approvingId === partner.id ? "Aprovando..." : "Aprovar"}
+                {approveMutation.isPending && approveMutation.variables === partner.id
+                  ? "Aprovando..."
+                  : "Aprovar"}
               </Button>
             </div>
           </Surface>

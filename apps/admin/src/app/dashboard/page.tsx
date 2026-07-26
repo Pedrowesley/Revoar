@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle, Clock, Users } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import { adminKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageShell } from "@/components/layout/page-shell";
@@ -17,26 +18,28 @@ type PendingHotel = { id: string; name: string };
 
 export default function AdminDashboardPage() {
   const token = useRequireAuth();
-  const [pendingPartners, setPendingPartners] = useState(0);
-  const [pendingHotels, setPendingHotels] = useState(0);
-  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    const authToken = getToken();
-    if (!authToken) return;
+  const partnersQuery = useQuery({
+    queryKey: adminKeys.pendingPartners,
+    enabled: Boolean(token),
+    refetchInterval: 15_000,
+    queryFn: () =>
+      apiFetch<PendingPartner[]>("/admin/partners/pending", { token: getToken()! }),
+  });
 
-    Promise.all([
-      apiFetch<PendingPartner[]>("/admin/partners/pending", { token: authToken }),
-      apiFetch<PendingHotel[]>("/admin/hotels/pending", { token: authToken }),
-    ])
-      .then(([partners, hotels]) => {
-        setPendingPartners(partners.length);
-        setPendingHotels(hotels.length);
-      })
-      .finally(() => setLoaded(true));
-  }, [token]);
+  const hotelsQuery = useQuery({
+    queryKey: adminKeys.pendingHotels,
+    enabled: Boolean(token),
+    refetchInterval: 15_000,
+    queryFn: () => apiFetch<PendingHotel[]>("/admin/hotels/pending", { token: getToken()! }),
+  });
 
-  if (!token || !loaded) return <PageSkeleton rows={2} />;
+  if (!token || partnersQuery.isLoading || hotelsQuery.isLoading) {
+    return <PageSkeleton rows={2} />;
+  }
+
+  const pendingPartners = partnersQuery.data?.length ?? 0;
+  const pendingHotels = hotelsQuery.data?.length ?? 0;
 
   return (
     <PageShell width="xl">
@@ -87,7 +90,7 @@ export default function AdminDashboardPage() {
       <Alert variant="info" className="mt-8">
         <span className="inline-flex items-center gap-2">
           <CheckCircle className="h-4 w-4" />
-          Aprovações registram histórico de status para auditoria.
+          Aprovações registram histórico de status para auditoria. Filas atualizam automaticamente.
         </span>
       </Alert>
     </PageShell>

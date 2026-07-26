@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Building2 } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import { adminKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageShell } from "@/components/layout/page-shell";
@@ -25,33 +26,24 @@ type PendingHotel = {
 };
 
 export default function PendingHotelsPage() {
-  useRequireAuth();
-  const [hotels, setHotels] = useState<PendingHotel[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const token = useRequireAuth();
 
-  const loadHotels = useCallback(async () => {
-    const token = getToken();
-    if (!token) return;
+  const hotelsQuery = useQuery({
+    queryKey: adminKeys.pendingHotels,
+    enabled: Boolean(token),
+    refetchInterval: 15_000,
+    queryFn: () => apiFetch<PendingHotel[]>("/admin/hotels/pending", { token: getToken()! }),
+  });
 
-    setLoading(true);
-    setError(null);
+  if (!token || hotelsQuery.isLoading) return <PageSkeleton rows={3} />;
 
-    try {
-      const data = await apiFetch<PendingHotel[]>("/admin/hotels/pending", { token });
-      setHotels(data);
-    } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadHotels();
-  }, [loadHotels]);
-
-  if (loading) return <PageSkeleton rows={3} />;
+  const hotels = hotelsQuery.data ?? [];
+  const error =
+    hotelsQuery.error instanceof ApiError
+      ? hotelsQuery.error.message
+      : hotelsQuery.isError
+        ? "Não foi possível carregar os hotéis."
+        : null;
 
   return (
     <PageShell>
@@ -65,7 +57,7 @@ export default function PendingHotelsPage() {
 
       <PageHeader
         title="Hotéis em revisão"
-        description="Revise o inventário enviado pelos parceiros antes de publicar."
+        description="Revise o inventário enviado pelos parceiros. A fila atualiza sozinha."
       />
 
       {error && (
