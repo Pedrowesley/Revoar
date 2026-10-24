@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Clock, Hotel } from "lucide-react";
-import { apiFetch, PartnerProfile } from "@/lib/api";
-import { clearToken, getToken } from "@/lib/auth";
+import { apiFetch, ApiError, PartnerProfile } from "@/lib/api";
+import { expireSession, getToken } from "@/lib/auth";
 import { extranetKeys } from "@/lib/query-keys";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageShell } from "@/components/layout/page-shell";
@@ -44,14 +44,32 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    if (profileQuery.isError) {
-      clearToken();
-      router.replace("/login");
-    }
-  }, [profileQuery.isError, router]);
+    if (!token || profileQuery.isFetching || !profileQuery.isError) return;
+    const unauthorized =
+      profileQuery.error instanceof ApiError && profileQuery.error.status === 401;
+    if (!unauthorized) return;
+    expireSession();
+  }, [token, profileQuery.isError, profileQuery.isFetching, profileQuery.error]);
 
-  if (!token || profileQuery.isLoading || !profileQuery.data) {
+  if (!token || profileQuery.isLoading || (profileQuery.isFetching && !profileQuery.data)) {
     return <PageSkeleton rows={2} />;
+  }
+
+  if (
+    profileQuery.error instanceof ApiError &&
+    profileQuery.error.status === 401
+  ) {
+    return null;
+  }
+
+  if (profileQuery.isError || !profileQuery.data) {
+    return (
+      <PageShell>
+        <Alert variant="danger" title="Não foi possível carregar o painel">
+          Tente de novo em instantes. A sessão só encerra quando o acesso é recusado.
+        </Alert>
+      </PageShell>
+    );
   }
 
   const profile = profileQuery.data;

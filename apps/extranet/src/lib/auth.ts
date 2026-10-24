@@ -26,6 +26,15 @@ export function clearToken() {
   }
 }
 
+/** Drop the stored session and leave the app shell for the login screen. */
+export function expireSession() {
+  clearToken();
+  if (typeof window === "undefined") return;
+  const path = window.location.pathname;
+  if (path === "/login" || path === "/signup" || path === "/") return;
+  window.location.replace("/login");
+}
+
 export function formatCnpj(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 14);
   return digits

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle, Clock, Users } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { adminKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
@@ -37,6 +37,13 @@ export default function AdminDashboardPage() {
 
   if (!token || partnersQuery.isLoading || hotelsQuery.isLoading) {
     return <PageSkeleton rows={2} />;
+  }
+
+  if (
+    (partnersQuery.error instanceof ApiError && partnersQuery.error.status === 401) ||
+    (hotelsQuery.error instanceof ApiError && hotelsQuery.error.status === 401)
+  ) {
+    return null;
   }
 
   const pendingPartners = partnersQuery.data?.length ?? 0;

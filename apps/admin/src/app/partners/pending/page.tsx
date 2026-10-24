@@ -55,6 +55,10 @@ export default function PendingPartnersPage() {
 
   if (!token || partnersQuery.isLoading) return <PageSkeleton rows={3} />;
 
+  if (partnersQuery.error instanceof ApiError && partnersQuery.error.status === 401) {
+    return null;
+  }
+
   const partners = partnersQuery.data ?? [];
   const error =
     partnersQuery.error instanceof ApiError

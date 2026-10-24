@@ -51,8 +51,7 @@ export default function HotelsList() {
     router.push(`/hotels?${params.toString()}`);
   }
 
-  if (!token) return null;
-  if (hotelsQuery.isLoading) return <PageSkeleton rows={4} />;
+  if (!token || hotelsQuery.isPending) return <PageSkeleton rows={4} />;
 
   const hotels = hotelsQuery.data ?? [];
   const error =

@@ -7,9 +7,16 @@ type HotelDetailNavProps = {
   activeTab: "dados" | "quartos" | "fotos";
   roomCount: number;
   imageCount: number;
+  hasPrimaryImage: boolean;
 };
 
-export function HotelDetailNav({ hotelId, activeTab, roomCount, imageCount }: HotelDetailNavProps) {
+export function HotelDetailNav({
+  hotelId,
+  activeTab,
+  roomCount,
+  imageCount,
+  hasPrimaryImage,
+}: HotelDetailNavProps) {
   const tabs = [
     {
       id: "dados" as const,
@@ -30,8 +37,13 @@ export function HotelDetailNav({ hotelId, activeTab, roomCount, imageCount }: Ho
       id: "fotos" as const,
       href: `/hotels/${hotelId}/photos`,
       label: "Fotos",
-      hint: imageCount > 0 ? `${imageCount} enviada(s)` : "Envie fotos e a capa",
-      done: imageCount > 0,
+      hint:
+        imageCount === 0
+          ? "Envie fotos e a capa"
+          : hasPrimaryImage
+            ? `${imageCount} enviada(s)`
+            : "Defina a foto principal",
+      done: imageCount > 0 && hasPrimaryImage,
       count: imageCount,
     },
   ];

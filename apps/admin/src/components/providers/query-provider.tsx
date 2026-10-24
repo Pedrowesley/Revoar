@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { RevoarEventsListener } from "@/components/revoar-events-listener";
+import { ApiError } from "@/lib/api";
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [client] = useState(
@@ -13,7 +14,8 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             staleTime: 10_000,
             refetchOnWindowFocus: true,
             refetchOnReconnect: true,
-            retry: 1,
+            retry: (failureCount, error) =>
+              error instanceof ApiError && error.status === 401 ? false : failureCount < 1,
           },
         },
       }),

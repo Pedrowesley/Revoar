@@ -18,6 +18,11 @@ import { EventBusService } from "../../events/event-bus.service";
 
 const EDITABLE_STATUSES: HotelStatus[] = [HotelStatus.DRAFT, HotelStatus.REJECTED];
 
+const hotelReadInclude = {
+  _count: { select: { roomTypes: true, images: true } },
+  images: { where: { isPrimary: true }, select: { id: true }, take: 1 },
+};
+
 @Injectable()
 export class HotelsService {
   constructor(
@@ -33,9 +38,7 @@ export class HotelsService {
         ...(query.status ? { status: query.status } : {}),
       },
       orderBy: { updatedAt: "desc" },
-      include: {
-        _count: { select: { roomTypes: true, images: true } },
-      },
+      include: hotelReadInclude,
     });
 
     return hotels.map((hotel) => this.toSummary(hotel));
@@ -67,9 +70,7 @@ export class HotelsService {
         longitude: input.longitude ?? null,
         status: HotelStatus.DRAFT,
       },
-      include: {
-        _count: { select: { roomTypes: true, images: true } },
-      },
+      include: hotelReadInclude,
     });
 
     return this.toDetail(hotel);
@@ -119,9 +120,7 @@ export class HotelsService {
     const updated = await this.prisma.hotel.update({
       where: { id: hotelId },
       data,
-      include: {
-        _count: { select: { roomTypes: true, images: true } },
-      },
+      include: hotelReadInclude,
     });
 
     return this.toDetail(updated);
@@ -160,9 +159,7 @@ export class HotelsService {
     const updated = await this.prisma.hotel.update({
       where: { id: hotelId },
       data,
-      include: {
-        _count: { select: { roomTypes: true, images: true } },
-      },
+      include: hotelReadInclude,
     });
 
     return this.toDetail(updated);
@@ -231,10 +228,8 @@ export class HotelsService {
 
     const updated = await this.prisma.hotel.update({
       where: { id: hotelId },
-      data: { status: HotelStatus.IN_REVIEW },
-      include: {
-        _count: { select: { roomTypes: true, images: true } },
-      },
+      data: { status: HotelStatus.IN_REVIEW, rejectionReason: null },
+      include: hotelReadInclude,
     });
 
     await this.statusHistory.record({
@@ -273,9 +268,7 @@ export class HotelsService {
   private async getOwnedHotel(partnerId: string, hotelId: string) {
     const hotel = await this.prisma.hotel.findUnique({
       where: { id: hotelId },
-      include: {
-        _count: { select: { roomTypes: true, images: true } },
-      },
+      include: hotelReadInclude,
     });
 
     if (!hotel) {
@@ -315,6 +308,7 @@ export class HotelsService {
       rejectionReason: string | null;
       updatedAt: Date;
       _count: { roomTypes: number; images: number };
+      images?: { id: string }[];
     },
   ) {
     return {
@@ -327,6 +321,7 @@ export class HotelsService {
       rejectionReason: hotel.rejectionReason,
       roomCount: hotel._count.roomTypes,
       imageCount: hotel._count.images,
+      hasPrimaryImage: (hotel.images?.length ?? 0) > 0,
       updatedAt: hotel.updatedAt.toISOString(),
     };
   }
@@ -354,6 +349,7 @@ export class HotelsService {
       createdAt: Date;
       updatedAt: Date;
       _count: { roomTypes: number; images: number };
+      images?: { id: string }[];
     },
   ) {
     return {
@@ -376,6 +372,7 @@ export class HotelsService {
       rejectionReason: hotel.rejectionReason,
       roomCount: hotel._count.roomTypes,
       imageCount: hotel._count.images,
+      hasPrimaryImage: (hotel.images?.length ?? 0) > 0,
       createdAt: hotel.createdAt.toISOString(),
       updatedAt: hotel.updatedAt.toISOString(),
     };

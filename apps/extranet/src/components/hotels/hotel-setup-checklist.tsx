@@ -24,13 +24,14 @@ export function HotelSetupChecklist({ hotel }: HotelSetupChecklistProps) {
     },
     {
       label: "Fotos + capa",
-      done: hotel.imageCount > 0,
+      done: hotel.imageCount > 0 && hotel.hasPrimaryImage,
       href: `/hotels/${hotel.id}/photos`,
     },
   ];
 
   const completed = steps.filter((step) => step.done).length;
   const ready = completed === steps.length;
+  const missingCover = hotel.imageCount > 0 && !hotel.hasPrimaryImage;
 
   return (
     <Surface className="mb-8 p-4 sm:p-5">
@@ -40,7 +41,9 @@ export function HotelSetupChecklist({ hotel }: HotelSetupChecklistProps) {
           <p className="text-xs text-muted-foreground">
             {ready
               ? "Tudo pronto — envie para revisão na aba Fotos."
-              : `${completed} de ${steps.length} etapas concluídas`}
+              : missingCover
+                ? "Defina uma foto principal para concluir o cadastro."
+                : `${completed} de ${steps.length} etapas concluídas`}
           </p>
         </div>
         <div className="h-2 w-28 overflow-hidden rounded-full bg-muted">

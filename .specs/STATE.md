@@ -8,9 +8,9 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Feature ativa** | `extranet-cadastro-parceiros` + `sync-tempo-real` (Release 0.0) |
-| **Fase atual** | Release 0.0 — **implementação concluída** + UI moderna + Query + SSE |
-| **Próximo passo** | Release 0.1 — busca pública read-only (+ spec nova) |
+| **Feature ativa** | `extranet-perfil-parceiro` (especificada, sem código) |
+| **Fase atual** | Release 0.0 — software no ar; perfil do parceiro só em spec |
+| **Próximo passo** | Implementar `extranet-perfil-parceiro` quando pedido; senão Release 0.1 |
 | **Última atualização** | 2026-10-24 |
 | **Git** | `main` em `github.com/Pedrowesley/Revoar` |
 
@@ -24,6 +24,7 @@
 | Packages | `packages/database`, `packages/shared` | ✅ |
 | Spec Release 0.0 | `.specs/features/admin-cadastro-parceiros/` | ✅ Atualizada |
 | Spec Fase 7 (sync) | `.specs/features/sync-tempo-real/` | ✅ |
+| Spec perfil do parceiro | `.specs/features/extranet-perfil-parceiro/` | ✅ spec/design/tasks; sem código |
 | Entrega consolidada | `RELEASE-0.0.md` | ✅ |
 | UI moderna | AD-010 (`PageShell`, header autenticado) | ✅ |
 | Sync UI | TanStack Query + polling + SSE | ✅ |
@@ -38,6 +39,7 @@
 - Deploy staging em URL pública para sócios
 - ≥ 10 hotéis piloto (operação manual)
 - Release 0.1 (site público, busca)
+- Perfil do parceiro na extranet e ficha somente leitura no admin (`extranet-perfil-parceiro`)
 - Reset de senha, fotos de quarto, multi-usuário por parceiro
 - E2E do sync duas origens (T7.19)
 - EventBus Redis (só quando a API tiver >1 instância)
@@ -48,10 +50,11 @@
 2. `RELEASE-0.0.md`
 3. `.specs/features/admin-cadastro-parceiros/spec.md`
 4. `.specs/features/sync-tempo-real/spec.md`
-5. `.specs/features/*/validation.md`
-6. `DEVELOPMENT.md`
-7. `.specs/features/*/design.md`
-8. `docs/09-roadmap/fase-09-roadmap.md` (se precisar contexto produto)
+5. `.specs/features/extranet-perfil-parceiro/spec.md` (especificada; sem código)
+6. `.specs/features/*/validation.md`
+7. `DEVELOPMENT.md`
+8. `.specs/features/*/design.md`
+9. `docs/09-roadmap/fase-09-roadmap.md` (se precisar contexto produto)
 
 ### Comandos essenciais
 
@@ -81,6 +84,7 @@ npm run test:e2e
 | AD-008 | **Quartos no P1:** cadastro completo de room types com dados necessários para o viajante | active | 2026-06 |
 | AD-009 | **Sync UI:** TanStack Query + polling condicional + SSE via `EventBusService`. WebSocket adiado para Release 0.5 (RF-028 reserva/PIX). | active | 2026-10 |
 | AD-010 | **UI shell moderno** extranet/admin: header autenticado, Plus Jakarta Sans, tokens `#0E7490`, componentes `PageShell`/`Surface`/`Skeleton`/`EmptyState`/`Alert`, checklist de progresso do hotel | active | 2026-07 |
+| AD-011 | **Perfil do parceiro:** a extranet grava avatar, logo e confirmação; o admin lê a mesma ficha e não a edita. Viajante não vê nesta entrega | active | 2026-10 |
 
 ---
 
@@ -101,3 +105,4 @@ Release 1.0  GA              → Lançamento 5 destinos
 |---------|------|--------|-------|------------|--------|
 | extranet-cadastro-parceiros | ✅ | ✅ | ✅ | ✅ | Release 0.0 — software complete (+ UI/RQ) |
 | sync-tempo-real | ✅ | ✅ | ✅ | ✅ | Fase 7 — polling + SSE (PASS condicional, sem E2E sync) |
+| extranet-perfil-parceiro | ✅ | ✅ | ✅ | — | Especificada (AD-011); Execute ainda não começou |

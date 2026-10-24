@@ -20,10 +20,12 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { useToast } from "@/components/ui/toaster";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 
 export default function HotelPhotosPage() {
+  const toast = useToast();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -61,12 +63,14 @@ export default function HotelPhotosPage() {
     onSuccess: async () => {
       await reload();
       await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
+      toast.success("Hotel enviado para revisão", "A equipe Revoar vai analisar o cadastro.");
       router.refresh();
     },
     onError: (err) => {
-      setSubmitError(
-        err instanceof ApiError ? err.message : "Não foi possível enviar para revisão.",
-      );
+      const message =
+        err instanceof ApiError ? err.message : "Não foi possível enviar para revisão.";
+      setSubmitError(message);
+      toast.error("Não foi possível enviar", message);
     },
   });
 
@@ -93,6 +97,7 @@ export default function HotelPhotosPage() {
         activeTab="fotos"
         roomCount={hotel.roomCount}
         imageCount={hotel.imageCount}
+        hasPrimaryImage={hotel.hasPrimaryImage}
       />
       <HotelSetupChecklist hotel={hotel} />
 
@@ -118,7 +123,8 @@ export default function HotelPhotosPage() {
         <Surface className="mt-8 border-primary/20 bg-primary-soft/40 p-5">
           <p className="text-sm font-semibold text-foreground">Enviar para revisão</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            O hotel precisa ter endereço completo, ao menos 1 quarto, 1 foto e uma foto principal.
+            Salvar o rascunho não publica o hotel. O envio exige endereço completo, ao menos 1
+            quarto, 1 foto e uma foto principal.
           </p>
           {submitError && (
             <Alert variant="danger" className="mt-3">

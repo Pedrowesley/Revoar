@@ -22,10 +22,12 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { useToast } from "@/components/ui/toaster";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 
 export default function HotelRoomsPage() {
+  const toast = useToast();
   const params = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   useRequireAuth();
@@ -54,9 +56,12 @@ export default function HotelRoomsPage() {
       await queryClient.invalidateQueries({ queryKey: extranetKeys.rooms(params.id) });
       await reload();
       await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
+      toast.success("Quarto excluído");
     },
     onError: (err) => {
-      setRoomsError(err instanceof ApiError ? err.message : "Não foi possível excluir o quarto.");
+      const message = err instanceof ApiError ? err.message : "Não foi possível excluir o quarto.";
+      setRoomsError(message);
+      toast.error("Não foi possível excluir o quarto", message);
     },
   });
 
@@ -91,6 +96,7 @@ export default function HotelRoomsPage() {
         activeTab="quartos"
         roomCount={hotel.roomCount}
         imageCount={hotel.imageCount}
+        hasPrimaryImage={hotel.hasPrimaryImage}
       />
       <HotelSetupChecklist hotel={hotel} />
 

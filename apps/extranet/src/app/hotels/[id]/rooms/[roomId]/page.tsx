@@ -19,10 +19,12 @@ import { PageShell } from "@/components/layout/page-shell";
 import { Alert } from "@/components/ui/alert";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { useToast } from "@/components/ui/toaster";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 
 export default function EditRoomPage() {
+  const toast = useToast();
   const params = useParams<{ id: string; roomId: string }>();
   const queryClient = useQueryClient();
   useRequireAuth();
@@ -64,12 +66,12 @@ export default function EditRoomPage() {
       });
       await queryClient.invalidateQueries({ queryKey: extranetKeys.rooms(params.id) });
       await queryClient.invalidateQueries({ queryKey: extranetKeys.hotel(params.id) });
+      toast.success("Quarto salvo");
     } catch (err) {
-      if (err instanceof ApiError) {
-        setSaveError(err.message);
-      } else {
-        setSaveError("Não foi possível salvar as alterações.");
-      }
+      const message =
+        err instanceof ApiError ? err.message : "Não foi possível salvar as alterações.";
+      setSaveError(message);
+      toast.error("Não foi possível salvar o quarto", message);
     }
   }
 

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { RevoarEvent } from "@revoar/shared";
-import { getToken } from "@/lib/auth";
+import { expireSession, getToken } from "@/lib/auth";
 import { getApiUrl } from "@/lib/api";
 import { extranetKeys } from "@/lib/query-keys";
 
@@ -35,7 +35,8 @@ async function consumePartnerEventStream(
     signal,
   });
 
-  if (!response.ok || !response.body) return;
+  if (response.status === 401) return "unauthorized" as const;
+  if (!response.ok || !response.body) return "retry" as const;
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
@@ -84,7 +85,11 @@ export function usePartnerRevoarEvents(enabled: boolean) {
     void (async () => {
       while (!controller.signal.aborted) {
         try {
-          await consumePartnerEventStream(token, handleEvent, controller.signal);
+          const result = await consumePartnerEventStream(token, handleEvent, controller.signal);
+          if (result === "unauthorized") {
+            expireSession();
+            break;
+          }
         } catch {
           if (controller.signal.aborted) break;
         }

@@ -10,6 +10,7 @@ export type HotelSummary = {
   rejectionReason: string | null;
   roomCount: number;
   imageCount: number;
+  hasPrimaryImage: boolean;
   updatedAt: string;
 };
 

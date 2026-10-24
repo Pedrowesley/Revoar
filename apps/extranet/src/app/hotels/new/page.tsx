@@ -14,9 +14,12 @@ import { HotelForm } from "@/components/hotels/hotel-form";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageShell } from "@/components/layout/page-shell";
 import { Alert } from "@/components/ui/alert";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { useToast } from "@/components/ui/toaster";
 
 export default function NewHotelPage() {
+  const toast = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
   const token = useRequireAuth();
@@ -33,17 +36,19 @@ export default function NewHotelPage() {
         body: JSON.stringify(data),
       });
       await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
+      toast.success(
+        "Hotel criado como rascunho",
+        "Cadastre um quarto e uma foto principal para enviar à revisão.",
+      );
       router.push(`/hotels/${hotel.id}`);
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Não foi possível criar o hotel.");
-      }
+      const message = err instanceof ApiError ? err.message : "Não foi possível criar o hotel.";
+      setError(message);
+      toast.error("Não foi possível criar o hotel", message);
     }
   }
 
-  if (!token) return null;
+  if (!token) return <PageSkeleton rows={4} />;
 
   return (
     <PageShell width="md">

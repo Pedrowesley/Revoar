@@ -38,6 +38,10 @@ export default function PendingHotelsPage() {
 
   if (!token || hotelsQuery.isLoading) return <PageSkeleton rows={3} />;
 
+  if (hotelsQuery.error instanceof ApiError && hotelsQuery.error.status === 401) {
+    return null;
+  }
+
   const hotels = hotelsQuery.data ?? [];
   const error =
     hotelsQuery.error instanceof ApiError

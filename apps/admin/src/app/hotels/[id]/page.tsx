@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, X } from "lucide-react";
+import { ArrowLeft, Building2, Check, X } from "lucide-react";
 import { ROOM_AMENITY_LABELS, RoomAmenity } from "@revoar/shared";
 import { apiFetch, ApiError } from "@/lib/api";
-import { formatCnpj, getToken } from "@/lib/auth";
+import { formatCep, formatCnpj, formatPhone, getToken } from "@/lib/auth";
 import { adminKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { PageShell } from "@/components/layout/page-shell";
@@ -31,6 +31,7 @@ type HotelPreview = {
   checkInTime: string;
   checkOutTime: string;
   status: string;
+  rejectionReason: string | null;
   partner: {
     legalName: string;
     tradeName: string | null;
@@ -66,6 +67,50 @@ const STATUS_LABELS: Record<string, string> = {
   INACTIVE: "Inativo",
   REJECTED: "Rejeitado",
 };
+
+function statusLabel(status: string | null) {
+  if (!status) return "—";
+  return STATUS_LABELS[status] ?? status;
+}
+
+function PhotoPlaceholder() {
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-muted" aria-hidden>
+      <Building2 className="h-10 w-10 text-muted-foreground/60" />
+    </div>
+  );
+}
+
+function AdminHotelPhoto({
+  image,
+  hotelName,
+}: {
+  image: HotelPreview["images"][number];
+  hotelName: string;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <Surface className="overflow-hidden">
+      <div className="aspect-video bg-muted">
+        {failed ? (
+          <PhotoPlaceholder />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image.url}
+            alt={image.altText ?? hotelName}
+            className="h-full w-full object-cover"
+            onError={() => setFailed(true)}
+          />
+        )}
+      </div>
+      {image.isPrimary && (
+        <p className="p-2 text-xs font-medium text-primary">Foto principal</p>
+      )}
+    </Surface>
+  );
+}
 
 export default function AdminHotelPreviewPage() {
   const params = useParams<{ id: string }>();
@@ -130,6 +175,10 @@ export default function AdminHotelPreviewPage() {
     return <PageSkeleton rows={5} />;
   }
 
+  if (hotelQuery.error instanceof ApiError && hotelQuery.error.status === 401) {
+    return null;
+  }
+
   const hotel = hotelQuery.data;
   const loadError =
     hotelQuery.error instanceof ApiError
@@ -192,6 +241,12 @@ export default function AdminHotelPreviewPage() {
         </Alert>
       )}
 
+      {hotel.rejectionReason && (
+        <Alert variant="danger" title="Motivo da rejeição" className="mb-6">
+          {hotel.rejectionReason}
+        </Alert>
+      )}
+
       {showReject && (
         <Alert variant="danger" className="mb-6" title="Motivo da rejeição">
           <Label htmlFor="reason">Descreva o que o parceiro precisa corrigir</Label>
@@ -234,10 +289,10 @@ export default function AdminHotelPreviewPage() {
         <h2 className="mb-3 font-semibold">Dados do hotel</h2>
         <p className="whitespace-pre-wrap text-sm">{hotel.description}</p>
         <p className="mt-3 text-sm text-muted-foreground">
-          {hotel.addressLine} — {hotel.city}/{hotel.state} · CEP {hotel.zipCode}
+          {hotel.addressLine} — {hotel.city}/{hotel.state} · CEP {formatCep(hotel.zipCode)}
         </p>
         <p className="text-sm text-muted-foreground">
-          Tel: {hotel.phone} · Check-in {hotel.checkInTime} · Check-out {hotel.checkOutTime}
+          Tel: {formatPhone(hotel.phone)} · Check-in {hotel.checkInTime} · Check-out {hotel.checkOutTime}
           {hotel.starRating ? ` · ${hotel.starRating} estrelas` : ""}
         </p>
       </Surface>
@@ -269,21 +324,19 @@ export default function AdminHotelPreviewPage() {
 
       <section className="mb-8">
         <h2 className="mb-3 font-semibold">Fotos ({hotel.images.length})</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {hotel.images.map((image) => (
-            <Surface key={image.id} className="overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={image.url}
-                alt={image.altText ?? hotel.name}
-                className="aspect-video w-full object-cover"
-              />
-              {image.isPrimary && (
-                <p className="p-2 text-xs font-medium text-primary">Foto principal</p>
-              )}
-            </Surface>
-          ))}
-        </div>
+        {hotel.images.length === 0 ? (
+          <Surface className="overflow-hidden">
+            <div className="aspect-video">
+              <PhotoPlaceholder />
+            </div>
+          </Surface>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {hotel.images.map((image) => (
+              <AdminHotelPhoto key={image.id} image={image} hotelName={hotel.name} />
+            ))}
+          </div>
+        )}
       </section>
 
       {hotel.statusHistory.length > 0 && (
@@ -292,7 +345,7 @@ export default function AdminHotelPreviewPage() {
           <ul className="space-y-2 text-sm">
             {hotel.statusHistory.map((entry, index) => (
               <li key={index} className="text-muted-foreground">
-                {entry.fromStatus ?? "—"} → {entry.toStatus} ({entry.actorType}){" "}
+                {statusLabel(entry.fromStatus)} → {statusLabel(entry.toStatus)} ({entry.actorType}){" "}
                 {entry.reason ? `— ${entry.reason}` : ""}
               </li>
             ))}

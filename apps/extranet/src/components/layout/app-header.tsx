@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Hotel, LayoutDashboard, LogOut } from "lucide-react";
-import { AUTH_CHANGE_EVENT, clearToken, getToken } from "@/lib/auth";
+import { AUTH_CHANGE_EVENT, expireSession, getToken } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -15,8 +15,8 @@ const AUTH_LINKS = [
 
 export function AppHeader() {
   const pathname = usePathname();
-  const router = useRouter();
   const [authed, setAuthed] = useState(false);
+  const showApp = authed && pathname !== "/login" && pathname !== "/signup";
 
   useEffect(() => {
     const sync = () => setAuthed(Boolean(getToken()));
@@ -30,15 +30,14 @@ export function AppHeader() {
   }, [pathname]);
 
   function handleLogout() {
-    clearToken();
-    router.push("/login");
+    expireSession();
   }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-surface/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-8">
-          <Link href={authed ? "/dashboard" : "/"} className="group flex items-center gap-2.5">
+          <Link href={showApp ? "/dashboard" : "/"} className="group flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-soft transition-transform group-hover:scale-[1.03]">
               R
             </span>
@@ -50,7 +49,7 @@ export function AppHeader() {
             </span>
           </Link>
 
-          {authed && (
+          {showApp && (
             <nav className="flex items-center gap-1 overflow-x-auto">
               {AUTH_LINKS.map(({ href, label, icon: Icon }) => {
                 const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
@@ -75,7 +74,7 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          {authed ? (
+          {showApp ? (
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="mr-1.5 h-4 w-4" />
               Sair

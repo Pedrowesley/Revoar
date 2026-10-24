@@ -157,7 +157,7 @@ export class AdminHotelsService {
     const updated = await this.prisma.hotel.update({
       where: { id: hotelId },
       data: {
-        status: HotelStatus.DRAFT,
+        status: HotelStatus.REJECTED,
         rejectionReason: input.reason.trim(),
       },
       include: { partner: true },
@@ -166,7 +166,7 @@ export class AdminHotelsService {
     await this.statusHistory.record({
       hotelId,
       fromStatus: hotel.status,
-      toStatus: HotelStatus.DRAFT,
+      toStatus: HotelStatus.REJECTED,
       reason: input.reason.trim(),
       actorType: ActorType.ADMIN,
       actorId: adminId,

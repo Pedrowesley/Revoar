@@ -15,6 +15,7 @@ import {
   formatZipCode,
   HotelDetail,
 } from "@/lib/hotel";
+import { useToast } from "@/components/ui/toaster";
 
 type HotelFormProps = {
   defaultValues?: Partial<CreateHotelInput>;
@@ -33,6 +34,7 @@ export function HotelForm({
   partialEdit = false,
   hotel,
 }: HotelFormProps) {
+  const toast = useToast();
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
   const criticalLocked = readOnly || partialEdit;
@@ -72,6 +74,7 @@ export function HotelForm({
 
     if (!address) {
       setCepError("CEP não encontrado");
+      toast.error("CEP não encontrado", "Confira o número e tente de novo.");
       return;
     }
 
@@ -81,7 +84,12 @@ export function HotelForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form
+      onSubmit={handleSubmit(onSubmit, () => {
+        toast.error("Não foi possível salvar o hotel", "Revise os campos destacados.");
+      })}
+      className="space-y-8"
+    >
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Dados do hotel</h2>
 

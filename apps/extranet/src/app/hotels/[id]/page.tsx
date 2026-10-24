@@ -19,10 +19,12 @@ import { PageShell } from "@/components/layout/page-shell";
 import { Alert } from "@/components/ui/alert";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { useToast } from "@/components/ui/toaster";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 
 export default function HotelDetailPage() {
+  const toast = useToast();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -60,12 +62,22 @@ export default function HotelDetailPage() {
       });
       await reload();
       await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setSaveError(err.message);
+      const ready = hotel.roomCount > 0 && hotel.imageCount > 0 && hotel.hasPrimaryImage;
+      if (hotel.status === "DRAFT" || hotel.status === "REJECTED") {
+        toast.success(
+          "Rascunho salvo",
+          ready
+            ? "Para publicar, envie para revisão na aba Fotos."
+            : "Falta um quarto ou a foto principal para enviar o hotel.",
+        );
       } else {
-        setSaveError("Não foi possível salvar as alterações.");
+        toast.success("Alterações salvas");
       }
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : "Não foi possível salvar as alterações.";
+      setSaveError(message);
+      toast.error("Não foi possível salvar", message);
     }
   }
 
@@ -78,11 +90,12 @@ export default function HotelDetailPage() {
     try {
       await apiFetch(`/extranet/hotels/${hotel.id}`, { method: "DELETE", token });
       await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
+      toast.success("Hotel excluído");
       router.push("/hotels");
     } catch (err) {
-      if (err instanceof ApiError) {
-        setSaveError(err.message);
-      }
+      const message = err instanceof ApiError ? err.message : "Não foi possível excluir o hotel.";
+      setSaveError(message);
+      toast.error("Não foi possível excluir", message);
       setDeleting(false);
     }
   }
@@ -115,6 +128,7 @@ export default function HotelDetailPage() {
         activeTab="dados"
         roomCount={hotel.roomCount}
         imageCount={hotel.imageCount}
+        hasPrimaryImage={hotel.hasPrimaryImage}
       />
       <HotelSetupChecklist hotel={hotel} />
 

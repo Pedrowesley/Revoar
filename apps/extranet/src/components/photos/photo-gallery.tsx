@@ -1,12 +1,41 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Star, Trash2, Upload } from "lucide-react";
+import { Building2, Star, Trash2, Upload } from "lucide-react";
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@revoar/shared";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import { ACCEPTED_IMAGE_TYPES, HotelImageDetail, MAX_IMAGE_SIZE_MB, PresignResponse } from "@/lib/image";
+import {
+  ACCEPTED_IMAGE_TYPES,
+  HotelImageDetail,
+  MAX_IMAGE_SIZE_MB,
+  PresignResponse,
+  resolveMediaUrl,
+} from "@/lib/image";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toaster";
+
+function HotelPhoto({ image }: { image: HotelImageDetail }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div className="flex h-full w-full items-center justify-center" aria-hidden>
+        <Building2 className="h-10 w-10 text-muted-foreground/60" />
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={resolveMediaUrl(image.url)}
+      alt={image.altText ?? "Foto do hotel"}
+      className="h-full w-full object-cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 type PhotoGalleryProps = {
   hotelId: string;
@@ -16,6 +45,7 @@ type PhotoGalleryProps = {
 };
 
 export function PhotoGallery({ hotelId, images, readOnly, onChange }: PhotoGalleryProps) {
+  const toast = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,12 +57,16 @@ export function PhotoGallery({ hotelId, images, readOnly, onChange }: PhotoGalle
     setError(null);
 
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type as (typeof ACCEPTED_IMAGE_TYPES)[number])) {
-      setError("Formato inválido. Use JPG, PNG ou WebP.");
+      const message = "Formato inválido. Use JPG, PNG ou WebP.";
+      setError(message);
+      toast.error("Foto não enviada", message);
       return;
     }
 
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      setError("Arquivo deve ter no máximo 5MB.");
+      const message = "Arquivo deve ter no máximo 5MB.";
+      setError(message);
+      toast.error("Foto não enviada", message);
       return;
     }
 
@@ -76,12 +110,17 @@ export function PhotoGallery({ hotelId, images, readOnly, onChange }: PhotoGalle
       });
 
       onChange();
+      toast.success(
+        images.length === 0 ? "Foto principal enviada" : "Foto enviada",
+        images.length === 0 ? "Ela já é a capa do hotel." : undefined,
+      );
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Não foi possível enviar a foto. Tente novamente.");
-      }
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : "Não foi possível enviar a foto. Tente novamente.";
+      setError(message);
+      toast.error("Foto não enviada", message);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -98,8 +137,11 @@ export function PhotoGallery({ hotelId, images, readOnly, onChange }: PhotoGalle
         token,
       });
       onChange();
+      toast.success("Foto principal definida", "O hotel já pode ser enviado para revisão.");
     } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
+      const message = err instanceof ApiError ? err.message : "Não foi possível definir a capa.";
+      setError(message);
+      toast.error("Não foi possível definir a capa", message);
     }
   }
 
@@ -114,8 +156,11 @@ export function PhotoGallery({ hotelId, images, readOnly, onChange }: PhotoGalle
         token,
       });
       onChange();
+      toast.success("Foto excluída");
     } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
+      const message = err instanceof ApiError ? err.message : "Não foi possível excluir a foto.";
+      setError(message);
+      toast.error("Não foi possível excluir a foto", message);
     }
   }
 
@@ -163,12 +208,7 @@ export function PhotoGallery({ hotelId, images, readOnly, onChange }: PhotoGalle
               className="overflow-hidden rounded-xl border border-border"
             >
               <div className="relative aspect-video bg-muted">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={image.url}
-                  alt={image.altText ?? "Foto do hotel"}
-                  className="h-full w-full object-cover"
-                />
+                <HotelPhoto image={image} />
                 {image.isPrimary && (
                   <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
                     Principal

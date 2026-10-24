@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { FieldError, Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/toaster";
 
 type RoomFormProps = {
   defaultValues?: Partial<RoomTypeInput>;
@@ -28,6 +29,7 @@ export function RoomForm({
   submitLabel,
   readOnly = false,
 }: RoomFormProps) {
+  const toast = useToast();
   const {
     register,
     handleSubmit,
@@ -60,7 +62,12 @@ export function RoomForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form
+      onSubmit={handleSubmit(onSubmit, () => {
+        toast.error("Não foi possível salvar o quarto", "Revise os campos destacados.");
+      })}
+      className="space-y-6"
+    >
       <div>
         <Label htmlFor="name">Nome do quarto *</Label>
         <Input id="name" disabled={readOnly} placeholder="Suíte Deluxe Vista Mar" {...register("name")} />

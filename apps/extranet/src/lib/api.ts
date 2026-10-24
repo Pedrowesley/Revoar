@@ -1,3 +1,5 @@
+import { expireSession } from "./auth";
+
 const CONFIGURED_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 
 /** Keep loopback hostname aligned with the tab (localhost vs 127.0.0.1). */
@@ -43,6 +45,9 @@ export async function apiFetch<T>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    if (response.status === 401 && token) {
+      expireSession();
+    }
     const message =
       typeof data.message === "string"
         ? data.message

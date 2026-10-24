@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { AppHeader } from "@/components/layout/app-header";
+import { SessionGate } from "@/components/layout/session-gate";
 import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${plusJakarta.variable} min-h-screen font-sans antialiased`}>
         <QueryProvider>
           <AppHeader />
-          <main>{children}</main>
+          <SessionGate>
+            <main>{children}</main>
+          </SessionGate>
         </QueryProvider>
       </body>
     </html>

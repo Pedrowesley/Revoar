@@ -19,10 +19,12 @@ import { PageShell } from "@/components/layout/page-shell";
 import { Alert } from "@/components/ui/alert";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { useToast } from "@/components/ui/toaster";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 
 export default function NewRoomPage() {
+  const toast = useToast();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -47,13 +49,12 @@ export default function NewRoomPage() {
       await queryClient.invalidateQueries({ queryKey: extranetKeys.rooms(params.id) });
       await queryClient.invalidateQueries({ queryKey: extranetKeys.hotel(params.id) });
       await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
+      toast.success("Quarto criado");
       router.push(`/hotels/${params.id}/rooms/${room.id}`);
     } catch (err) {
-      if (err instanceof ApiError) {
-        setSaveError(err.message);
-      } else {
-        setSaveError("Não foi possível criar o quarto.");
-      }
+      const message = err instanceof ApiError ? err.message : "Não foi possível criar o quarto.";
+      setSaveError(message);
+      toast.error("Não foi possível criar o quarto", message);
     }
   }
 

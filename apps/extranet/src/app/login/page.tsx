@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { partnerLoginSchema, PartnerLoginInput } from "@revoar/shared";
 import { apiFetch, AuthResponse, ApiError } from "@/lib/api";
 import { saveToken } from "@/lib/auth";
+import { extranetKeys } from "@/lib/query-keys";
 import { PageShell } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +18,7 @@ import { Surface } from "@/components/ui/surface";
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -34,6 +37,7 @@ export default function LoginPage() {
         body: JSON.stringify(data),
       });
       saveToken(response.accessToken);
+      queryClient.removeQueries({ queryKey: extranetKeys.me });
       router.push("/dashboard");
     } catch (error) {
       if (error instanceof ApiError) {

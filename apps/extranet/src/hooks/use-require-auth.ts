@@ -1,17 +1,27 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken } from "@/lib/auth";
+import { AUTH_CHANGE_EVENT, getToken } from "@/lib/auth";
 
 export function useRequireAuth(): string | null {
   const router = useRouter();
-  const token = typeof window !== "undefined" ? getToken() : null;
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-    }
+    const sync = () => {
+      const current = getToken();
+      setToken(current);
+      if (!current) router.replace("/login");
+    };
+
+    sync();
+    window.addEventListener(AUTH_CHANGE_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
   }, [router]);
 
   return token;
