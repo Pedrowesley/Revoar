@@ -96,11 +96,14 @@ export class S3Service implements OnModuleInit {
       .filter((value): value is string => Boolean(value))
       .map((value) => value.replace(/\/$/, ""));
 
-    if (fromEnv.length === 0) {
-      return ["http://localhost:3000", "http://localhost:3001"];
-    }
+    const loopback = [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
+    ];
 
-    return [...new Set(fromEnv)];
+    return [...new Set([...loopback, ...fromEnv])];
   }
 
   private async ensureBucketCors() {

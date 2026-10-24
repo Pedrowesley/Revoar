@@ -4,9 +4,8 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { RevoarEvent } from "@revoar/shared";
 import { getToken } from "@/lib/auth";
+import { getApiUrl } from "@/lib/api";
 import { extranetKeys } from "@/lib/query-keys";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 
 function parseSseChunk(chunk: string): RevoarEvent[] {
   const events: RevoarEvent[] = [];
@@ -28,7 +27,7 @@ async function consumePartnerEventStream(
   onEvent: (event: RevoarEvent) => void,
   signal: AbortSignal,
 ) {
-  const response = await fetch(`${API_URL}/extranet/notifications/stream`, {
+  const response = await fetch(`${getApiUrl()}/extranet/notifications/stream`, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "text/event-stream",

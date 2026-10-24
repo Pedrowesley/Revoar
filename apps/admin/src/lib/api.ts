@@ -1,4 +1,19 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
+const CONFIGURED_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
+
+/** Keep loopback hostname aligned with the tab (localhost vs 127.0.0.1). */
+export function getApiUrl(): string {
+  if (typeof window === "undefined") return CONFIGURED_API_URL;
+  try {
+    const url = new URL(CONFIGURED_API_URL);
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      url.hostname = host;
+    }
+    return url.origin;
+  } catch {
+    return CONFIGURED_API_URL;
+  }
+}
 
 export class ApiError extends Error {
   constructor(
@@ -16,7 +31,7 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const { token, headers, ...rest } = options;
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${getApiUrl()}${path}`, {
     ...rest,
     headers: {
       "Content-Type": "application/json",

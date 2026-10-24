@@ -1,7 +1,7 @@
 # Tasks — Extranet Cadastro Parceiros (Release 0.0)
 
 **Estimativa original:** 6–8 semanas  
-**Status:** ✅ Fases 0–6 concluídas (Jun/2026)  
+**Status:** ✅ Fases 0–6 concluídas (Jun/2026) · **Fase 7** em `.specs/features/sync-tempo-real/tasks.md`  
 **Validação:** `validation.md` · **Entrega:** `../../../RELEASE-0.0.md`
 
 ---
@@ -89,8 +89,12 @@
 ## Dependências
 
 ```
-T0.* → T1.* → T2.* → T3.* → T4.* → T5.* → T6.*
+T0.* → T1.* → T2.* → T3.* → T4.* → T5.* → T6.* → T7.* (sync-tempo-real)
 ```
+
+## Fase 7 — Sync sem F5 ✅ (feature separada)
+
+Tarefas T7.1–T7.18 e débitos T7.19–T7.21: [`.specs/features/sync-tempo-real/tasks.md`](../sync-tempo-real/tasks.md).
 
 ---
 

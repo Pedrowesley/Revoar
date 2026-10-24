@@ -2,9 +2,10 @@
 
 **Feature ID:** `extranet-cadastro-parceiros`  
 **Scope:** Large  
-**Status:** Implemented (Release 0.0 — Jun/2026)  
+**Status:** Implemented (Release 0.0 — Jun/2026) · **Addendum:** Fase 7 sync (Jul/2026)  
 **Versão:** 2.0 — Extranet + quartos P1  
-**Validação:** `.specs/features/admin-cadastro-parceiros/validation.md`
+**Validação:** `.specs/features/admin-cadastro-parceiros/validation.md`  
+**Sync UI (sem F5):** `.specs/features/sync-tempo-real/spec.md`
 
 ---
 
@@ -199,3 +200,7 @@ A Revoar precisa de **inventário próprio** (hotéis direct) antes de abrir ao 
 ## Fora do escopo desta entrega (documentado em RELEASE-0.0.md)
 
 - Deploy staging público, ≥ 10 hotéis piloto, e-mail produção (Resend), reset senha, fotos de quarto
+
+## Addendum — Fase 7 (Jul/2026)
+
+A aprovação/rejeição/submit **não exige mais F5** na outra UI. Requisitos e evidências: feature `sync-tempo-real` (SYNC-UI-01 … SYNC-INV-01). Isto não altera os ACs desta spec — só o transporte de atualização.

@@ -40,19 +40,18 @@ Admin aprova → ACTIVE (visível Release 0.1)
 
 | Camada | Tecnologia |
 |--------|------------|
-| Extranet UI | Next.js 15 + Tailwind 4 + primitives estilo shadcn |
-| Admin UI | Next.js 15 + Tailwind 4 (mesmo design system) |
-| Data fetching | TanStack Query — polling + invalidação (AD-009); sem WebSockets |
-| Tipografia | Plus Jakarta Sans |
+| Extranet UI | Next.js 15 + shadcn/ui + Tailwind |
+| Admin UI | Next.js 15 + shadcn/ui (mesmo design system) |
 | API | NestJS + Prisma |
 | Banco | PostgreSQL 16 |
 | Auth parceiro | JWT (PartnerUser) |
 | Auth admin | JWT (AdminUser) — issuer/audience separados |
 | Validação | Zod + React Hook Form |
+| Cache UI / sync | TanStack Query v5 + SSE (`sync-tempo-real`) |
 | CEP | ViaCEP API |
 | CNPJ | cpf-cnpj-validator |
-| Fotos | S3 presigned URL |
-| Monorepo | Turborepo + **npm** workspaces |
+| Fotos | S3 presigned URL (+ CORS auto no boot da API) |
+| Monorepo | Turborepo + **npm** (não pnpm) |
 | Testes | Playwright E2E (Vitest não implementado) |
 
 ---
@@ -197,7 +196,8 @@ enum ActorType {
 |--------|-------|-----------|
 | POST | `/extranet/auth/signup` | Cadastro parceiro + user |
 | POST | `/extranet/auth/login` | Login |
-| GET | `/extranet/me` | Perfil parceiro |
+| GET | `/extranet/auth/me` | Perfil parceiro |
+| GET | `/extranet/notifications/stream` | SSE eventos do parceiro (Fase 7) |
 | GET | `/extranet/hotels` | Meus hotéis |
 | POST | `/extranet/hotels` | Criar hotel |
 | GET | `/extranet/hotels/:id` | Detalhe |
@@ -215,6 +215,8 @@ enum ActorType {
 | Method | Route | Descrição |
 |--------|-------|-----------|
 | POST | `/admin/auth/login` | Login operador |
+| GET | `/admin/stats` | Contadores pendentes (Fase 7) |
+| GET | `/admin/notifications/stream` | SSE moderação (Fase 7) |
 | GET | `/admin/partners/pending` | Fila parceiros PENDING |
 | PATCH | `/admin/partners/:id/approve` | → ACTIVE |
 | PATCH | `/admin/partners/:id/suspend` | → SUSPENDED |
@@ -227,19 +229,14 @@ enum ActorType {
 ## Extranet UI — Páginas
 
 ```
-/signup                      Cadastro parceiro (CNPJ)
+/signup                    Cadastro parceiro (CNPJ)
 /login
-/dashboard                   Resumo + atalhos (poll 30s se PENDING)
-/hotels                      Meus hotéis (TanStack Query)
-/hotels/new                  Form hotel
-/hotels/[id]                 Dados (+ steps nav + checklist progresso)
-/hotels/[id]/rooms           Lista quartos
+/dashboard                 Resumo + atalhos
+/hotels                      Meus hotéis
+/hotels/new                  Wizard hotel
+/hotels/[id]                 Tabs: Dados | Quartos | Fotos | Status
 /hotels/[id]/rooms/new       Form quarto completo
-/hotels/[id]/rooms/[roomId]  Editar quarto
-/hotels/[id]/photos          Galeria + enviar para revisão
 ```
-
-Shell: `AppHeader` autenticado (Painel · Hotéis · Sair), `PageShell`/`PageHeader`/`Surface`/`Skeleton`.
 
 ### Formulário quarto (campos obrigatórios para viajante)
 
@@ -259,14 +256,12 @@ Shell: `AppHeader` autenticado (Painel · Hotéis · Sair), `PageShell`/`PageHea
 ## Admin UI — Páginas
 
 ```
-/login                     Login admin
-/dashboard                 Contadores + atalhos (poll 15s)
-/partners/pending          Aprovar parceiros (poll 15s)
-/hotels/pending            Aprovar hotéis (poll 15s)
-/hotels/[id]               Preview + aprovar/rejeitar (poll 15s se IN_REVIEW)
+/admin/login
+/admin/dashboard           Fila aprovações (P2)
+/admin/partners/pending    Aprovar parceiros
+/admin/hotels/pending      Aprovar hotéis
+/admin/hotels/[id]         Preview + aprovar/rejeitar
 ```
-
-Filas e preview usam TanStack Query: atualizam sem F5 quando outro admin age ou um parceiro envia hotel.
 
 ---
 
@@ -300,3 +295,4 @@ Admin `IN_REVIEW → ACTIVE` quando checklist visual OK.
 | Múltiplos PartnerUser | P2 |
 | Fotos de quarto | P2 |
 | Tarifas/disponibilidade | Release 0.5 |
+| Sync UI (Fase 7) | TanStack Query + SSE — ver `.specs/features/sync-tempo-real/design.md` |
