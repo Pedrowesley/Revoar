@@ -164,7 +164,7 @@ export function GuestPreview() {
     <section className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:py-16 lg:grid-cols-5 lg:items-center">
       <div className="lg:col-span-2">
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">Para o hóspede</p>
-        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-balance text-foreground sm:text-4xl">
           Veja o que o hóspede vai encontrar
         </h2>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">

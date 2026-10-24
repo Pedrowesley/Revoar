@@ -122,12 +122,12 @@ A rota `/` da extranet é um bloco curto que só fala com quem já decidiu cadas
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| LAND-01 | P1: Headline e linha de processo | Tasks | Pending |
-| LAND-02 | P1: CTAs do visitante | Tasks | Pending |
-| LAND-03 | P1: CTA com sessão | Tasks | Pending |
-| LAND-04 | P1: Porta do hóspede desabilitada | Tasks | Pending |
-| LAND-05 | P1: Prévia com abas | Tasks | Pending |
-| LAND-06 | P1: Passos, grade e sem admin | Tasks | Pending |
+| LAND-01 | P1: Headline e linha de processo | Execute | Implemented |
+| LAND-02 | P1: CTAs do visitante | Execute | Implemented |
+| LAND-03 | P1: CTA com sessão | Execute | Implemented |
+| LAND-04 | P1: Porta do hóspede desabilitada | Execute | Implemented |
+| LAND-05 | P1: Prévia com abas | Execute | Implemented |
+| LAND-06 | P1: Passos, grade e sem admin | Execute | Implemented |
 
 **Coverage:** 6 total, 6 mapped to tasks, 0 unmapped.
 

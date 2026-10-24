@@ -1,5 +1,6 @@
 import {
   BedDouble,
+  CircleCheck,
   CreditCard,
   ListChecks,
   MessageSquareText,
@@ -26,6 +27,8 @@ const STEPS = [
     text: "A equipe Revoar confere e publica. Se algo faltar, você recebe o motivo.",
   },
 ];
+
+const CHECKLIST = ["Dados do hotel", "Endereço e políticas", "Quartos", "Foto de capa"];
 
 const LIVE = [
   {
@@ -67,7 +70,7 @@ export function LandingSections() {
     <>
       <section className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">Como funciona</p>
-        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-balance text-foreground sm:text-4xl">
           Três passos até o hotel no ar
         </h2>
         <ol className="mt-8 grid gap-4 md:grid-cols-3">
@@ -89,7 +92,7 @@ export function LandingSections() {
         <p className="text-xs font-semibold uppercase tracking-widest text-primary">A plataforma</p>
         <h2
           id="capabilities-title"
-          className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl"
+          className="mt-3 text-3xl font-extrabold tracking-tight text-balance text-foreground sm:text-4xl"
         >
           O que já funciona e o que vem
         </h2>
@@ -114,6 +117,22 @@ export function LandingSections() {
               >
                 <Icon className="size-5" aria-hidden />
               </span>
+              {featured ? (
+                <ul className="mt-6 space-y-2">
+                  {CHECKLIST.map((item, index) => (
+                    <li
+                      key={item}
+                      className="flex items-center gap-3 rounded-xl bg-primary-foreground/10 px-3 py-2 text-sm font-medium transition-colors hover:bg-primary-foreground/20"
+                    >
+                      <CircleCheck
+                        className={cn("size-4", index < 3 ? "opacity-100" : "opacity-40")}
+                        aria-hidden
+                      />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               <div className="mt-6">
                 <h3 className={cn("font-bold", featured ? "text-2xl sm:text-3xl" : "text-lg text-foreground")}>
                   {title}
@@ -151,7 +170,7 @@ export function LandingSections() {
       <section className="mx-auto max-w-6xl px-4 pt-6 pb-16 sm:pb-24">
         <Surface className="flex flex-col items-start gap-6 p-6 sm:p-10 md:flex-row md:items-center md:justify-between">
           <div className="max-w-xl">
-            <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+            <h2 className="text-2xl font-extrabold tracking-tight text-balance text-foreground sm:text-3xl">
               Deixe o hotel pronto antes do hóspede chegar
             </h2>
             <p className="mt-2 text-muted-foreground">

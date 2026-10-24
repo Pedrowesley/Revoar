@@ -10,7 +10,7 @@ export function LandingHero() {
 
       <h1 className="mt-6 max-w-4xl text-4xl font-extrabold tracking-tight text-balance text-foreground sm:text-6xl lg:text-7xl">
         Publique seu hotel.{" "}
-        <span className="text-primary">O hóspede vai reservar aqui.</span>
+        <span className="text-primary sm:block">O hóspede vai reservar aqui.</span>
       </h1>
 
       <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">

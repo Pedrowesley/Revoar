@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/landing-publica/design.md`  
-**Status**: In Progress
+**Status**: Done
 
 ---
 
@@ -153,9 +153,9 @@ T1 → T2 → T3 → T4 → T5
 
 **Done when**:
 
-- [ ] `e2e/landing.spec.ts` cobre cada AC da spec
-- [ ] Full gate passa
-- [ ] Conferido no browser em 390px e desktop
+- [x] `e2e/landing.spec.ts` cobre cada AC da spec
+- [x] Full gate passa (9 testes)
+- [x] Conferido no browser em 390px e desktop
 
 **Tests**: e2e
 **Gate**: full
