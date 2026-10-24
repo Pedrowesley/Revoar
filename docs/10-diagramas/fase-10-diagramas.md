@@ -574,6 +574,7 @@ flowchart LR
 | Integrações | Fase 7 | Adapters ✓ |
 | Deployment | Fase 5 §6 | Multi-AZ ✓ |
 | Roadmap Gantt | Fase 9 | Releases ✓ |
+| Monorepo + sync 0.0 | Addendum Jul/2026 | Código atual ✓ |
 
 ---
 
@@ -613,3 +614,53 @@ O sistema Revoar está **completamente definido em nível de engenharia** para i
 ---
 
 *Documento final do Master Plan Revoar.*
+
+---
+
+## Addendum de implementação — Release 0.0 (Jul/2026)
+
+Diagrama do que **está no código hoje** (não substitui os C4-alvo acima).
+
+### A. Monorepo atual
+
+```mermaid
+flowchart LR
+    EXT[apps/extranet :3000]
+    ADM[apps/admin :3001]
+    API[apps/api :3002]
+    DB[(PostgreSQL 16)]
+    S3[LocalStack S3 :4566]
+    SH[@revoar/shared]
+    PR[@revoar/database]
+
+    EXT -->|REST + SSE JWT| API
+    ADM -->|REST + SSE JWT| API
+    API --> PR --> DB
+    API --> S3
+    EXT --> SH
+    ADM --> SH
+    API --> SH
+```
+
+### B. Sync sem F5 (Fase 7)
+
+```mermaid
+sequenceDiagram
+    participant P as Extranet
+    participant API as NestJS
+    participant Bus as EventBusService
+    participant A as Admin
+
+    P->>API: GET /extranet/notifications/stream
+    A->>API: GET /admin/notifications/stream
+    P->>API: POST /extranet/hotels/:id/submit
+    API->>Bus: hotel.submitted
+    Bus-->>A: SSE
+    Note over A: invalidateQueries filas + stats
+    A->>API: PATCH /admin/hotels/:id/approve
+    API->>Bus: hotel.approved
+    Bus-->>P: SSE canal partnerId
+    Note over P: invalidateQueries hotel + lista
+```
+
+Spec: `.specs/features/sync-tempo-real/design.md`.

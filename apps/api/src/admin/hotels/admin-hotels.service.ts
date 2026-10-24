@@ -7,6 +7,7 @@ import { ActorType, HotelStatus } from "@revoar/database";
 import { RejectHotelInput } from "@revoar/shared";
 import { HotelStatusHistoryService } from "../../common/hotel-status-history.service";
 import { NotificationsService } from "../../notifications/notifications.service";
+import { EventBusService } from "../../events/event-bus.service";
 import { PrismaService } from "../../prisma/prisma.service";
 
 @Injectable()
@@ -15,6 +16,7 @@ export class AdminHotelsService {
     private readonly prisma: PrismaService,
     private readonly statusHistory: HotelStatusHistoryService,
     private readonly notifications: NotificationsService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async listPending() {
@@ -129,6 +131,17 @@ export class AdminHotelsService {
 
     await this.notifications.sendHotelApproved(updated.partner.email, updated.name);
 
+    this.eventBus.emitToPartner(updated.partnerId, {
+      type: "hotel.approved",
+      hotelId,
+      partnerId: updated.partnerId,
+    });
+    this.eventBus.emitToAdmins({
+      type: "hotel.approved",
+      hotelId,
+      partnerId: updated.partnerId,
+    });
+
     return {
       id: updated.id,
       name: updated.name,
@@ -164,6 +177,20 @@ export class AdminHotelsService {
       updated.name,
       input.reason.trim(),
     );
+
+    const reason = input.reason.trim();
+    this.eventBus.emitToPartner(updated.partnerId, {
+      type: "hotel.rejected",
+      hotelId,
+      partnerId: updated.partnerId,
+      reason,
+    });
+    this.eventBus.emitToAdmins({
+      type: "hotel.rejected",
+      hotelId,
+      partnerId: updated.partnerId,
+      reason,
+    });
 
     return {
       id: updated.id,

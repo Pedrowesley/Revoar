@@ -1,8 +1,8 @@
 # Release 0.0 — Extranet MVP (Entrega)
 
-**Data:** Junho/2026 (UI + data-fetch atualizados Jul/2026)  
-**Feature ID:** `extranet-cadastro-parceiros`  
-**Status:** Código completo (fases 0–6) · UI moderna + TanStack Query · DoD de negócio parcial
+**Data:** Junho/2026 (UI + Query Jul/2026 · SSE/docs Out/2026)  
+**Feature ID:** `extranet-cadastro-parceiros` + `sync-tempo-real`  
+**Status:** Código completo (fases 0–7) · UI moderna + Query + SSE · DoD de negócio parcial
 
 Este documento consolida **o que foi feito**, **o que ficou de fora** e **como retomar o trabalho** — especialmente para agentes Cursor ou desenvolvedores em uma máquina nova.
 
@@ -97,7 +97,8 @@ Próximo — Release 0.1: busca pública read-only
 - Design system alinhado: primary `#0E7490`, accent `#EA580C`, tipografia **Plus Jakarta Sans**, fundo atmosférico, shadows suaves
 - Componentes de layout: `AppHeader`, `PageShell`, `PageHeader`, `Surface`, `Alert`, `EmptyState`, `Skeleton`
 - Nav do hotel em steps + `HotelSetupChecklist` (progresso Dados → Quartos → Fotos)
-- **TanStack Query (AD-009):** `QueryClientProvider` nas duas apps; polling 15s nas filas admin; poll 30s condicional no status do parceiro/hotel; invalidação pós-mutação; sem WebSockets
+- **TanStack Query (AD-009):** polling 15s nas filas admin; poll 30s condicional no parceiro/hotel; invalidação pós-mutação
+- **SSE (Fase 7):** `EventBusService` + `/admin/notifications/stream` e `/extranet/notifications/stream`; spec em `.specs/features/sync-tempo-real/`
 
 ---
 
@@ -177,7 +178,7 @@ Detalhes completos em `.specs/STATE.md` (AD-001 … AD-010).
 | AD-003 | Parceiro = PJ com CNPJ obrigatório |
 | AD-007 | Extranet self-service + aprovação Revoar via admin |
 | AD-008 | Quartos completos no P1 (dados para viajante futuro) |
-| AD-009 | TanStack Query + polling (sem WebSockets nesta fase) |
+| AD-009 | TanStack Query + polling + SSE; WebSocket adiado para Release 0.5 |
 | AD-010 | UI shell moderno (header auth, Plus Jakarta Sans, checklist hotel) |
 
 **Roadmap revisado:**

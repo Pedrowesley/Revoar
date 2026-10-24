@@ -13,6 +13,7 @@ import { PageShell } from "@/components/layout/page-shell";
 import { Alert } from "@/components/ui/alert";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { LastUpdated } from "@/components/last-updated";
 
 const STATUS_LABELS = {
   PENDING: { label: "Aguardando aprovação", color: "bg-warning-soft text-warning" },
@@ -62,6 +63,7 @@ export default function DashboardPage() {
         eyebrow="Painel do parceiro"
         title={`Olá, ${profile.name}`}
         description={profile.partner.legalName}
+        actions={<LastUpdated updatedAt={profileQuery.dataUpdatedAt} />}
       />
 
       <div

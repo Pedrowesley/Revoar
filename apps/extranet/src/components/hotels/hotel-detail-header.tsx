@@ -5,14 +5,16 @@ import { HOTEL_STATUS_LABELS, HotelStatus } from "@/lib/hotel.const";
 import { HotelStatusBadge } from "@/components/hotels/hotel-status-badge";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { LastUpdated } from "@/components/last-updated";
 
 type HotelDetailHeaderProps = {
   hotel: HotelDetail;
   onDelete?: () => void;
   deleting?: boolean;
+  updatedAt?: number;
 };
 
-export function HotelDetailHeader({ hotel, onDelete, deleting }: HotelDetailHeaderProps) {
+export function HotelDetailHeader({ hotel, onDelete, deleting, updatedAt }: HotelDetailHeaderProps) {
   const fullyLocked = !(["DRAFT", "REJECTED", "IN_REVIEW"] as HotelStatus[]).includes(hotel.status);
 
   return (
@@ -28,8 +30,9 @@ export function HotelDetailHeader({ hotel, onDelete, deleting }: HotelDetailHead
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{hotel.name}</h1>
-          <div className="mt-3">
+          <div className="mt-3 flex flex-wrap items-center gap-3">
             <HotelStatusBadge status={hotel.status} />
+            <LastUpdated updatedAt={updatedAt} />
           </div>
         </div>
         {hotel.status === "DRAFT" && onDelete && (

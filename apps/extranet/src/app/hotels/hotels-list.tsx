@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
 import { cn } from "@/lib/utils";
+import { LastUpdated } from "@/components/last-updated";
 
 export default function HotelsList() {
   const router = useRouter();
@@ -67,12 +68,15 @@ export default function HotelsList() {
         title="Meus hotéis"
         description="Gerencie suas propriedades cadastradas"
         actions={
-          <Link href="/hotels/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo hotel
-            </Button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <LastUpdated updatedAt={hotelsQuery.dataUpdatedAt} />
+            <Link href="/hotels/new">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo hotel
+              </Button>
+            </Link>
+          </div>
         }
       />
 

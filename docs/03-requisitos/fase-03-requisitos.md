@@ -288,3 +288,26 @@
 ---
 
 *Base para Fase 4 — Experiência do Usuário.*
+
+---
+
+## Addendum de implementação — Release 0.0 (Jul/2026)
+
+O Master Plan acima descreve a jornada do **viajante** (busca → reserva). O código atual entrega a **extranet + admin** (Release 0.0) e já adiantou a fundação de RF-028.
+
+| ID Master Plan | O que o código já tem | O que ainda falta |
+|----------------|-----------------------|-------------------|
+| RF-028 | Polling + SSE + `EventBusService` + contrato `RevoarEvent` | Usar o mesmo padrão na confirmação de reserva (Release 0.5) |
+| RF-034 | E-mail stub (`NotificationsService` / Resend) no fluxo de cadastro | WhatsApp, lembrete D-1, review |
+| RF-042 | — | Reset de senha (P2 da 0.0) |
+
+Requisitos **novos** (não estavam na tabela original; nascem da extranet AD-007 + AD-009):
+
+| ID | Requisito | Prioridade | Status no código |
+|----|-----------|------------|------------------|
+| RF-060 | Extranet: cadastro parceiro PJ + hotel + quartos + fotos + submit | P0 (0.0) | ✅ `extranet-cadastro-parceiros` |
+| RF-061 | Admin: aprovar/rejeitar parceiro e hotel com histórico | P0 (0.0) | ✅ |
+| RF-062 | UIs de moderação atualizam sem F5 (TanStack Query + SSE) | P1 (0.0 Fase 7) | ✅ `sync-tempo-real` |
+
+Rastreio técnico: `.specs/features/sync-tempo-real/spec.md` (SYNC-*).  
+Isto **não substitui** RF-028 — só reutiliza o mecanismo.

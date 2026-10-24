@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { LastUpdated } from "@/components/last-updated";
 
 type PendingPartner = {
   id: string;
@@ -48,6 +49,7 @@ export default function PendingPartnersPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: adminKeys.pendingPartners });
       await queryClient.invalidateQueries({ queryKey: adminKeys.pendingHotels });
+      await queryClient.invalidateQueries({ queryKey: adminKeys.stats });
     },
   });
 
@@ -78,6 +80,7 @@ export default function PendingPartnersPage() {
       <PageHeader
         title="Parceiros pendentes"
         description="Analise e aprove contas de parceiros hoteleiros. A lista atualiza sozinha."
+        actions={<LastUpdated updatedAt={partnersQuery.dataUpdatedAt} />}
       />
 
       {error && (

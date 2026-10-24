@@ -13,6 +13,7 @@ import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { LastUpdated } from "@/components/last-updated";
 
 type PendingHotel = {
   id: string;
@@ -58,6 +59,7 @@ export default function PendingHotelsPage() {
       <PageHeader
         title="Hotéis em revisão"
         description="Revise o inventário enviado pelos parceiros. A fila atualiza sozinha."
+        actions={<LastUpdated updatedAt={hotelsQuery.dataUpdatedAt} />}
       />
 
       {error && (

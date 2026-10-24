@@ -6,12 +6,14 @@ import {
 import { PartnerStatus } from "@revoar/database";
 import { PrismaService } from "../../prisma/prisma.service";
 import { NotificationsService } from "../../notifications/notifications.service";
+import { EventBusService } from "../../events/event-bus.service";
 
 @Injectable()
 export class AdminPartnersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async listPending() {
@@ -46,6 +48,9 @@ export class AdminPartnersService {
     });
 
     await this.notifications.sendPartnerApproved(updated.email, updated.legalName);
+
+    this.eventBus.emitToPartner(partnerId, { type: "partner.approved", partnerId });
+    this.eventBus.emitToAdmins({ type: "partner.approved", partnerId });
 
     return {
       id: updated.id,

@@ -313,3 +313,27 @@ Apps → OpenTelemetry Collector → Tempo (traces) + Prometheus (metrics) + Lok
 ---
 
 *Base para Fase 6 — Modelagem de Dados.*
+
+---
+
+## Addendum de implementação — Release 0.0 (Jul/2026)
+
+O desenho acima é o **alvo** (microservices em EKS). O que está no disco hoje é o **monólito pragmático** da AD-002:
+
+```
+apps/extranet  (Next.js :3000)  ─┐
+apps/admin     (Next.js :3001)  ─┼─► apps/api (NestJS :3002)
+                                 │      ├─ REST (Prisma / PostgreSQL)
+                                 │      ├─ S3 presign (LocalStack / AWS)
+                                 │      └─ EventBusService (EventEmitter → SSE)
+                                 └─ packages/shared + packages/database
+```
+
+| Conceito do Master Plan | Implementação atual | Quando extrair |
+|-------------------------|---------------------|----------------|
+| notification-service | `NotificationsService` (e-mail) + `EventBusService` (SSE in-app) | Release 0.5+ |
+| Event-driven async | `RevoarEvent` in-process | Redis Pub/Sub quando API >1 instância |
+| Web App Next.js | Dois apps: extranet (parceiro) e (futuro) site público | Release 0.1 = site viajante |
+| Backoffice Admin | `apps/admin` — só moderação de cadastro | RF-051 (reservas) ainda não |
+
+**Sync UI (AD-009):** TanStack Query + SSE. WebSocket continua reservado para fluxos bidirecionais da Release 0.5. Detalhe: `.specs/features/sync-tempo-real/design.md`.

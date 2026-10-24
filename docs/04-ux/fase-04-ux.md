@@ -306,3 +306,17 @@ Button, Input, Select, Sheet, Dialog, Tabs, Badge, Skeleton, Toast.
 ---
 
 *Base para Fase 5 — Desenho de Sistema.*
+
+---
+
+## Addendum de implementação — Release 0.0 (Out/2026)
+
+O documento acima é UX do **viajante**. A UI no ar hoje é **parceiro + operador**, com shell AD-010 e sync AD-009:
+
+| Superfície | Atualização | Onde o time vê |
+|------------|-------------|----------------|
+| Admin dashboard/filas/detalhe | Poll + SSE + “Atualizado há Xs” | `LastUpdated` |
+| Extranet dashboard (`PENDING`), lista/detalhe `IN_REVIEW` | Idem | `LastUpdated` |
+| Checkout / PIX / voucher | Ainda não existe | Release 0.5 — reutilizar SSE (RF-028) |
+
+Spec: `.specs/features/sync-tempo-real/spec.md`.

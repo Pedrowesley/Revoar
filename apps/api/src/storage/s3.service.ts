@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import {
   CreateBucketCommand,
   HeadBucketCommand,
+  PutBucketCorsCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -39,6 +40,7 @@ export class S3Service implements OnModuleInit {
       : `https://${this.bucket}.s3.${region}.amazonaws.com`;
 
     await this.ensureBucket();
+    await this.ensureBucketCors();
   }
 
   async createPresignedUpload(params: {
@@ -86,6 +88,47 @@ export class S3Service implements OnModuleInit {
         this.logger.warn(`Não foi possível criar bucket S3 (${this.bucket}). Upload pode falhar.`);
         this.logger.warn(error);
       }
+    }
+  }
+
+  private corsOrigins(): string[] {
+    const fromEnv = [this.config.get<string>("EXTRANET_URL"), this.config.get<string>("ADMIN_URL")]
+      .filter((value): value is string => Boolean(value))
+      .map((value) => value.replace(/\/$/, ""));
+
+    if (fromEnv.length === 0) {
+      return ["http://localhost:3000", "http://localhost:3001"];
+    }
+
+    return [...new Set(fromEnv)];
+  }
+
+  private async ensureBucketCors() {
+    const allowedOrigins = this.corsOrigins();
+
+    try {
+      await this.client.send(
+        new PutBucketCorsCommand({
+          Bucket: this.bucket,
+          CORSConfiguration: {
+            CORSRules: [
+              {
+                AllowedHeaders: ["*"],
+                AllowedMethods: ["GET", "PUT", "HEAD"],
+                AllowedOrigins: allowedOrigins,
+                ExposeHeaders: ["ETag"],
+                MaxAgeSeconds: 3000,
+              },
+            ],
+          },
+        }),
+      );
+      this.logger.log(`CORS S3 configurado para: ${allowedOrigins.join(", ")}`);
+    } catch (error) {
+      this.logger.warn(
+        `Não foi possível configurar CORS do bucket S3 (${this.bucket}). Upload via browser pode falhar.`,
+      );
+      this.logger.warn(error);
     }
   }
 }

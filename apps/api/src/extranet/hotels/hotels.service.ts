@@ -14,6 +14,7 @@ import {
 } from "@revoar/shared";
 import { PrismaService } from "../../prisma/prisma.service";
 import { HotelStatusHistoryService } from "../../common/hotel-status-history.service";
+import { EventBusService } from "../../events/event-bus.service";
 
 const EDITABLE_STATUSES: HotelStatus[] = [HotelStatus.DRAFT, HotelStatus.REJECTED];
 
@@ -22,6 +23,7 @@ export class HotelsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly statusHistory: HotelStatusHistoryService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async findAll(partnerId: string, query: HotelListQuery) {
@@ -241,6 +243,12 @@ export class HotelsService {
       toStatus: HotelStatus.IN_REVIEW,
       actorType: ActorType.PARTNER,
       actorId: partnerUserId,
+    });
+
+    this.eventBus.emitToAdmins({
+      type: "hotel.submitted",
+      hotelId,
+      partnerId,
     });
 
     return this.toDetail(updated);

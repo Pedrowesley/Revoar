@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { PartnerAuthController } from "./partner-auth.controller";
 import { PartnerAuthService } from "./partner-auth.service";
 import { PartnerJwtStrategy } from "./partner-jwt.strategy";
+import { PartnerNotificationsController } from "../notifications/partner-notifications.controller";
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { PartnerJwtStrategy } from "./partner-jwt.strategy";
       },
     }),
   ],
-  controllers: [PartnerAuthController],
+  controllers: [PartnerAuthController, PartnerNotificationsController],
   providers: [PartnerAuthService, PartnerJwtStrategy],
   exports: [PartnerAuthService, JwtModule, PassportModule],
 })

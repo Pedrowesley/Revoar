@@ -28,7 +28,7 @@ export default function HotelDetailPage() {
   const queryClient = useQueryClient();
   useRequireAuth();
 
-  const { hotel, loading, error, reload } = useHotel(params.id);
+  const { hotel, loading, error, reload, dataUpdatedAt } = useHotel(params.id);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -104,7 +104,12 @@ export default function HotelDetailPage() {
 
   return (
     <PageShell width="md">
-      <HotelDetailHeader hotel={hotel} onDelete={handleDelete} deleting={deleting} />
+      <HotelDetailHeader
+        hotel={hotel}
+        onDelete={handleDelete}
+        deleting={deleting}
+        updatedAt={dataUpdatedAt}
+      />
       <HotelDetailNav
         hotelId={hotel.id}
         activeTab="dados"

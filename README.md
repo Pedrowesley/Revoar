@@ -8,8 +8,9 @@ Leia nesta ordem antes de implementar qualquer coisa:
 
 1. [`.specs/STATE.md`](./.specs/STATE.md) — decisões, handoff, próximo passo
 2. [`RELEASE-0.0.md`](./RELEASE-0.0.md) — o que foi entregue vs. gaps
-3. [`.specs/features/admin-cadastro-parceiros/spec.md`](./.specs/features/admin-cadastro-parceiros/spec.md) — requisitos
-4. [`DEVELOPMENT.md`](./DEVELOPMENT.md) — setup, API, testes
+3. [`.specs/features/admin-cadastro-parceiros/spec.md`](./.specs/features/admin-cadastro-parceiros/spec.md) — requisitos do cadastro
+4. [`.specs/features/sync-tempo-real/spec.md`](./.specs/features/sync-tempo-real/spec.md) — sync sem F5
+5. [`DEVELOPMENT.md`](./DEVELOPMENT.md) — setup, API, testes, SSE
 
 **Release 0.0 está concluída no código.** Próximo milestone: Release 0.1 (busca pública).
 

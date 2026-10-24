@@ -43,5 +43,6 @@ export function useHotel(hotelId: string) {
     loading: !token || query.isLoading,
     error,
     reload,
+    dataUpdatedAt: query.dataUpdatedAt,
   };
 }

@@ -88,6 +88,7 @@ export default function AdminHotelPreviewPage() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: adminKeys.pendingHotels }),
       queryClient.invalidateQueries({ queryKey: adminKeys.pendingPartners }),
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats }),
       queryClient.invalidateQueries({ queryKey: adminKeys.hotel(params.id) }),
     ]);
   }

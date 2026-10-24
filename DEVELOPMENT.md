@@ -183,8 +183,33 @@ npm run staging:down
 |-----------|------------|
 | `RELEASE-0.0.md` | Entrega consolidada Release 0.0 |
 | `.specs/STATE.md` | Decisões + handoff (leia primeiro) |
-| `.specs/features/admin-cadastro-parceiros/` | Spec, design, tasks, validation |
-| `docs/` | Master Plan (11 fases) |
+| `.specs/features/admin-cadastro-parceiros/` | Spec, design, tasks, validation do cadastro |
+| `.specs/features/sync-tempo-real/` | Spec, design, tasks, validation do sync (Fase 7) |
+| `docs/` | Master Plan (11 fases) + addendums de implementação |
+
+## Sincronização de dados sem F5 (Fase 7)
+
+Spec: `.specs/features/sync-tempo-real/`. Decisão **AD-009**.
+
+Admin e extranet já usam TanStack Query (polling + `refetchOnWindowFocus`). A Fase 7 adiciona **SSE** por cima, sem trocar o REST.
+
+| Camada | Onde |
+|--------|------|
+| QueryProvider + listener SSE | `apps/*/src/components/providers/query-provider.tsx` |
+| Query keys | `apps/*/src/lib/query-keys.ts` |
+| SSE hooks | `apps/*/src/hooks/use-revoar-events.ts` |
+| Eventos | `packages/shared/src/events.ts` + `EventBusService` |
+
+| Endpoint | Auth | Descrição |
+|----------|------|-----------|
+| `GET /admin/stats` | Admin JWT | `{ pendingPartners, pendingHotels }` |
+| `GET /admin/notifications/stream` | Admin JWT | SSE de moderação |
+| `GET /extranet/notifications/stream` | Partner JWT | SSE filtrado por `partnerId` |
+
+Tipos: `partner.approved`, `hotel.submitted`, `hotel.approved`, `hotel.rejected`.  
+O browser usa `fetch` + stream (não `EventSource`, que não envia JWT). Se o SSE cair, reconecta em 3s e o polling continua.
+
+**Produção multi-instância:** `EventBusService` é in-process. Trocar por Redis Pub/Sub quando a API tiver mais de uma instância.
 
 ## UI shell (AD-010)
 

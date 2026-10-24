@@ -12,6 +12,7 @@ import { PageShell } from "@/components/layout/page-shell";
 import { Alert } from "@/components/ui/alert";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { Surface } from "@/components/ui/surface";
+import { LastUpdated } from "@/components/last-updated";
 
 type PendingPartner = { id: string; legalName: string };
 type PendingHotel = { id: string; name: string };
@@ -47,6 +48,7 @@ export default function AdminDashboardPage() {
         eyebrow="Moderação Revoar"
         title="Painel administrativo"
         description="Aprove parceiros e hotéis cadastrados pela extranet."
+        actions={<LastUpdated updatedAt={partnersQuery.dataUpdatedAt} />}
       />
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2">

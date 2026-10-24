@@ -234,3 +234,19 @@ O plano de 24 meses é ambicioso mas bem sequenciado: começamos enxutos, valida
 ---
 
 *Este documento faz parte do Master Plan Revoar. Para detalhes técnicos de cada fase, consulte os documentos de Requisitos, System Design, Modelagem e Integrações.*
+
+---
+
+## Addendum de implementação — o que o código já entrega (Jul/2026)
+
+O plano de 24 meses acima **não muda**. Abaixo, o recorte que o time já tem no repositório — para não misturar visão de sócios com status de engenharia.
+
+| Marco do roadmap | Status no código (2026-07-04) |
+|------------------|-------------------------------|
+| Inventário próprio (parceiro cadastra, Revoar aprova) | ✅ Release 0.0 fases 0–6 |
+| UIs de moderação sem F5 | ✅ Release 0.0 Fase 7 (`sync-tempo-real`) |
+| Busca pública / Hotelbeds sandbox | ❌ Release 0.1 — próximo |
+| Reserva + pagamento | ❌ Release 0.5 |
+| Staging em URL pública + 10 hotéis piloto | ❌ operação / infra |
+
+Handoff técnico: `.specs/STATE.md` · entrega: `RELEASE-0.0.md`.

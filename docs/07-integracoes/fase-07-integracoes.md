@@ -306,3 +306,19 @@ CI/CD roda contract tests contra sandboxes nightly.
 ---
 
 *Base para Fase 8 — Análise de Riscos.*
+
+---
+
+## Addendum de implementação — Release 0.0 (Jul/2026)
+
+Integrações externas no código **hoje** (antes de Hotelbeds / Mercado Pago):
+
+| Destino | Uso atual | Notas |
+|---------|-----------|--------|
+| ViaCEP | Preenchimento de endereço na extranet | Cliente Next.js |
+| LocalStack S3 (`:4566`) | Fotos do hotel (presign) | CORS auto no boot da API |
+| AWS S3 | Mesmo contrato, quando `S3_*` de produção | — |
+| Resend | E-mail de signup/aprovação | Stub no console sem `RESEND_API_KEY` |
+| SSE interno | Sync UI admin ↔ extranet | Não é integração externa; `EventBusService` |
+
+Hotelbeds, Mercado Pago, SendGrid/Twilio do documento acima continuam **Release 0.1 / 0.5**.
