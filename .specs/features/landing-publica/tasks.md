@@ -105,9 +105,9 @@ T1 → T2 → T3 → T4 → T5
 
 **Done when**:
 
-- [ ] `role="tablist"`, `role="tab"` com `aria-selected` e `role="tabpanel"`
-- [ ] Nenhum controle submete ou navega
-- [ ] Build gate passa
+- [x] `role="tablist"`, `role="tab"` com `aria-selected` e `role="tabpanel"`
+- [x] Nenhum controle submete ou navega
+- [x] Build gate passa
 
 **Tests**: none
 **Gate**: build
