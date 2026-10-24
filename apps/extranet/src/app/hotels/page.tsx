@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import HotelsList from "./hotels-list";
+import { PageSkeleton } from "@/components/ui/skeleton";
 
 export default function HotelsPage() {
   return (
-    <Suspense fallback={<div className="mx-auto max-w-4xl px-4 py-16 text-center text-muted-foreground">Carregando...</div>}>
+    <Suspense fallback={<PageSkeleton rows={4} />}>
       <HotelsList />
     </Suspense>
   );

@@ -1,12 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Check } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Check, Users } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
 import { formatCnpj, getToken } from "@/lib/auth";
+import { adminKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { PageHeader } from "@/components/layout/page-header";
+import { PageShell } from "@/components/layout/page-shell";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageSkeleton } from "@/components/ui/skeleton";
+import { Surface } from "@/components/ui/surface";
 
 type PendingPartner = {
   id: string;
@@ -21,73 +28,76 @@ type PendingPartner = {
 };
 
 export default function PendingPartnersPage() {
-  useRequireAuth();
-  const [partners, setPartners] = useState<PendingPartner[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const token = useRequireAuth();
+  const queryClient = useQueryClient();
 
-  const loadPartners = useCallback(async () => {
-    const token = getToken();
-    if (!token) return;
+  const partnersQuery = useQuery({
+    queryKey: adminKeys.pendingPartners,
+    enabled: Boolean(token),
+    refetchInterval: 15_000,
+    queryFn: () =>
+      apiFetch<PendingPartner[]>("/admin/partners/pending", { token: getToken()! }),
+  });
 
-    setLoading(true);
-    setError(null);
+  const approveMutation = useMutation({
+    mutationFn: (partnerId: string) =>
+      apiFetch(`/admin/partners/${partnerId}/approve`, {
+        method: "PATCH",
+        token: getToken()!,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.pendingPartners });
+      await queryClient.invalidateQueries({ queryKey: adminKeys.pendingHotels });
+    },
+  });
 
-    try {
-      const data = await apiFetch<PendingPartner[]>("/admin/partners/pending", { token });
-      setPartners(data);
-    } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  if (!token || partnersQuery.isLoading) return <PageSkeleton rows={3} />;
 
-  useEffect(() => {
-    loadPartners();
-  }, [loadPartners]);
-
-  async function handleApprove(partnerId: string) {
-    const token = getToken();
-    if (!token) return;
-
-    setApprovingId(partnerId);
-    try {
-      await apiFetch(`/admin/partners/${partnerId}/approve`, { method: "PATCH", token });
-      await loadPartners();
-    } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
-    } finally {
-      setApprovingId(null);
-    }
-  }
+  const partners = partnersQuery.data ?? [];
+  const error =
+    partnersQuery.error instanceof ApiError
+      ? partnersQuery.error.message
+      : approveMutation.error instanceof ApiError
+        ? approveMutation.error.message
+        : partnersQuery.isError
+          ? "Não foi possível carregar os parceiros."
+          : approveMutation.isError
+            ? "Não foi possível aprovar o parceiro."
+            : null;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <PageShell>
       <Link
         href="/dashboard"
-        className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+        className="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="mr-1 h-4 w-4" />
         Voltar ao painel
       </Link>
 
-      <h1 className="mb-6 text-2xl font-bold">Parceiros pendentes</h1>
+      <PageHeader
+        title="Parceiros pendentes"
+        description="Analise e aprove contas de parceiros hoteleiros. A lista atualiza sozinha."
+      />
 
-      {loading && <p className="text-muted-foreground">Carregando...</p>}
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && (
+        <Alert variant="danger" className="mb-4">
+          {error}
+        </Alert>
+      )}
 
-      {!loading && partners.length === 0 && (
-        <div className="rounded-xl border border-dashed border-border p-10 text-center">
-          <p className="font-medium">Nenhum parceiro pendente</p>
-        </div>
+      {partners.length === 0 && (
+        <EmptyState
+          icon={Users}
+          title="Nenhum parceiro pendente"
+          description="Quando houver novos cadastros, eles aparecerão aqui."
+        />
       )}
 
       <ul className="space-y-4">
         {partners.map((partner) => (
-          <li key={partner.id} className="rounded-xl border border-border p-5">
-            <div className="flex items-start justify-between gap-4">
+          <Surface as="li" key={partner.id} className="p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="font-semibold">{partner.legalName}</p>
                 {partner.tradeName && (
@@ -101,16 +111,18 @@ export default function PendingPartnersPage() {
                 </p>
               </div>
               <Button
-                onClick={() => handleApprove(partner.id)}
-                disabled={approvingId === partner.id}
+                onClick={() => approveMutation.mutate(partner.id)}
+                disabled={approveMutation.isPending && approveMutation.variables === partner.id}
               >
                 <Check className="mr-2 h-4 w-4" />
-                {approvingId === partner.id ? "Aprovando..." : "Aprovar"}
+                {approveMutation.isPending && approveMutation.variables === partner.id
+                  ? "Aprovando..."
+                  : "Aprovar"}
               </Button>
             </div>
-          </li>
+          </Surface>
         ))}
       </ul>
-    </div>
+    </PageShell>
   );
 }

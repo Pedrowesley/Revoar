@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CreateHotelInput } from "@revoar/shared";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
@@ -12,13 +13,19 @@ import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useHotel } from "@/hooks/use-hotel";
 import { HotelDetailHeader } from "@/components/hotels/hotel-detail-header";
 import { HotelDetailNav } from "@/components/hotels/hotel-detail-nav";
+import { HotelSetupChecklist } from "@/components/hotels/hotel-setup-checklist";
 import { HotelForm } from "@/components/hotels/hotel-form";
+import { PageShell } from "@/components/layout/page-shell";
+import { Alert } from "@/components/ui/alert";
+import { PageSkeleton } from "@/components/ui/skeleton";
+import { Surface } from "@/components/ui/surface";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
 
 export default function HotelDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   useRequireAuth();
 
   const { hotel, loading, error, reload } = useHotel(params.id);
@@ -52,6 +59,7 @@ export default function HotelDetailPage() {
         body: JSON.stringify(payload),
       });
       await reload();
+      await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
     } catch (err) {
       if (err instanceof ApiError) {
         setSaveError(err.message);
@@ -69,6 +77,7 @@ export default function HotelDetailPage() {
     setDeleting(true);
     try {
       await apiFetch(`/extranet/hotels/${hotel.id}`, { method: "DELETE", token });
+      await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
       router.push("/hotels");
     } catch (err) {
       if (err instanceof ApiError) {
@@ -79,26 +88,22 @@ export default function HotelDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center text-muted-foreground">
-        Carregando...
-      </div>
-    );
+    return <PageSkeleton rows={4} />;
   }
 
   if (error || !hotel) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-red-600">{error ?? "Hotel não encontrado"}</p>
+      <PageShell width="md" className="py-16 text-center">
+        <p className="text-danger">{error ?? "Hotel não encontrado"}</p>
         <Link href="/hotels" className="mt-4 inline-block text-primary hover:underline">
           Voltar para meus hotéis
         </Link>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <PageShell width="md">
       <HotelDetailHeader hotel={hotel} onDelete={handleDelete} deleting={deleting} />
       <HotelDetailNav
         hotelId={hotel.id}
@@ -106,18 +111,21 @@ export default function HotelDetailPage() {
         roomCount={hotel.roomCount}
         imageCount={hotel.imageCount}
       />
+      <HotelSetupChecklist hotel={hotel} />
 
       {partialEdit && (
-        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+        <Alert variant="info" className="mb-6">
           Hotel em análise. Você pode editar descrição, telefone e horários, mas não nome ou endereço.
-        </div>
+        </Alert>
       )}
 
       {saveError && (
-        <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{saveError}</p>
+        <Alert variant="danger" className="mb-4">
+          {saveError}
+        </Alert>
       )}
 
-      <div className="rounded-xl border border-border p-6">
+      <Surface className="p-6">
         <HotelForm
           hotel={hotel}
           readOnly={readOnly}
@@ -137,7 +145,7 @@ export default function HotelDetailPage() {
             checkOutTime: hotel.checkOutTime,
           }}
         />
-      </div>
-    </div>
+      </Surface>
+    </PageShell>
   );
 }

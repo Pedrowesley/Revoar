@@ -1,19 +1,72 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0f766e;
+  --color-primary: #0e7490;
   --color-primary-foreground: #ffffff;
-  --color-accent: #f97316;
+  --color-primary-soft: #ecfeff;
+  --color-accent: #ea580c;
+  --color-accent-foreground: #ffffff;
   --color-muted: #f1f5f9;
   --color-muted-foreground: #64748b;
   --color-border: #e2e8f0;
-  --color-background: #ffffff;
+  --color-background: #f4f7fb;
+  --color-surface: #ffffff;
   --color-foreground: #0f172a;
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --color-success: #15803d;
+  --color-success-soft: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-soft: #fffbeb;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fef2f2;
+  --color-info: #1d4ed8;
+  --color-info-soft: #eff6ff;
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.04), 0 12px 32px rgb(15 23 42 / 0.08);
 }
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-background);
+  background:
+    radial-gradient(1100px 460px at 0% -8%, rgb(14 116 144 / 0.14), transparent 55%),
+    radial-gradient(800px 380px at 100% 0%, rgb(15 23 42 / 0.05), transparent 45%),
+    var(--color-background);
   color: var(--color-foreground);
+  min-height: 100vh;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.35s ease-out both;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  animation: shimmer 1.4s infinite;
 }

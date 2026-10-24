@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { CreateHotelInput } from "@revoar/shared";
 import { apiFetch, ApiError } from "@/lib/api";
@@ -10,9 +11,14 @@ import { getToken } from "@/lib/auth";
 import { HotelDetail } from "@/lib/hotel";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { HotelForm } from "@/components/hotels/hotel-form";
+import { PageHeader } from "@/components/layout/page-header";
+import { PageShell } from "@/components/layout/page-shell";
+import { Alert } from "@/components/ui/alert";
+import { Surface } from "@/components/ui/surface";
 
 export default function NewHotelPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const token = useRequireAuth();
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +32,7 @@ export default function NewHotelPage() {
         token,
         body: JSON.stringify(data),
       });
+      await queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
       router.push(`/hotels/${hotel.id}`);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -39,24 +46,29 @@ export default function NewHotelPage() {
   if (!token) return null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <PageShell width="md">
       <Link
         href="/hotels"
-        className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+        className="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="mr-1 h-4 w-4" />
         Voltar para meus hotéis
       </Link>
 
-      <h1 className="mb-6 text-2xl font-bold">Cadastrar hotel</h1>
+      <PageHeader
+        title="Cadastrar hotel"
+        description="Preencha os dados principais. Depois você adiciona quartos e fotos."
+      />
 
       {error && (
-        <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>
+        <Alert variant="danger" className="mb-4">
+          {error}
+        </Alert>
       )}
 
-      <div className="rounded-xl border border-border p-6">
+      <Surface className="p-6">
         <HotelForm submitLabel="Criar hotel" onSubmit={handleSubmit} />
-      </div>
-    </div>
+      </Surface>
+    </PageShell>
   );
 }

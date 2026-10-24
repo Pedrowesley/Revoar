@@ -9,11 +9,11 @@ export const HOTEL_STATUS_LABELS: Record<HotelStatus, string> = {
 };
 
 export const HOTEL_STATUS_COLORS: Record<HotelStatus, string> = {
-  DRAFT: "bg-gray-100 text-gray-800",
-  IN_REVIEW: "bg-amber-100 text-amber-800",
-  ACTIVE: "bg-green-100 text-green-800",
-  INACTIVE: "bg-slate-100 text-slate-600",
-  REJECTED: "bg-red-100 text-red-800",
+  DRAFT: "bg-muted text-muted-foreground",
+  IN_REVIEW: "bg-warning-soft text-warning",
+  ACTIVE: "bg-success-soft text-success",
+  INACTIVE: "bg-muted text-muted-foreground",
+  REJECTED: "bg-danger-soft text-danger",
 };
 
 export const HOTEL_STATUS_FILTERS: { value: HotelStatus | "ALL"; label: string }[] = [
