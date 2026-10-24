@@ -59,8 +59,8 @@ T1 → T2 → T3 → T4 → T5
 
 **Done when**:
 
-- [ ] Lê o token no effect e escuta `AUTH_CHANGE_EVENT` e `storage`
-- [ ] Build gate passa
+- [x] Lê o token no effect e escuta `AUTH_CHANGE_EVENT` e `storage`
+- [x] Build gate passa
 
 **Tests**: none
 **Gate**: build
