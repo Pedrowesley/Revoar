@@ -85,6 +85,7 @@ npm run test:e2e
 | AD-009 | **Sync UI:** TanStack Query + polling condicional + SSE via `EventBusService`. WebSocket adiado para Release 0.5 (RF-028 reserva/PIX). | active | 2026-10 |
 | AD-010 | **UI shell moderno** extranet/admin: header autenticado, Plus Jakarta Sans, tokens `#0E7490`, componentes `PageShell`/`Surface`/`Skeleton`/`EmptyState`/`Alert`, checklist de progresso do hotel | active | 2026-07 |
 | AD-011 | **Perfil do parceiro:** a extranet grava avatar, logo e confirmação; o admin lê a mesma ficha e não a edita. Viajante não vê nesta entrega | active | 2026-10 |
+| AD-012 | **Landing na `/` da extranet:** anfitrião com links reais (cadastro, login, painel); hóspede como prévia "Em breve" sem rota; admin fora da página; sem números inventados | active | 2026-10 |
 
 ---
 
@@ -106,3 +107,4 @@ Release 1.0  GA              → Lançamento 5 destinos
 | extranet-cadastro-parceiros | ✅ | ✅ | ✅ | ✅ | Release 0.0 — software complete (+ UI/RQ) |
 | sync-tempo-real | ✅ | ✅ | ✅ | ✅ | Fase 7 — polling + SSE (PASS condicional, sem E2E sync) |
 | extranet-perfil-parceiro | ✅ | ✅ | ✅ | — | Especificada (AD-011); Execute ainda não começou |
+| landing-publica | ✅ | ✅ | ✅ | — | Execute em andamento (AD-012) |
