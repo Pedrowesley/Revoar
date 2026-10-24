@@ -82,8 +82,8 @@ T1 → T2 → T3 → T4 → T5
 
 **Done when**:
 
-- [ ] Porta do hóspede é `<button type="button" disabled>`
-- [ ] Build gate passa
+- [x] Porta do hóspede é `<button type="button" disabled>`
+- [x] Build gate passa
 
 **Tests**: none
 **Gate**: build
