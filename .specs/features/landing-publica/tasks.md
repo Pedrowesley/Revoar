@@ -129,9 +129,9 @@ T1 → T2 → T3 → T4 → T5
 
 **Done when**:
 
-- [ ] Busca, Reserva, Pagamento e Avaliação com "Em breve"
-- [ ] Nenhum link do admin
-- [ ] Build gate passa
+- [x] Busca, Reserva, Pagamento e Avaliação com "Em breve"
+- [x] Nenhum link do admin
+- [x] Build gate passa
 
 **Tests**: none
 **Gate**: build
