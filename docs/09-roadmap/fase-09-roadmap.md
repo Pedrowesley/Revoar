@@ -250,3 +250,5 @@ O plano de 24 meses acima **não muda**. Abaixo, o recorte que o time já tem no
 | Staging em URL pública + 10 hotéis piloto | ❌ operação / infra |
 
 Handoff técnico: `.specs/STATE.md` · entrega: `RELEASE-0.0.md`.
+
+A área do cliente (outubro/2026) está planejada em `docs/11-area-do-cliente/fase-11-area-do-cliente.md`. O hóspede reserva hotel e pousada, escolhe o quarto e a tarifa, e fecha em reserva imediata ou sob consulta. O inventário inicial é o cadastro `DIRECT`. Hotelbeds continua fora até esse fluxo fechar.

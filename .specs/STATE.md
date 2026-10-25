@@ -38,7 +38,7 @@
 
 - Deploy staging em URL pública para sócios
 - ≥ 10 hotéis piloto (operação manual)
-- Release 0.1 (site público, busca)
+- Release 0.1 em diante — plano em `docs/11-area-do-cliente/fase-11-area-do-cliente.md` (tarifa, vitrine, reserva imediata, sob consulta). Código ainda não começou
 - Perfil do parceiro na extranet e ficha somente leitura no admin (`extranet-perfil-parceiro`)
 - Reset de senha, fotos de quarto, multi-usuário por parceiro
 - E2E do sync duas origens (T7.19)
@@ -88,6 +88,12 @@ npm run test:e2e
 | AD-012 | **Landing na `/` da extranet:** anfitrião com links reais (cadastro, login, painel); hóspede como prévia "Em breve" sem rota; admin fora da página; sem números inventados | active | 2026-10 |
 | AD-013 | **CRUD inteiro:** cadastro novo cobre criar, ler, atualizar e excluir na mesma entrega, na tela de criar e na de editar | active | 2026-10 |
 | AD-014 | **Correção de hotel ativo:** o parceiro reabre a ficha para rascunho, edita tudo e só volta a Ativo depois de nova aprovação. Sem cópia publicada nesta entrega | active | 2026-10 |
+| AD-015 | **Área do cliente:** hotel e pousada de parceiro PJ. Casa inteira e anfitrião pessoa física ficam fora | active | 2026-10 |
+| AD-016 | **Modo de fechamento** no hotel (`INSTANT` ou `REQUEST`), com override por tipo de quarto (`INHERIT`, `INSTANT`, `REQUEST`) | active | 2026-10 |
+| AD-017 | **Quando cobra:** imediata cobra no checkout (hold 15 min). Sob consulta não cobra antes do aceite (24 h); depois do aceite, o hóspede paga em 2 h | active | 2026-10 |
+| AD-018 | **Inventário da vitrine:** só `DIRECT` até o fluxo de reserva fechar. Bedbank fica depois | active | 2026-10 |
+| AD-019 | **Uma reserva, um tipo de quarto e uma tarifa.** Quantidade do mesmo tipo. Tipos diferentes são reservas separadas | active | 2026-10 |
+| AD-020 | **Preço do calendário é o preço do hóspede**, por quarto por noite, impostos inclusos. Sem taxa de plataforma e sem taxa de limpeza | active | 2026-10 |
 
 ---
 
@@ -95,10 +101,14 @@ npm run test:e2e
 
 ```
 Release 0.0  Extranet MVP + UI + sync sem F5 → ✅ (Jun–Out/2026)
-Release 0.1  Foundation    → Busca pública read-only + Hotelbeds sandbox
-Release 0.5  Beta            → Reserva + pagamento
-Release 1.0  GA              → Lançamento 5 destinos
+Fatia 1      Tarifa, calendário e modo de reserva na extranet
+Fatia 2      Vitrine do hóspede (busca, ficha, escolha do quarto)
+Fatia 3      Reserva imediata + PIX/cartão + voucher + cancelamento
+Fatia 4      Sob consulta (pedido, aceite, pagamento em 2 h)
+Fatia 5      Cinco destinos, avaliações, mapa. Bedbank só com o DIRECT estável
 ```
+
+Detalhe da jornada, estados e dados: `docs/11-area-do-cliente/fase-11-area-do-cliente.md`.
 
 ---
 

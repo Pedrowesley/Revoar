@@ -12,7 +12,7 @@ Leia nesta ordem antes de implementar qualquer coisa:
 4. [`.specs/features/sync-tempo-real/spec.md`](./.specs/features/sync-tempo-real/spec.md) — sync sem F5
 5. [`DEVELOPMENT.md`](./DEVELOPMENT.md) — setup, API, testes, SSE
 
-**Release 0.0 está concluída no código.** Próximo milestone: Release 0.1 (busca pública).
+**Release 0.0 está concluída no código.** O plano da área do hóspede está em [`docs/11-area-do-cliente/fase-11-area-do-cliente.md`](docs/11-area-do-cliente/fase-11-area-do-cliente.md). A construção começa pela tarifa e pelo calendário na extranet, e segue para a vitrine e o fechamento.
 
 ## Estrutura de documentação
 
@@ -29,6 +29,7 @@ Leia nesta ordem antes de implementar qualquer coisa:
 | 8 — Análise de Riscos | `docs/08-analise-riscos/` | `fase-08-analise-riscos.md` |
 | 9 — Roadmap | `docs/09-roadmap/` | `fase-09-roadmap.md` |
 | 10 — Diagramas | `docs/10-diagramas/` | `fase-10-diagramas.md` |
+| 11 — Área do cliente | `docs/11-area-do-cliente/` | `fase-11-area-do-cliente.md` |
 
 ## Regra de leitura
 
