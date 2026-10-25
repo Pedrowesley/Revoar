@@ -4,9 +4,9 @@
 **Versão:** 1.0
 **Data:** Outubro/2026
 **Dependências:** Fases 0–10, Release 0.0 (extranet + admin)
-**Status:** Fluxo do hóspede em código para inventário DIRECT. Pagamento de PIX e cartão confirma em ambiente de teste, sem gateway real.
+**Status:** Decisão da área do hóspede. O fluxo DIRECT está em código até o voucher, com pagamento em ambiente de teste. O que falta para a jornada operar está na [Fase 12](../12-jornada-completa/fase-12-jornada-completa.md).
 
-Este documento é o master plan da jornada do hóspede. Ele estende as Fases 3 (requisitos), 4 (UX) e 6 (dados). Onde esta fase e aquelas divergem, vale o que está escrito aqui.
+Este documento é a decisão da área do hóspede. Ele estende as Fases 3 (requisitos), 4 (UX) e 6 (dados). Onde esta fase e aquelas divergem, vale o que está escrito aqui. A continuação operacional, com as fatias que ainda faltam no parceiro, no admin e no e-mail, está na Fase 12.
 
 ---
 
@@ -28,16 +28,17 @@ O formato da jornada segue o que o Airbnb faz quando o anúncio é um hotel ou u
 
 ## 2. O que já existe e o que esta fase acrescenta
 
-A Release 0.0 entrega o lado da oferta.
+A Release 0.0 entrega o lado da oferta. As fatias 1 a 4 desta fase já estão em código para inventário `DIRECT`. O pagamento confirma em ambiente de teste.
 
-| Já está no ar | Ainda não existe |
-|---------------|------------------|
-| Parceiro PJ, hotel, tipo de quarto, fotos, moderação até `ACTIVE` | App do hóspede |
-| Endereço, horários de check-in e check-out, ocupação, camas, comodidades do quarto | Preço, calendário, tarifa, política de cancelamento |
-| Landing da extranet com prévia e link para a área do hóspede | Conta obrigatória do hóspede. O checkout de convidado já funciona, e o pagamento real de PIX e cartão ainda é o ambiente de teste |
-| | Caixa de pedidos na extranet |
+| Já está no ar | Ainda falta para operar |
+|---------------|-------------------------|
+| Parceiro PJ, hotel, tipo de quarto, fotos, moderação até `ACTIVE` | PIX e cartão em banco real |
+| Preço, calendário, tarifa, política de cancelamento e modo de reserva na extranet | E-mail da reserva, grade mensal, admin da reserva |
+| App do hóspede: busca, ficha com foto do quarto, checkout e voucher na tela | Comodidades na ficha, reembolso antes de cancelar, minhas viagens fora deste navegador |
+| Caixa de reservas com aceitar e recusar. Bloqueio de noite, inclusive aluguel fora da plataforma | Motivo da recusa, prazo de 24 horas na tela, aviso sem atualizar a página |
+| Checkout de convidado. A conta do hóspede permanece opcional | Link da viagem por e-mail, descrito na Fase 12 |
 
-Sem calendário de diárias, a busca não tem preço verdadeiro e o hóspede não escolhe um quarto de verdade. A extranet ganha tarifa e calendário **antes** da busca pública mostrar preço.
+O desenho das seções seguintes continua valendo. A ordem para fechar a coluna da direita está na [Fase 12](../12-jornada-completa/fase-12-jornada-completa.md).
 
 ---
 
@@ -463,4 +464,4 @@ Avaliação pós-estadia, mapa na listagem, coleções, lembrete de check-in. Op
 
 ---
 
-*Este documento faz parte do Master Plan Revoar. Requisitos de busca, pagamento e cancelamento continuam nas Fases 3 e 4. O ciclo de vida com bedbank continua na Fase 6 e só volta a valer quando a fatia 5 abrir integração.*
+*Este documento faz parte do Master Plan Revoar. Requisitos de busca, pagamento e cancelamento continuam nas Fases 3 e 4. O ciclo de vida com bedbank continua na Fase 6 e só volta a valer quando a fatia 8 da Fase 12 abrir integração. O que falta para a reserva operar no dia a dia está na [Fase 12](../12-jornada-completa/fase-12-jornada-completa.md).*

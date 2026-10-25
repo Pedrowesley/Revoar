@@ -251,4 +251,10 @@ O plano de 24 meses acima **não muda**. Abaixo, o recorte que o time já tem no
 
 Handoff técnico: `.specs/STATE.md` · entrega: `RELEASE-0.0.md`.
 
-A área do cliente (outubro/2026) está planejada em `docs/11-area-do-cliente/fase-11-area-do-cliente.md`. O hóspede reserva hotel e pousada, escolhe o quarto e a tarifa, e fecha em reserva imediata ou sob consulta. O inventário inicial é o cadastro `DIRECT`. Hotelbeds continua fora até esse fluxo fechar.
+A área do cliente (outubro/2026) está decidida em `docs/11-area-do-cliente/fase-11-area-do-cliente.md`. O hóspede reserva hotel e pousada, escolhe o quarto e a tarifa, e fecha em reserva imediata ou sob consulta. O inventário inicial é o cadastro `DIRECT`. Hotelbeds continua fora até esse fluxo fechar.
+
+## Addendum de implementação — busca e reserva no ambiente de teste (Out/2026)
+
+A tabela de julho permanece como registro daquela data. Em 25 de outubro de 2026 o repositório já tem busca pública, ficha do quarto e reserva até o voucher, para inventário `DIRECT`, com PIX e cartão confirmados em ambiente de teste. O parceiro abre e bloqueia noites e aceita ou recusa o pedido. O admin segue na moderação de cadastro.
+
+A continuação, com e-mail da reserva, grade mensal, suporte no admin e o banco real, está em `docs/12-jornada-completa/fase-12-jornada-completa.md`. A próxima fatia é a ficha honesta.
