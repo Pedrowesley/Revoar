@@ -24,6 +24,7 @@ type PendingPartner = {
   email: string;
   phone: string;
   contactName: string;
+  detailsConfirmed: boolean;
   hotelCount: number;
   createdAt: string;
 };
@@ -106,7 +107,10 @@ export default function PendingPartnersPage() {
           <Surface as="li" key={partner.id} className="p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="font-semibold">{partner.legalName}</p>
+                <Link href={`/partners/${partner.id}`} className="font-semibold hover:text-primary">
+                  {partner.legalName}
+                </Link>
+                <p className="text-sm">{partner.detailsConfirmed ? "Confirmou" : "Não confirmou"}</p>
                 {partner.tradeName && (
                   <p className="text-sm text-muted-foreground">{partner.tradeName}</p>
                 )}

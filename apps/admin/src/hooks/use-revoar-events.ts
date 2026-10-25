@@ -75,6 +75,11 @@ export function useAdminRevoarEvents(enabled: boolean) {
       if ("hotelId" in event && event.hotelId) {
         queryClient.invalidateQueries({ queryKey: adminKeys.hotel(event.hotelId) });
       }
+
+      if (event.type === "partner.profile.updated") {
+        queryClient.invalidateQueries({ queryKey: adminKeys.partner(event.partnerId) });
+        queryClient.invalidateQueries({ queryKey: adminKeys.pendingPartners });
+      }
     };
 
     void (async () => {

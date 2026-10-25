@@ -33,6 +33,7 @@ type HotelPreview = {
   status: string;
   rejectionReason: string | null;
   partner: {
+    id: string;
     legalName: string;
     tradeName: string | null;
     cnpj: string;
@@ -301,7 +302,11 @@ export default function AdminHotelPreviewPage() {
 
       <Surface className="mb-8 p-5">
         <h2 className="mb-3 font-semibold">Parceiro</h2>
-        <p>{hotel.partner.legalName}</p>
+        <p>
+          <Link href={`/partners/${hotel.partner.id}`} className="font-medium text-primary">
+            {hotel.partner.legalName}
+          </Link>
+        </p>
         <p className="text-sm text-muted-foreground">
           CNPJ: {formatCnpj(hotel.partner.cnpj)} · {hotel.partner.contactName} ·{" "}
           {hotel.partner.email}
