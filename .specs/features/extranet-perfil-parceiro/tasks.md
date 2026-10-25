@@ -9,9 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/extranet-perfil-parceiro/design.md`  
-**Status**: Draft
-
-Execute não começa com este arquivo. Cada tarefa vira um commit só quando alguém pedir a implementação.
+**Status**: Done
 
 ---
 
@@ -192,10 +190,10 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] Update grava só nome, nome fantasia, telefone, responsável e URLs com o prefixo do próprio `partnerId`
-- [ ] URL fora do prefixo responde 400 e não grava
-- [ ] Confirm sem os cinco campos responde 422 `{ missing }`
-- [ ] Confirm e update emitem `partner.profile.updated` para admins
+- [x] Update grava só nome, nome fantasia, telefone, responsável e URLs com o prefixo do próprio `partnerId`
+- [x] URL fora do prefixo responde 400 e não grava
+- [x] Confirm sem os cinco campos responde 422 `{ missing }`
+- [x] Confirm e update emitem `partner.profile.updated` para admins
 
 **Tests**: e2e
 **Gate**: full
@@ -217,8 +215,8 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] `PATCH /extranet/profile`, `POST /extranet/profile/avatar/presign`, `POST /extranet/profile/logo/presign`, `POST /extranet/profile/confirm`
-- [ ] Token de admin recebe 401
+- [x] `PATCH /extranet/profile`, `POST /extranet/profile/avatar/presign`, `POST /extranet/profile/logo/presign`, `POST /extranet/profile/confirm`
+- [x] Token de admin recebe 401
 
 **Tests**: e2e
 **Gate**: full
@@ -240,8 +238,8 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] O JSON do me traz os três campos novos
-- [ ] Tipo `PartnerProfile` em `apps/extranet/src/lib/api.ts` acompanha o JSON
+- [x] O JSON do me traz os três campos novos
+- [x] Tipo `PartnerProfile` em `apps/extranet/src/lib/api.ts` acompanha o JSON
 
 **Tests**: e2e
 **Gate**: full
@@ -263,9 +261,9 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] 404 quando o id não existe
-- [ ] A lista pendente inclui `detailsConfirmed`
-- [ ] `approve` existente não muda de regra
+- [x] 404 quando o id não existe
+- [x] A lista pendente inclui `detailsConfirmed`
+- [x] `approve` existente não muda de regra
 
 **Tests**: e2e
 **Gate**: full
@@ -287,8 +285,8 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] `GET /admin/partners/pending` continua a lista
-- [ ] Token de parceiro recebe 401
+- [x] `GET /admin/partners/pending` continua a lista
+- [x] Token de parceiro recebe 401
 
 **Tests**: e2e
 **Gate**: full
@@ -310,9 +308,9 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] Seções Pessoal, Empresa, Contato e Revisar
-- [ ] E-mail, razão social e CNPJ sem input
-- [ ] Confirmar desabilitado até o checkbox e os campos exigidos
+- [x] Seções Pessoal, Empresa, Contato e Revisar
+- [x] E-mail, razão social e CNPJ sem input
+- [x] Confirmar desabilitado até o checkbox e os campos exigidos
 
 **Tests**: e2e
 **Gate**: full
@@ -334,8 +332,8 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] Logado vê o menu; deslogado não
-- [ ] Meu perfil navega para `/profile`
+- [x] Logado vê o menu; deslogado não
+- [x] Meu perfil navega para `/profile`
 
 **Tests**: e2e
 **Gate**: full
@@ -357,7 +355,7 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] O cartão é um link para `/profile`
+- [x] O cartão é um link para `/profile`
 
 **Tests**: e2e
 **Gate**: full
@@ -379,9 +377,9 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] Sem inputs e sem botão Confirmar
-- [ ] Mostra "Ainda não confirmou" ou a data
-- [ ] Aprovar só aparece quando status é PENDING
+- [x] Sem inputs e sem botão Confirmar
+- [x] Mostra "Ainda não confirmou" ou a data
+- [x] Aprovar só aparece quando status é PENDING
 
 **Tests**: e2e
 **Gate**: full
@@ -403,9 +401,9 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] O texto usa `detailsConfirmed`
-- [ ] O nome navega para `/partners/[id]`
-- [ ] O botão Aprovar da fila permanece
+- [x] O texto usa `detailsConfirmed`
+- [x] O nome navega para `/partners/[id]`
+- [x] O botão Aprovar da fila permanece
 
 **Tests**: e2e
 **Gate**: full
@@ -427,7 +425,7 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] O nome é um link para `/partners/{partnerId}`
+- [x] O nome é um link para `/partners/{partnerId}`
 
 **Tests**: e2e
 **Gate**: full
@@ -449,8 +447,8 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] A query `['admin','partners', partnerId]` é invalidada
-- [ ] A fila pendente também
+- [x] A query `['admin','partners', partnerId]` é invalidada
+- [x] A fila pendente também
 
 **Tests**: e2e
 **Gate**: full
@@ -472,10 +470,10 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] Parceiro edita, confirma e vê a data
-- [ ] Body com CNPJ recebe 400
-- [ ] Admin lê a ficha, vê Confirmou na fila, e token de parceiro em `/admin/partners/:id` recebe 401
-- [ ] `npm run test:e2e -- e2e/partner-profile.spec.ts` passa
+- [x] Parceiro edita, confirma e vê a data
+- [x] Body com CNPJ recebe 400
+- [x] Admin lê a ficha, vê Confirmou na fila, e token de parceiro em `/admin/partners/:id` recebe 401
+- [x] `npm run test:e2e -- e2e/partner-profile.spec.ts` passa
 
 **Tests**: e2e
 **Gate**: full

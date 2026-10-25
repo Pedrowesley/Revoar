@@ -2,7 +2,7 @@
 
 **Feature ID:** `extranet-perfil-parceiro`  
 **Scope:** Large  
-**Status:** Specified (não implementado)  
+**Status:** Implemented  
 **Decisão:** AD-011 em `.specs/STATE.md`  
 **Spec:** este arquivo  
 **Design:** `.specs/features/extranet-perfil-parceiro/design.md`  
@@ -16,9 +16,9 @@ O parceiro logado só vê um cartão no painel (CNPJ, responsável, e-mail). Nã
 
 ## Goals
 
-- [ ] Parceiro abre `/profile`, vê e edita os dados permitidos, envia avatar e logo, e confirma a ficha
-- [ ] Admin abre `/partners/[id]` e lê a mesma ficha, sem editar, inclusive o estado de confirmação
-- [ ] Fila de pendentes mostra "Confirmou" ou "Não confirmou" e a ficha aberta atualiza sem F5
+- [x] Parceiro abre `/profile`, vê e edita os dados permitidos, envia avatar e logo, e confirma a ficha
+- [x] Admin abre `/partners/[id]` e lê a mesma ficha, sem editar, inclusive o estado de confirmação
+- [x] Fila de pendentes mostra "Confirmou" ou "Não confirmou" e a ficha aberta atualiza sem F5
 
 ## Out of Scope
 
@@ -115,18 +115,18 @@ O parceiro logado só vê um cartão no painel (CNPJ, responsável, e-mail). Nã
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| PROF-01 | P1: Ficha do parceiro | Design | Pending |
-| PROF-02 | P1: Edição e zerar confirmação | Design | Pending |
-| PROF-03 | P1: Campos fiscais somente leitura | Design | Pending |
-| PROF-04 | P1: Avatar e logo | Design | Pending |
-| PROF-05 | P1: Confirmar | Design | Pending |
-| PROF-06 | P1: Menu do perfil | Design | Pending |
-| PROF-07 | P1: Ficha do admin | Design | Pending |
-| PROF-08 | P1: Sinal na fila e link no hotel | Design | Pending |
-| PROF-09 | P1: Sync sem F5 | Design | Pending |
-| PROF-10 | P1: Aprovar a partir da ficha | Design | Pending |
+| PROF-01 | P1: Ficha do parceiro | Execute | Verified |
+| PROF-02 | P1: Edição e zerar confirmação | Execute | Verified |
+| PROF-03 | P1: Campos fiscais somente leitura | Execute | Verified |
+| PROF-04 | P1: Avatar e logo | Execute | Verified |
+| PROF-05 | P1: Confirmar | Execute | Verified |
+| PROF-06 | P1: Menu do perfil | Execute | Verified |
+| PROF-07 | P1: Ficha do admin | Execute | Verified |
+| PROF-08 | P1: Sinal na fila e link no hotel | Execute | Verified |
+| PROF-09 | P1: Sync sem F5 | Execute | Verified |
+| PROF-10 | P1: Aprovar a partir da ficha | Execute | Verified |
 
-**Coverage:** 10 total, 0 mapped to tasks until tasks.md is approved, 10 unmapped.
+**Coverage:** 10 total, 10 mapped to tasks, 0 unmapped.
 
 ---
 
