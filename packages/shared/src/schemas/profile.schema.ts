@@ -23,6 +23,7 @@ export const presignProfileImageSchema = z
       .positive()
       .max(MAX_IMAGE_SIZE_BYTES, { message: "Arquivo deve ter no máximo 5MB" }),
     fileName: z.string().optional(),
+    partnerId: z.string().uuid().optional(),
   })
   .strict();
 
