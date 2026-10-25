@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { SearchForm } from "@/components/search-form";
+import { Sheet } from "@/components/sheet";
 import { apiFetch, ApiError } from "@/lib/api";
 import { brl, SearchValues } from "@/lib/format";
 
@@ -30,6 +31,8 @@ function Results() {
   };
   const [hotels, setHotels] = useState<HotelCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [instantOnly, setInstantOnly] = useState(false);
 
   useEffect(() => {
     const query = params.toString();
@@ -42,38 +45,46 @@ function Results() {
       .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "Não foi possível buscar"));
   }, [params, search.city, search.checkIn, search.checkOut]);
 
+  const visible = hotels?.filter((hotel) => !instantOnly || hotel.bookingMode === "INSTANT") ?? null;
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <SearchForm initial={search} />
+    <div className="mx-auto max-w-6xl px-4 pb-8">
+      <div className="sticky top-16 z-20 -mx-4 bg-background px-4 py-3">
+        <SearchForm compact initial={search} />
+        <button type="button" onClick={() => setFiltersOpen(true)} className="mt-2 h-11 rounded-xl px-1 text-sm font-semibold text-primary">
+          Filtros
+        </button>
+      </div>
+      <Sheet open={filtersOpen} title="Filtros" onClose={() => setFiltersOpen(false)}>
+        <label className="flex min-h-12 items-center gap-3 text-base">
+          <input type="checkbox" checked={instantOnly} onChange={(event) => setInstantOnly(event.target.checked)} className="h-5 w-5" />
+          Só reserva imediata
+        </label>
+        <button type="button" onClick={() => setFiltersOpen(false)} className="mt-4 h-12 w-full rounded-xl bg-primary font-semibold text-primary-foreground">
+          Ver resultados
+        </button>
+      </Sheet>
       {error && <p className="mt-4 rounded-xl border border-red-200 bg-danger-soft px-4 py-3 text-sm">{error}</p>}
-      <div className="mt-6 grid gap-3">
-        {hotels?.map((hotel) => (
+      <div className="mt-2 grid gap-3">
+        {visible?.map((hotel) => (
           <Link
             key={hotel.slug}
             href={`/hoteis/${hotel.slug}?${params.toString()}`}
-            className="rounded-2xl border border-border bg-surface p-5 shadow-soft"
+            className="block min-w-0 rounded-2xl border border-border bg-surface p-4 shadow-soft"
           >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">{hotel.name}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {hotel.addressLine} · {hotel.city}
-                  {hotel.starRating ? ` · ${hotel.starRating} estrelas` : ""}
-                </p>
-                <p className="mt-2 text-sm">
-                  {hotel.bookingMode === "INSTANT" ? "Reserva imediata" : "Sob consulta · resposta em até 24 h"}
-                </p>
-              </div>
-              <p className="text-right">
-                <span className="block text-lg font-bold">{brl(hotel.totalCents)} total</span>
-                <span className="text-sm text-muted-foreground">{hotel.nights} noites · impostos inclusos</span>
-              </p>
-            </div>
+            <h2 className="text-xl font-semibold">{hotel.name}</h2>
+            <p className="text-sm text-muted-foreground">
+              {hotel.addressLine} · {hotel.city}
+              {hotel.starRating ? ` · ${hotel.starRating} estrelas` : ""}
+            </p>
+            <p className="mt-2 text-sm">{hotel.bookingMode === "INSTANT" ? "Reserva imediata" : "Sob consulta · resposta em até 24 h"}</p>
+            <p className="mt-3">
+              <span className="block text-lg font-bold">{brl(hotel.totalCents)} total</span>
+              <span className="text-sm text-muted-foreground">{hotel.nights} noites · impostos inclusos</span>
+            </p>
           </Link>
         ))}
-        {hotels && hotels.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nada livre nessas datas. Tente outro período.</p>
-        )}
+        {visible && visible.length === 0 && <p className="text-sm text-muted-foreground">Nada livre nessas datas. Tente outro período.</p>}
       </div>
     </div>
   );

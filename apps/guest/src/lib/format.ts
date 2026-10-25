@@ -2,6 +2,12 @@ export function brl(cents: number): string {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+export function shortDate(iso: string): string {
+  const [, month, day] = iso.split("-");
+  if (!day || !month) return iso;
+  return `${day}/${month}`;
+}
+
 export function tomorrow(offset = 1): string {
   const date = new Date();
   date.setDate(date.getDate() + offset);
