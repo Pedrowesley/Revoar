@@ -20,6 +20,7 @@ Este documento é o master plan da jornada do hóspede. Ele estende as Fases 3 (
 | AD-018 | A primeira área do cliente lê só inventário `DIRECT` já aprovado na extranet. Hotelbeds e Omnibees entram depois que esse fluxo fechar de ponta a ponta. |
 | AD-019 | Uma reserva leva **um** tipo de quarto e **uma** tarifa. A quantidade pode ser maior que um, do mesmo tipo, limitada ao que a busca pediu e ao que o calendário tem livre. Tipos diferentes viram reservas separadas. |
 | AD-020 | O preço que o parceiro lança no calendário é o preço que o hóspede paga, por quarto por noite, com impostos inclusos. A comissão sai desse valor. O hóspede não vê taxa de plataforma nem taxa de limpeza. |
+| AD-021 | O parceiro abre as noites em que quer receber hóspede. Noite sem configuração fica fora de venda. Bloquear o dia ou algumas unidades, porque não pode receber ou porque alugou fora do Revoar, tira essa vaga da reserva imediata e do pedido sob consulta. Reserva já confirmada na plataforma permanece. |
 
 O formato da jornada segue o que o Airbnb faz quando o anúncio é um hotel ou uma pousada: busca, ficha, escolha de quarto, fechamento. O fechamento imediato é o "Reserve" do Airbnb. O sob consulta é o "Solicitar reserva", com uma diferença de propósito: no Revoar o PIX é o meio principal, e PIX não segura valor sem cobrar. Por isso o dinheiro só entra depois que a estadia está garantida.
 
@@ -248,13 +249,25 @@ Pelo menos uma tarifa por tipo de quarto antes de o quarto aparecer numa busca c
 
 ### 4.3 Calendário
 
-Grade mensal por tarifa. Para um intervalo de datas o parceiro define:
+Grade mensal por tipo de quarto. Cada noite está em um de três estados:
 
-- preço da diária em reais;
-- quantos quartos daquele tipo estão à venda;
-- fechado (zero à venda).
+| Estado | O que o parceiro fez | O que o hóspede pode fazer |
+|--------|----------------------|----------------------------|
+| Sem configuração | Ainda não abriu a noite | Nada. A noite não entra na busca |
+| Aberta | Definiu o preço e deixou ao menos uma unidade livre | Reservar na hora ou solicitar, até o número de unidades livres |
+| Bloqueada | Tirou unidades de venda | Nada nessas unidades. As que continuam livres seguem abertas |
 
-A vaga é do tipo de quarto, compartilhada entre as tarifas dele. Duas tarifas no mesmo dia não dobram o estoque. O preço é da tarifa.
+Abrir e bloquear valem para um dia ou para um intervalo. O aviso fixo na grade é: "Alugou fora do Revoar? Bloqueie essas noites."
+
+Ao abrir, o parceiro informa o preço da diária e quantas unidades daquele tipo estão à venda. Ao bloquear, informa quantas unidades saem de venda e o motivo: não pode receber, ou alugou fora da plataforma. Bloquear o dia inteiro zera o que ainda está livre.
+
+A vaga livre de uma noite é: unidades à venda, menos as reservas confirmadas na plataforma, menos as retenções de checkout, menos as unidades bloqueadas. A vaga é do tipo de quarto e vale para todas as tarifas dele. Duas tarifas no mesmo dia não dobram o estoque. O preço é da tarifa.
+
+Noite ocupada por uma reserva confirmada no Revoar já aparece assim na grade. O parceiro não precisa bloqueá-la. O bloqueio é para o que aconteceu fora, ou para o que ele não quer vender. Bloquear não cancela reserva `CONFIRMED`.
+
+Se há 4 quartos daquele tipo e 1 foi alugado por fora, ele bloqueia 1 unidade naquelas noites. As outras 3 continuam à venda. Não dá para bloquear uma unidade que já está confirmada ou retida num checkout: a tela mostra o conflito e o bloqueio fica no que ainda está livre.
+
+Um hold já iniciado (15 minutos na reserva imediata, 24 horas num pedido, 2 horas para pagar) continua com a unidade que segurou. O bloqueio vale dali para a frente. Se o hóspede chega no pagamento e a vaga livre acabou, a reserva não confirma e nada é cobrado.
 
 ### 4.4 Pedidos e reservas
 
@@ -339,7 +352,7 @@ O schema de hoje tem hotel, tipo de quarto e fotos. Esta fase acrescenta o que f
 
 `DailyRate` (novo): tarifa, data, preço em centavos. A vaga **não** fica aqui.
 
-`RoomInventory` (novo): tipo de quarto, data, `unitsForSale`. Único por quarto e data. As tarifas daquele quarto leem a mesma vaga.
+`RoomInventory` (novo): tipo de quarto, data, `unitsForSale`, `blockedUnits`, `blockReason` (`UNAVAILABLE` ou `RENTED_OFFLINE`, vazio quando `blockedUnits` é zero). Único por quarto e data. As tarifas daquele quarto leem a mesma vaga. O preço continua em `DailyRate`.
 
 `InventoryLock` (novo): reserva, tipo de quarto, data, quantidade, `expiresAt`. Segura as unidades do hold de 15 minutos, das 24 horas do pedido ou das 2 horas de pagamento.
 
@@ -364,7 +377,7 @@ CPF segue guardado como hash, como a Fase 6 já exige.
 
 ### 7.3 Preço e vaga na prática
 
-Para cada noite do intervalo, a diária é a linha do calendário daquela tarifa. O total é a soma das diárias, vezes a quantidade. Noite sem preço ou com vaga menor que a quantidade torna a tarifa indisponível.
+Para cada noite do intervalo, a diária é a linha do calendário daquela tarifa. O total é a soma das diárias, vezes a quantidade. A vaga livre é `unitsForSale − confirmadas na plataforma − locks − blockedUnits`. Noite sem preço, sem quantidade ou com vaga livre menor que a quantidade torna a tarifa indisponível. Unidade com `blockReason` `RENTED_OFFLINE` conta como bloqueada: não entra em reserva imediata nem em pedido sob consulta.
 
 Aceitar duas reservas ao mesmo tempo sobre a última vaga usa trava transacional: quem commitar o lock primeiro fica com o quarto. O outro recebe "Esse quarto acabou de ser reservado" e volta à ficha.
 
@@ -400,7 +413,7 @@ Cada fatia entra no ar só quando a anterior fecha. Hotelbeds não está em nenh
 
 O parceiro define modo, tarifa e calendário. Sem isso a busca mente.
 
-Pronto quando: um hotel `ACTIVE` de teste tem quarto com preço e vaga, e a vaga não duplica entre duas tarifas.
+Pronto quando: um hotel `ACTIVE` de teste tem quarto com preço e vaga, e a vaga não duplica entre duas tarifas. Uma noite bloqueada, no dia inteiro ou em parte das unidades, e uma unidade marcada como alugada fora não aparecem como reserváveis. Uma reserva já confirmada na plataforma continua no calendário depois do bloqueio.
 
 ### Fatia 2 — Vitrine
 
@@ -446,7 +459,7 @@ Avaliação pós-estadia, mapa na listagem, coleções, lembrete de check-in. Op
 2. Quarto imediato: pagou, recebeu código e voucher, calendário baixou.
 3. Quarto sob consulta: o hotel aceita ou recusa; o hóspede só paga depois do aceite; recusa não gera cobrança.
 4. Cancelar dentro da política devolve o que a tabela da seção 3.8 descreve, e devolve a vaga das noites futuras.
-5. Hotel que não está `ACTIVE`, quarto sem tarifa e noite sem vaga não aparecem como reserváveis.
+5. Hotel que não está `ACTIVE`, quarto sem tarifa, noite sem configuração e noite bloqueada (inclusive unidade alugada fora da plataforma) não aparecem como reserváveis. Bloquear não cancela reserva já confirmada no Revoar.
 
 ---
 

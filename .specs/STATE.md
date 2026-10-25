@@ -94,6 +94,7 @@ npm run test:e2e
 | AD-018 | **Inventário da vitrine:** só `DIRECT` até o fluxo de reserva fechar. Bedbank fica depois | active | 2026-10 |
 | AD-019 | **Uma reserva, um tipo de quarto e uma tarifa.** Quantidade do mesmo tipo. Tipos diferentes são reservas separadas | active | 2026-10 |
 | AD-020 | **Preço do calendário é o preço do hóspede**, por quarto por noite, impostos inclusos. Sem taxa de plataforma e sem taxa de limpeza | active | 2026-10 |
+| AD-021 | **Calendário:** o parceiro abre a noite para vender. Bloquear a noite, no dia inteiro ou em algumas unidades, com motivo de indisponível ou alugado fora, impede reserva imediata e sob consulta. Reserva já confirmada na plataforma não é cancelada pelo bloqueio | active | 2026-10 |
 
 ---
 
