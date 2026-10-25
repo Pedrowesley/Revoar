@@ -283,7 +283,10 @@ test.describe("Fotos do quarto", () => {
       expect(promoted.ok).toBe(true);
     }
     await page.reload();
-    await expect(room.getByRole("img").first()).toHaveAttribute("alt", "Foto antiga");
+    const images = room.getByRole("img");
+    await expect(images).toHaveCount(2);
+    await expect(images.nth(0)).toHaveAttribute("alt", "Foto antiga");
+    await expect(images.nth(1)).toHaveAttribute("alt", "Capa da suíte");
 
     await createRoom(token, hotelId, "Quarto vazio");
     const brokenId = await createRoom(token, hotelId, "Foto quebrada");
