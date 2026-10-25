@@ -4,6 +4,7 @@ import { adminLogin, apiPatch, apiPost, registerTestImage } from "./helpers/api"
 
 const API = "http://localhost:3002";
 const EXTRANET = "http://localhost:3000";
+const ADMIN = "http://localhost:3001";
 
 type HotelDetail = {
   id: string;
@@ -225,5 +226,73 @@ test.describe("Ajuste de hotel ativo", () => {
     ]);
     await page.reload();
     await expect(page.getByRole("button", { name: "Corrigir ficha" })).toHaveCount(0);
+  });
+
+  test("AJUS-04: quarto sem foto bloqueia o reenvio e mantém o rascunho", async () => {
+    const { token, adminToken, uniqueId } = await approvedPartner();
+    const { hotelId } = await publishHotel(token, adminToken, `Hotel Foto ${uniqueId}`);
+    const correction = await apiPost(`/extranet/hotels/${hotelId}/correction`, {}, token);
+    expect(correction.ok).toBe(true);
+
+    const room = await apiPost(`/extranet/hotels/${hotelId}/rooms`, {
+      name: "Sem foto",
+      description: "Quarto criado na correção sem imagem.",
+      maxAdults: 2,
+      maxChildren: 0,
+      maxOccupancy: 2,
+      bedConfiguration: "1 cama de solteiro",
+      amenities: ["WIFI"],
+    }, token);
+    expect(room.ok).toBe(true);
+
+    const submit = await apiPost(`/extranet/hotels/${hotelId}/submit`, {}, token);
+    expect(submit.ok).toBe(false);
+    if (!submit.ok) {
+      expect(submit.status).toBe(422);
+      expect(submit.message).toBe("Cadastre ao menos 1 foto em: Sem foto");
+    }
+    expect((await apiGet<HotelDetail>(`/extranet/hotels/${hotelId}`, token)).status).toBe("DRAFT");
+  });
+
+  test("AJUS-05: a fila aprova de novo e a rejeição mostra o motivo", async ({ page }) => {
+    const { token, adminToken, uniqueId } = await approvedPartner();
+    const name = `Hotel Fila ${uniqueId}`;
+    const { hotelId } = await publishHotel(token, adminToken, name);
+    expect((await apiPost(`/extranet/hotels/${hotelId}/correction`, {}, token)).ok).toBe(true);
+    expect((await apiPost(`/extranet/hotels/${hotelId}/submit`, {}, token)).ok).toBe(true);
+
+    await page.addInitScript(
+      ({ admin, partner }) => {
+        localStorage.setItem("revoar_admin_token", admin);
+        localStorage.setItem("revoar_partner_token", partner);
+      },
+      { admin: adminToken, partner: token },
+    );
+
+    await page.goto(`${ADMIN}/hotels/pending`);
+    await expect(page.getByText(name)).toBeVisible();
+    await page.getByText(name).click();
+    await expect(page.getByText("Ativo → Rascunho (PARTNER)")).toBeVisible();
+    await page.getByRole("button", { name: "Aprovar" }).click();
+    await expect(page).toHaveURL(/\/hotels\/pending/);
+    expect((await apiGet<HotelDetail>(`/extranet/hotels/${hotelId}`, token)).status).toBe("ACTIVE");
+
+    expect((await apiPost(`/extranet/hotels/${hotelId}/correction`, {}, token)).ok).toBe(true);
+    expect((await apiPost(`/extranet/hotels/${hotelId}/submit`, {}, token)).ok).toBe(true);
+
+    await page.goto(`${ADMIN}/hotels/${hotelId}`);
+    await page.getByRole("button", { name: "Rejeitar" }).click();
+    await page.getByLabel("Descreva o que o parceiro precisa corrigir").fill("O CEP da ficha está errado.");
+    await page.getByRole("button", { name: "Confirmar rejeição" }).click();
+    await expect(page).toHaveURL(/\/hotels\/pending/);
+
+    const partnerPage = await page.context().newPage();
+    await partnerPage.addInitScript((value) => {
+      localStorage.setItem("revoar_partner_token", value);
+    }, token);
+    await partnerPage.goto(`${EXTRANET}/hotels/${hotelId}`);
+    await expect(partnerPage.getByText("Rejeitado", { exact: true })).toBeVisible();
+    await expect(partnerPage.getByText("O CEP da ficha está errado.")).toBeVisible();
+    await partnerPage.close();
   });
 });

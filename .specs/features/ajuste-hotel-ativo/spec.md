@@ -2,7 +2,7 @@
 
 **Feature ID:** `ajuste-hotel-ativo`  
 **Scope:** Medium  
-**Status:** Specified  
+**Status:** Implemented  
 **Spec:** este arquivo  
 **Design:** `.specs/features/ajuste-hotel-ativo/design.md`
 
@@ -14,9 +14,9 @@ Depois que a equipe Revoar aprova um hotel, a ficha trava. Se o endereço está 
 
 ## Goals
 
-- [ ] O parceiro de um hotel ativo pede o ajuste e volta a editar a ficha inteira
-- [ ] A correção só volta a Ativo depois de uma nova aprovação
-- [ ] O admin vê o hotel de novo na fila, com o histórico do pedido
+- [x] O parceiro de um hotel ativo pede o ajuste e volta a editar a ficha inteira
+- [x] A correção só volta a Ativo depois de uma nova aprovação
+- [x] O admin vê o hotel de novo na fila, com o histórico do pedido
 
 ## Out of Scope
 
@@ -102,16 +102,16 @@ Depois que a equipe Revoar aprova um hotel, a ficha trava. Se o endereço está 
 | AJUS-01 | P1: Corrigir ficha leva a DRAFT | Execute | Verified |
 | AJUS-02 | P1: Edição completa no rascunho | Execute | Verified |
 | AJUS-03 | P1: Só hotel ativo entra em correção | Execute | Verified |
-| AJUS-04 | P1: Reenvio usa as regras atuais | Design | Pending |
-| AJUS-05 | P1: Aprovação e rejeição reusam o admin | Design | Pending |
+| AJUS-04 | P1: Reenvio usa as regras atuais | Execute | Verified |
+| AJUS-05 | P1: Aprovação e rejeição reusam o admin | Execute | Verified |
 | AJUS-06 | P1: Histórico mostra o pedido | Execute | Verified |
 
-**Coverage:** 6 total, 4 mapped to tasks, 2 mapped to design.
+**Coverage:** 6 total, 6 mapped to tasks, 0 unmapped.
 
 ---
 
 ## Success Criteria
 
-- [ ] Um hotel ativo pode ser corrigido pelo parceiro
-- [ ] A correção não volta a Ativo sem aprovação
-- [ ] O admin não ganha tela nova
+- [x] Um hotel ativo pode ser corrigido pelo parceiro
+- [x] A correção não volta a Ativo sem aprovação
+- [x] O admin não ganha tela nova

@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/ajuste-hotel-ativo/design.md`
-**Status**: In Progress
+**Status**: Done
 
 ---
 
@@ -106,12 +106,12 @@ T1 → T2 → T3
 
 **Done when**:
 
-- [ ] Quarto sem foto responde 422 com "Cadastre ao menos 1 foto em: {nome}" e o status fica DRAFT
-- [ ] O envio válido coloca o hotel na fila do admin
-- [ ] Aprovar volta o status para ACTIVE
-- [ ] Rejeitar grava o motivo e o parceiro vê esse texto
-- [ ] Build gate passa
-- [ ] Test count: 7 tests pass
+- [x] Quarto sem foto responde 422 com "Cadastre ao menos 1 foto em: {nome}" e o status fica DRAFT
+- [x] O envio válido coloca o hotel na fila do admin
+- [x] Aprovar volta o status para ACTIVE
+- [x] Rejeitar grava o motivo e o parceiro vê esse texto
+- [x] Build gate passa
+- [x] Test count: 7 tests pass
 
 **Tests**: e2e
 **Gate**: build

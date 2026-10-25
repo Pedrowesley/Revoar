@@ -8,9 +8,9 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Feature ativa** | `ajuste-hotel-ativo` (T2 do botão feito) |
+| **Feature ativa** | `ajuste-hotel-ativo` (código e testes locais; verificação independente pendente) |
 | **Fase atual** | Release 0.0 — software no ar |
-| **Próximo passo** | Reenvio, fila, aprovação e rejeição da correção |
+| **Próximo passo** | Re-verificador das fotos do quarto; em seguida o do ajuste |
 | **Última atualização** | 2026-10-24 |
 | **Git** | `main` em `github.com/Pedrowesley/Revoar` |
 
@@ -111,4 +111,4 @@ Release 1.0  GA              → Lançamento 5 destinos
 | extranet-perfil-parceiro | ✅ | ✅ | ✅ | — | Especificada (AD-011); Execute ainda não começou |
 | landing-publica | ✅ | ✅ | ✅ | FAIL | Código no ar; validação com 2 testes frouxos por corrigir |
 | fotos-do-quarto | ✅ | ✅ | ✅ | — | Implementada: até 8 fotos, CRUD no criar e editar, admin só leitura |
-| ajuste-hotel-ativo | ✅ | ✅ | em curso | — | T2: botão Corrigir ficha e histórico na ficha |
+| ajuste-hotel-ativo | ✅ | ✅ | ✅ | — | Parceiro reabre o hotel ativo; volta a Ativo só com nova aprovação |
