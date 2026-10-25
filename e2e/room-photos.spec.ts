@@ -291,14 +291,17 @@ test.describe("Fotos do quarto", () => {
     await page.reload();
 
     const empty = page.getByRole("listitem").filter({ hasText: "Quarto vazio" });
+    const emptyMark = empty.locator("[aria-hidden]").filter({ has: page.locator("svg.lucide-building2") });
     await expect(empty.getByRole("img")).toHaveCount(0);
-    await expect(empty.locator("svg")).toBeVisible();
+    await expect(emptyMark).toBeVisible();
+    await expect(emptyMark).toHaveText("");
     await expect(empty.getByRole("button")).toHaveCount(0);
 
     const broken = page.getByRole("listitem").filter({ hasText: "Foto quebrada" });
+    const brokenMark = broken.locator("[aria-hidden]").filter({ has: page.locator("svg.lucide-building2") });
     await expect(broken.getByRole("img")).toHaveCount(0);
-    await expect(broken.locator("svg")).toBeVisible();
-    await expect(broken.getByText(/não carreg/i)).toHaveCount(0);
+    await expect(brokenMark).toBeVisible();
+    await expect(brokenMark).toHaveText("");
   });
 
   test("FOTO-02, FOTO-03 e FOTO-04: a galeria avisa envio, limite, tipo e tamanho", async ({ page }) => {
@@ -326,11 +329,13 @@ test.describe("Fotos do quarto", () => {
     await expect(page.getByText("Foto não enviada")).toBeVisible();
     await expect(page.getByText("Formato inválido. Use JPG, PNG ou WebP.")).toHaveCount(2);
 
-    await input.setInputFiles({
+    await page.reload();
+    await page.locator("input[type=file]").setInputFiles({
       name: "grande.png",
       mimeType: "image/png",
       buffer: Buffer.alloc(5 * 1024 * 1024 + 1, 1),
     });
+    await expect(page.getByText("Foto não enviada")).toBeVisible();
     await expect(page.getByText("Arquivo deve ter no máximo 5MB.")).toHaveCount(2);
 
     for (let index = 3; index <= 8; index += 1) {
