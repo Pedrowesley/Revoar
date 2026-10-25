@@ -147,7 +147,7 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] O union aceita `{ type: "partner.profile.updated"; partnerId: string }`
+- [x] O union aceita `{ type: "partner.profile.updated"; partnerId: string }`
 
 **Tests**: none
 **Gate**: build
