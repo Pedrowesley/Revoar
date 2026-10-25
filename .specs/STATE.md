@@ -8,9 +8,9 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Feature ativa** | `extranet-perfil-parceiro` (especificada, sem código) |
-| **Fase atual** | Release 0.0 — software no ar; perfil do parceiro só em spec |
-| **Próximo passo** | Implementar `extranet-perfil-parceiro` quando pedido; senão Release 0.1 |
+| **Feature ativa** | `fotos-do-quarto` (implementada; e2e verde) |
+| **Fase atual** | Release 0.0 — software no ar |
+| **Próximo passo** | Verificador de fotos-do-quarto; landing visual segue sem commit |
 | **Última atualização** | 2026-10-24 |
 | **Git** | `main` em `github.com/Pedrowesley/Revoar` |
 
@@ -86,6 +86,7 @@ npm run test:e2e
 | AD-010 | **UI shell moderno** extranet/admin: header autenticado, Plus Jakarta Sans, tokens `#0E7490`, componentes `PageShell`/`Surface`/`Skeleton`/`EmptyState`/`Alert`, checklist de progresso do hotel | active | 2026-07 |
 | AD-011 | **Perfil do parceiro:** a extranet grava avatar, logo e confirmação; o admin lê a mesma ficha e não a edita. Viajante não vê nesta entrega | active | 2026-10 |
 | AD-012 | **Landing na `/` da extranet:** anfitrião com links reais (cadastro, login, painel); hóspede como prévia "Em breve" sem rota; admin fora da página; sem números inventados | active | 2026-10 |
+| AD-013 | **CRUD inteiro:** cadastro novo cobre criar, ler, atualizar e excluir na mesma entrega, na tela de criar e na de editar | active | 2026-10 |
 
 ---
 
@@ -107,4 +108,5 @@ Release 1.0  GA              → Lançamento 5 destinos
 | extranet-cadastro-parceiros | ✅ | ✅ | ✅ | ✅ | Release 0.0 — software complete (+ UI/RQ) |
 | sync-tempo-real | ✅ | ✅ | ✅ | ✅ | Fase 7 — polling + SSE (PASS condicional, sem E2E sync) |
 | extranet-perfil-parceiro | ✅ | ✅ | ✅ | — | Especificada (AD-011); Execute ainda não começou |
-| landing-publica | ✅ | ✅ | ✅ | — | Execute em andamento (AD-012) |
+| landing-publica | ✅ | ✅ | ✅ | FAIL | Código no ar; validação com 2 testes frouxos por corrigir |
+| fotos-do-quarto | ✅ | ✅ | ✅ | — | Implementada: até 8 fotos, CRUD no criar e editar, admin só leitura |
