@@ -184,6 +184,10 @@ test.describe("Ajuste de hotel ativo", () => {
     await page.getByRole("link", { name: "Standard" }).click();
     await expect(page.getByLabel("Nome do quarto")).toBeEnabled();
     await expect(page.getByRole("button", { name: "Salvar alterações" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Adicionar foto" })).toBeEnabled();
+
+    await page.goto(`${EXTRANET}/hotels/${hotelId}/photos`);
+    await expect(page.getByRole("button", { name: "Adicionar foto" })).toBeEnabled();
   });
 
   test("o botão fica oculto em rascunho, análise, rejeitado e inativo", async ({ page }) => {
