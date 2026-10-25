@@ -5,6 +5,12 @@ export type AllowedImageType = (typeof ALLOWED_IMAGE_TYPES)[number];
 
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
+export const MAX_ROOM_IMAGES = 8;
+
+export const ROOM_IMAGE_LIMIT_MESSAGE = "Este quarto já tem 8 fotos.";
+
+export const ROOM_IMAGE_SELECTION_LIMIT_MESSAGE = "Escolha no máximo 8 fotos.";
+
 export const presignImageSchema = z.object({
   contentType: z.enum(ALLOWED_IMAGE_TYPES, { message: "Formato inválido. Use JPG, PNG ou WebP." }),
   fileSize: z
