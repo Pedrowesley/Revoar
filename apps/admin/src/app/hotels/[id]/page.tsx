@@ -49,6 +49,7 @@ type HotelPreview = {
     bedConfiguration: string;
     amenities: string[];
     sizeSqm: number | null;
+    images: { id: string; url: string; isPrimary: boolean; altText: string | null }[];
   }[];
   images: { id: string; url: string; isPrimary: boolean; altText: string | null }[];
   statusHistory: {
@@ -71,6 +72,28 @@ const STATUS_LABELS: Record<string, string> = {
 function statusLabel(status: string | null) {
   if (!status) return "—";
   return STATUS_LABELS[status] ?? status;
+}
+
+function AdminRoomPhoto({
+  image,
+  roomName,
+}: {
+  image: HotelPreview["roomTypes"][number]["images"][number];
+  roomName: string;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) return <PhotoPlaceholder />;
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={image.url}
+      alt={image.altText ?? roomName}
+      className="h-full w-full object-cover"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 function PhotoPlaceholder() {
@@ -316,6 +339,19 @@ export default function AdminHotelPreviewPage() {
                     {ROOM_AMENITY_LABELS[a as RoomAmenity]}
                   </span>
                 ))}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {room.images.length === 0 ? (
+                  <div className="aspect-video overflow-hidden rounded-lg">
+                    <PhotoPlaceholder />
+                  </div>
+                ) : (
+                  room.images.map((image) => (
+                    <div key={image.id} className="aspect-video overflow-hidden rounded-lg bg-muted">
+                      <AdminRoomPhoto image={image} roomName={room.name} />
+                    </div>
+                  ))
+                )}
               </div>
             </Surface>
           ))}
