@@ -124,8 +124,8 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] Exportado em `packages/shared/src/index.ts`
-- [ ] `legalName`, `cnpj`, `email` e `status` não passam no update
+- [x] Exportado em `packages/shared/src/index.ts`
+- [x] `legalName`, `cnpj`, `email` e `status` não passam no update
 
 **Tests**: none
 **Gate**: build

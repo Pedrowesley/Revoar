@@ -6,5 +6,6 @@ export * from "./schemas/hotel.schema";
 export * from "./schemas/hotel-update.schema";
 export * from "./schemas/room.schema";
 export * from "./schemas/image.schema";
+export * from "./schemas/profile.schema";
 export * from "./utils/slug";
 export * from "./events";
