@@ -121,6 +121,8 @@ Pronto quando: abrir o link do e-mail mostra a reserva confirmada em próximas, 
 
 ### Fatia 4 — Extranet no mesmo ponto
 
+A recusa com motivo e o prazo das 24 horas estão em código. A grade, a leitura das confirmadas e o aviso sem atualizar a página ainda não.
+
 Grade do mês por tipo de quarto. Cada noite mostra sem configuração, aberta ou bloqueada, e quantas unidades já estão confirmadas no Revoar. Recusa exige motivo opcional e mostra o prazo que falta das 24 horas. Confirmadas ficam em leitura: código, hóspede, quarto, datas, total e status. Pedido novo chega pelo canal de eventos que a extranet já usa.
 
 Pronto quando: o parceiro vê, sem atualizar a página, um pedido sob consulta. Recusar grava o motivo que o hóspede lê. A noite confirmada na plataforma aparece ocupada, e bloqueá-la não cancela essa reserva.
@@ -181,7 +183,7 @@ Uma etapa só começa quando a anterior está no código e o teste dela passou. 
 
 A fatia 4 anda nesta ordem, e a fatia só fecha quando as quatro passaram:
 
-1. Motivo opcional na recusa e prazo das 24 horas visível. O hóspede lê o motivo. O e-mail de recusa continua dizendo que nada foi cobrado.
+1. Motivo opcional na recusa e prazo das 24 horas visível. O hóspede lê o motivo. O e-mail de recusa continua dizendo que nada foi cobrado. **Em código e testado.**
 2. Confirmadas em leitura, separadas do pedido: código, hóspede, quarto, datas, total e status, sem aceitar nem recusar.
 3. Pedido novo no canal de eventos que a extranet já usa, sem atualizar a página.
 4. Grade do mês: noite sem configuração, aberta ou bloqueada, e as unidades já confirmadas. Bloquear a noite ocupada não cancela a reserva. O hóspede não reserva essa noite.

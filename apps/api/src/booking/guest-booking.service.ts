@@ -626,7 +626,15 @@ export class GuestBookingService {
 
   private async notify(
     kind: "requested" | "accepted" | "declined" | "voucher",
-    view: { code: string; guestEmail: string; checkIn: string; checkOut: string; totalCents: number; snapshot: Prisma.JsonValue },
+    view: {
+      code: string;
+      guestEmail: string;
+      checkIn: string;
+      checkOut: string;
+      totalCents: number;
+      snapshot: Prisma.JsonValue;
+      declineReason?: string | null;
+    },
   ) {
     const snapshot = (view.snapshot ?? {}) as { hotelName?: string; roomName?: string };
     const stay: StayNotice = {
@@ -642,7 +650,7 @@ export class GuestBookingService {
     try {
       if (kind === "requested") await this.notifications.sendBookingRequested(stay);
       if (kind === "accepted") await this.notifications.sendBookingAccepted(stay);
-      if (kind === "declined") await this.notifications.sendBookingDeclined(stay);
+      if (kind === "declined") await this.notifications.sendBookingDeclined(stay, view.declineReason);
       if (kind === "voucher") await this.notifications.sendBookingVoucher(stay);
     } catch (error) {
       this.logger.error(`Falha ao registrar e-mail da reserva ${view.code}: ${error instanceof Error ? error.message : "erro"}`);

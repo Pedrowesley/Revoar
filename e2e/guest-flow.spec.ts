@@ -319,6 +319,76 @@ test("pedido sob consulta só cobra depois que o parceiro aceita", async ({ page
   });
 });
 
+test("parceiro recusa com motivo dentro das 24 horas e o hóspede lê", async ({ page }) => {
+  let checkIn = "";
+  let checkOut = "";
+  let rate: { id: string; totalCents: number } | null = null;
+  for (let offset = 8; offset <= 36; offset += 1) {
+    const start = iso(offset);
+    const end = iso(offset + 2);
+    const response = await fetch(
+      `http://127.0.0.1:3002/guest/hotels/pousada-atlantico?city=Fortaleza&checkIn=${start}&checkOut=${end}&adults=2&children=0&rooms=1`,
+    );
+    if (!response.ok) continue;
+    const detail = (await response.json()) as { rooms: { rates: { id: string; bookingMode: string; freeUnits: number; totalCents: number }[] }[] };
+    const request = detail.rooms.flatMap((room) => room.rates).find((item) => item.bookingMode === "REQUEST" && item.freeUnits >= 1);
+    if (request) {
+      checkIn = start;
+      checkOut = end;
+      rate = request;
+      break;
+    }
+  }
+  if (!rate) throw new Error("Nenhuma data sob consulta livre");
+  const email = `recusa-${Date.now()}@example.com`;
+  const reason = "Sem vaga nesta data";
+  const created = await fetch("http://127.0.0.1:3002/guest/bookings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ratePlanId: rate.id,
+      checkIn,
+      checkOut,
+      adults: 2,
+      children: 0,
+      quantity: 1,
+      firstName: "Lia",
+      lastName: "Costa",
+      email,
+      phone: "85933334444",
+      cpf: "10000000019",
+      idempotencyKey: crypto.randomUUID(),
+      expectedTotalCents: rate.totalCents,
+    }),
+  });
+  if (!created.ok) throw new Error(await created.text());
+  const booking = (await created.json()) as { code: string };
+
+  const login = await apiPost<{ accessToken: string }>("/extranet/auth/login", {
+    email: "parceiro@revoar.com.br",
+    password: "revoar123",
+  });
+  if (!login.ok) throw new Error(login.message);
+  await page.addInitScript((value) => {
+    localStorage.setItem("revoar_partner_token", value);
+  }, login.data.accessToken);
+  await page.goto("http://localhost:3000/reservations");
+  const card = page.getByRole("article", { name: booking.code });
+  await expect(card.getByText(/24 horas/)).toBeVisible();
+  await card.getByLabel("Motivo da recusa (opcional)").fill(reason);
+  await card.getByRole("button", { name: "Recusar" }).click();
+  await expect(card.getByText("Recusada")).toBeVisible();
+
+  await page.goto(`${GUEST}/reservas/${booking.code}?email=${encodeURIComponent(email)}`);
+  await expect(page.getByText("O hotel recusou. Nada foi cobrado.")).toBeVisible();
+  await expect(page.getByText(`Motivo da recusa: ${reason}`)).toBeVisible();
+  await expect
+    .poll(async () =>
+      (await messagesFor(email)).some((message) => message.html.includes("Nada foi cobrado") && message.html.includes(reason)),
+    )
+    .toBe(true);
+});
+
 test("parceiro abre o calendário com o aviso de bloqueio", async ({ page }) => {
   const login = await apiPost<{ accessToken: string }>("/extranet/auth/login", {
     email: "parceiro@revoar.com.br",

@@ -236,7 +236,7 @@ function Reservation() {
         </button>
       )}
       <p className="text-sm text-muted-foreground">{booking.snapshot.cancellationLabel}</p>
-      {booking.declineReason && <p className="mt-2 text-sm">{booking.declineReason}</p>}
+      {booking.declineReason && <p className="mt-2 text-sm">Motivo da recusa: {booking.declineReason}</p>}
       {typeof booking.refundedCents === "number" && booking.status === "CANCELLED" && (
         <p className="mt-2 text-sm">Reembolso de {brl(booking.refundedCents)}.</p>
       )}

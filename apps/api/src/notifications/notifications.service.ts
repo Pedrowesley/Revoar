@@ -95,11 +95,12 @@ export class NotificationsService {
     });
   }
 
-  async sendBookingDeclined(stay: StayNotice) {
+  async sendBookingDeclined(stay: StayNotice, reason?: string | null) {
+    const motive = reason?.trim() ? `<p>Motivo: ${escapeHtml(reason.trim())}</p>` : "";
     await this.send({
       to: stay.to,
       subject: `O hotel recusou — ${stay.hotelName}`,
-      html: this.stayHtml(stay, "<p>O hotel recusou o pedido. Nada foi cobrado.</p>"),
+      html: this.stayHtml(stay, `<p>O hotel recusou o pedido. Nada foi cobrado.</p>${motive}`),
     });
   }
 
