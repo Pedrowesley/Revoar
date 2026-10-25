@@ -14,7 +14,7 @@ Leia nesta ordem antes de implementar qualquer coisa:
 6. [`.specs/features/sync-tempo-real/spec.md`](./.specs/features/sync-tempo-real/spec.md) — sync sem F5
 7. [`DEVELOPMENT.md`](./DEVELOPMENT.md) — setup, API, testes, SSE
 
-**Release 0.0 está concluída no código.** A área do hóspede já busca, escolhe o quarto e chega ao voucher em ambiente de teste. A decisão dessa área está em [`docs/11-area-do-cliente/fase-11-area-do-cliente.md`](docs/11-area-do-cliente/fase-11-area-do-cliente.md). O que falta para a reserva operar, no hóspede, na extranet e no admin, está em [`docs/12-jornada-completa/fase-12-jornada-completa.md`](docs/12-jornada-completa/fase-12-jornada-completa.md). A próxima fatia é a ficha honesta.
+**Release 0.0 está concluída no código.** A área do hóspede já busca, escolhe o quarto e chega ao voucher em ambiente de teste. A decisão dessa área está em [`docs/11-area-do-cliente/fase-11-area-do-cliente.md`](docs/11-area-do-cliente/fase-11-area-do-cliente.md). O que falta para a reserva operar, no hóspede, na extranet e no admin, está em [`docs/12-jornada-completa/fase-12-jornada-completa.md`](docs/12-jornada-completa/fase-12-jornada-completa.md). A ficha honesta já está em código. A próxima fatia é o e-mail da reserva.
 
 ## Estrutura de documentação
 

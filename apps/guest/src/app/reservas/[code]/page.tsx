@@ -32,6 +32,8 @@ type BookingView = {
   payment: { id: string; method: string; status: string; pixCopyPaste: string | null; sandbox: boolean; installments?: number } | null;
   refundedCents?: number;
   refundPercent?: number;
+  holdExtended?: boolean;
+  refundPreview?: { percent: number; refundedCents: number } | null;
 };
 
 const STATUS: Record<string, string> = {
@@ -88,6 +90,7 @@ function Reservation() {
   const [method, setMethod] = useState<"PIX" | "CREDIT_CARD">("PIX");
   const [installments, setInstallments] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   async function load() {
@@ -143,17 +146,52 @@ function Reservation() {
     }
   }
 
-  async function cancel() {
-    if (!window.confirm("Cancelar esta reserva?")) return;
+  async function extend() {
     setError(null);
+    setBusy(true);
+    try {
+      const data = await apiFetch<BookingView>(`/guest/bookings/${params.code}/extend`, {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      setBooking(data);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Não foi possível estender o tempo");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function regeneratePix() {
+    setError(null);
+    setBusy(true);
+    try {
+      const data = await apiFetch<BookingView>(`/guest/bookings/${params.code}/pay`, {
+        method: "POST",
+        body: JSON.stringify({ email, method: "PIX", installments: 1 }),
+      });
+      setBooking(data);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Não foi possível gerar outro PIX");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function cancel() {
+    setError(null);
+    setBusy(true);
     try {
       const data = await apiFetch<BookingView>(`/guest/bookings/${params.code}/cancel`, {
         method: "POST",
         body: JSON.stringify({ email }),
       });
       setBooking(data);
+      setCancelOpen(false);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Não foi possível cancelar");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -163,8 +201,18 @@ function Reservation() {
   const canPay = booking.status === "HELD" || booking.status === "AWAITING_PAYMENT";
   const pendingSandbox = booking.payment?.status === "PENDING" && booking.payment.sandbox;
   const canCancel = ["HELD", "PAYMENT_PENDING", "REQUESTED", "AWAITING_PAYMENT", "CONFIRMED"].includes(booking.status);
-  const deadline = booking.status === "AWAITING_PAYMENT" ? booking.payBy : booking.holdExpiresAt;
-  const remaining = canPay ? countdown(deadline, now) : null;
+  const payDeadline = booking.bookingMode === "INSTANT" ? booking.holdExpiresAt : booking.payBy;
+  const paying = canPay || booking.status === "PAYMENT_PENDING";
+  const remaining = paying ? countdown(payDeadline, now) : null;
+  const canExtend = booking.status === "HELD" && booking.bookingMode === "INSTANT" && !booking.holdExtended;
+  const canRegeneratePix = booking.payment?.method === "PIX" && booking.payment.status === "PENDING" && remaining != null && remaining !== "0:00";
+  const preview = booking.refundPreview;
+  const refundCopy =
+    booking.status === "CONFIRMED" && preview
+      ? preview.percent === 100
+        ? `Se cancelar agora, o reembolso é integral: ${brl(preview.refundedCents)}.`
+        : `Se cancelar agora, o reembolso é de ${brl(preview.refundedCents)}.`
+      : "Se cancelar agora, nada é cobrado.";
   const step = booking.status === "CONFIRMED" ? "Passo 3 de 3" : canPay || booking.status === "PAYMENT_PENDING" ? "Passo 2 de 3" : "Sua reserva";
   const shareText = encodeURIComponent(
     `Reserva ${booking.code} em ${booking.snapshot.hotelName ?? "Revoar"}, de ${booking.checkIn} a ${booking.checkOut}.`,
@@ -182,6 +230,11 @@ function Reservation() {
       <p className="mt-4 text-lg font-semibold">{brl(booking.totalCents)} total · {booking.nights} noites · impostos inclusos</p>
       <p className="mt-3 text-base">{STATUS[booking.status] ?? booking.status}</p>
       {remaining && <p className="mt-1 text-sm font-semibold">Reservamos seu quarto por {remaining}</p>}
+      {canExtend && (
+        <button type="button" onClick={extend} disabled={busy} className="mt-4 h-12 rounded-xl border border-border bg-surface px-4 text-sm font-semibold disabled:opacity-60">
+          Mais 10 minutos
+        </button>
+      )}
       <p className="text-sm text-muted-foreground">{booking.snapshot.cancellationLabel}</p>
       {booking.declineReason && <p className="mt-2 text-sm">{booking.declineReason}</p>}
       {typeof booking.refundedCents === "number" && booking.status === "CANCELLED" && (
@@ -237,6 +290,11 @@ function Reservation() {
             <p className="mt-3 break-all rounded-xl bg-muted px-4 py-5 text-base font-medium leading-relaxed">{booking.payment.pixCopyPaste}</p>
           )}
           <p className="mt-2 text-xs text-muted-foreground">Ambiente de teste: esta confirmação não cobra um banco de verdade.</p>
+          {canRegeneratePix && (
+            <button type="button" onClick={regeneratePix} disabled={busy} className="mt-4 h-12 rounded-xl border border-border px-4 text-sm font-semibold disabled:opacity-60">
+              Gerar outro PIX de teste
+            </button>
+          )}
         </div>
       )}
 
@@ -257,10 +315,23 @@ function Reservation() {
         </div>
       )}
 
-      {canCancel && (
-        <button type="button" onClick={cancel} className="mt-6 inline-flex h-11 items-center text-sm font-medium text-danger">
+      {canCancel && !cancelOpen && (
+        <button type="button" onClick={() => setCancelOpen(true)} className="mt-6 inline-flex h-11 items-center text-sm font-medium text-danger">
           Cancelar reserva
         </button>
+      )}
+      {canCancel && cancelOpen && (
+        <div className="mt-6 rounded-2xl border border-border bg-surface p-4">
+          <p className="text-sm">{refundCopy}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" onClick={cancel} disabled={busy} className="h-12 rounded-xl bg-danger px-4 text-sm font-semibold text-white disabled:opacity-60">
+              Confirmar cancelamento
+            </button>
+            <button type="button" onClick={() => setCancelOpen(false)} className="h-12 rounded-xl border border-border px-4 text-sm font-semibold">
+              Voltar
+            </button>
+          </div>
+        </div>
       )}
 
       {canPay && !booking.payment && (

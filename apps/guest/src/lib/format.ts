@@ -1,3 +1,7 @@
+export function stayTotal(nightlyCents: number[], quantity: number) {
+  return nightlyCents.reduce((sum, price) => sum + price, 0) * quantity;
+}
+
 export function brl(cents: number): string {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }

@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import {
   BadRequestException,
   ConflictException,
@@ -91,7 +92,7 @@ export class GuestBookingService {
       nights[0],
       nights[nights.length - 1],
     );
-    const quoted = this.quoteHotel(hotel, nights, query, committed);
+    const quoted = this.quoteHotel(hotel, nights, query, committed, { allowFewerRooms: true });
     return {
       search: { ...query, nights: nights.length },
       hotel: {
@@ -295,9 +296,13 @@ export class GuestBookingService {
     if (!deadline || deadline.getTime() <= Date.now()) {
       throw new BadRequestException("O prazo para pagar acabou");
     }
+    await this.prisma.payment.updateMany({
+      where: { bookingId: booking.id, status: "PENDING" },
+      data: { status: "FAILED" },
+    });
     const pixCopyPaste =
       input.method === "PIX"
-        ? `00020126revoar${booking.bookingCode}${booking.totalCents}`
+        ? `00020126revoar${booking.bookingCode}${booking.totalCents}${randomBytes(3).toString("hex")}`
         : null;
     const payment = await this.prisma.payment.create({
       data: {
@@ -609,7 +614,7 @@ export class GuestBookingService {
     confirmedAt: Date | null;
     snapshot: Prisma.JsonValue;
     guests?: { kind: string; firstName: string; lastName: string; age: number | null }[];
-    payments?: { id: string; method: string; status: string; pixCopyPaste: string | null; sandbox: boolean; installments: number; refundedCents: number }[];
+    payments?: { id: string; method: string; status: string; pixCopyPaste: string | null; sandbox: boolean; installments: number; refundedCents: number; amountCents: number }[];
     hotel?: { name: string };
   }) {
     const payment = booking.payments?.[0];
@@ -648,6 +653,35 @@ export class GuestBookingService {
             refundedCents: payment.refundedCents,
           }
         : null,
+      refundPreview: this.refundPreview(booking),
+    };
+  }
+
+  private refundPreview(booking: {
+    status: BookingStatus;
+    confirmedAt: Date | null;
+    checkIn: Date;
+    snapshot: Prisma.JsonValue;
+    payments?: { status: string; amountCents: number }[];
+  }): { percent: number; refundedCents: number } | null {
+    const open = ["HELD", "PAYMENT_PENDING", "REQUESTED", "AWAITING_PAYMENT", "CONFIRMED"];
+    if (!open.includes(booking.status)) return null;
+    if (booking.status !== "CONFIRMED" || !booking.confirmedAt) {
+      return { percent: 0, refundedCents: 0 };
+    }
+    const snapshot = (booking.snapshot ?? {}) as { cancellationPolicy?: CancellationPolicy; checkInTime?: string };
+    const checkInAt = checkInInstant(booking.checkIn, snapshot.checkInTime ?? "14:00");
+    if (checkInAt.getTime() <= Date.now()) return { percent: 0, refundedCents: 0 };
+    const percent = refundPercent({
+      policy: snapshot.cancellationPolicy ?? "NON_REFUNDABLE",
+      confirmedAt: booking.confirmedAt,
+      checkInAt,
+      now: new Date(),
+    });
+    const payment = booking.payments?.find((item) => item.status === "CAPTURED");
+    return {
+      percent,
+      refundedCents: payment ? Math.round((payment.amountCents * percent) / 100) : 0,
     };
   }
 
@@ -679,6 +713,7 @@ export class GuestBookingService {
     nights: Date[],
     query: GuestSearchQuery,
     committed: Map<string, number>,
+    options?: { allowFewerRooms?: boolean },
   ) {
     const offers: { totalCents: number; bookingMode: BookingMode }[] = [];
     const rooms = hotel.roomTypes.map((room) => {
@@ -697,8 +732,11 @@ export class GuestBookingService {
                 return Math.max(0, inventory.unitsForSale - inventory.blockedUnits - taken);
               }),
             );
-            if (freeUnits < query.rooms) return [];
-            const totalCents = (nightly as number[]).reduce((sum, price) => sum + price, 0) * query.rooms;
+            if (freeUnits < 1) return [];
+            const maxQuantity = Math.min(query.rooms, freeUnits);
+            if (!options?.allowFewerRooms && freeUnits < query.rooms) return [];
+            const pricedQuantity = options?.allowFewerRooms ? maxQuantity : query.rooms;
+            const totalCents = (nightly as number[]).reduce((sum, price) => sum + price, 0) * pricedQuantity;
             offers.push({ totalCents, bookingMode: mode });
             return [
               {
@@ -713,6 +751,7 @@ export class GuestBookingService {
                 nightlyCents: nightly,
                 totalCents,
                 freeUnits,
+                maxQuantity,
                 bookingMode: mode,
               },
             ];

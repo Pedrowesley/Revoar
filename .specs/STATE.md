@@ -8,9 +8,9 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Feature ativa** | Fase 12 — jornada completa (plano). O hóspede já chega ao voucher em ambiente de teste |
+| **Feature ativa** | Fase 12 — jornada completa. A fatia 1, ficha honesta, está em código |
 | **Fase atual** | Fase 12. Release 0.0 e as fatias 1 a 4 da área do cliente já estão em código |
-| **Próximo passo** | Fatia 1 da fase 12: ficha honesta (comodidades, quantidade, reembolso antes de cancelar, +10 min, novo PIX de teste) |
+| **Próximo passo** | Fatia 2 da fase 12: e-mail da reserva (pedido, aceite, recusa, voucher e link da viagem) |
 | **Última atualização** | 2026-10-25 |
 | **Git** | `cursor/area-do-cliente-1644` em `github.com/Pedrowesley/Revoar` |
 
@@ -26,7 +26,7 @@
 | Spec Fase 7 (sync) | `.specs/features/sync-tempo-real/` | ✅ |
 | Spec perfil do parceiro | `.specs/features/extranet-perfil-parceiro/` | ✅ spec/design/tasks e código na extranet e no admin |
 | Área do hóspede | `apps/guest`, `docs/11-area-do-cliente/` | ✅ em código; pagamento em ambiente de teste |
-| Jornada completa | `docs/12-jornada-completa/` | ✅ plano; nenhuma fatia desta fase está em código |
+| Jornada completa | `docs/12-jornada-completa/` | ✅ plano; fatia 1 em código, fatias 2 a 8 ainda no plano |
 | Entrega consolidada | `RELEASE-0.0.md` | ✅ |
 | UI moderna | AD-010 (`PageShell`, header autenticado) | ✅ |
 | Sync UI | TanStack Query + polling + SSE | ✅ |
@@ -41,7 +41,7 @@
 - Deploy staging em URL pública para sócios
 - ≥ 10 hotéis piloto (operação manual)
 - Gateway real de PIX e cartão (AD-022). O fluxo do hóspede confirma o pagamento em ambiente de teste
-- Fatias 1 a 8 da fase 12: ficha honesta, e-mail da reserva, minhas viagens fora deste navegador, grade mensal e operação do pedido na extranet, admin da reserva, busca por estrelas, Mercado Pago, avaliações e mapa
+- Fatias 2 a 8 da fase 12: e-mail da reserva, minhas viagens fora deste navegador, grade mensal e operação do pedido na extranet, admin da reserva, busca por estrelas, Mercado Pago, avaliações e mapa
 - Vários usuários no mesmo parceiro
 - E2E do sync duas origens (T7.19)
 - EventBus Redis (só quando a API tiver >1 instância)
@@ -114,8 +114,8 @@ Fatia 1      Tarifa, calendário e modo de reserva na extranet → ✅ em códig
 Fatia 2      Vitrine do hóspede (busca, ficha, escolha do quarto) → ✅ em código
 Fatia 3      Reserva imediata + PIX/cartão de teste + voucher + cancelamento → ✅ em código (sandbox)
 Fatia 4      Sob consulta (pedido, aceite, pagamento em 2 h) → ✅ em código (sandbox)
-Fase 12      Jornada completa. Próximo trabalho: fatia 1, ficha honesta
-             2 e-mail da reserva · 3 minhas viagens · 4 extranet (grade, motivo, 24 h)
+Fase 12      Jornada completa. Fatia 1 ficha honesta → ✅ em código
+             Próximo: 2 e-mail da reserva · 3 minhas viagens · 4 extranet (grade, motivo, 24 h)
              5 admin da reserva · 6 busca por estrelas · 7 Mercado Pago · 8 avaliações e mapa
 ```
 

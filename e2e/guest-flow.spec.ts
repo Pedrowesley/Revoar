@@ -81,12 +81,69 @@ test.describe("área do hóspede no celular", () => {
     await page.getByRole("button", { name: "Continuar", exact: true }).click();
 
     await expect(page.getByText("Quase lá! Seu quarto está reservado temporariamente.")).toBeVisible();
+    await page.getByRole("button", { name: "Mais 10 minutos" }).click();
+    await expect(page.getByRole("button", { name: "Mais 10 minutos" })).toHaveCount(0);
+    const code = (await page.getByText(/^REV-/).textContent())?.trim() ?? "";
+    const again = await fetch(`http://127.0.0.1:3002/guest/bookings/${code}/extend`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    expect(again.status).toBe(400);
     await expectMobileShell(page, /Confirmar reserva/);
     await page.getByRole("button", { name: /Confirmar reserva/ }).click();
+    const pix = page.getByText(/00020126revoar/);
+    const firstPix = (await pix.textContent()) ?? "";
+    await page.getByRole("button", { name: "Gerar outro PIX de teste" }).click();
+    await expect(pix).not.toHaveText(firstPix);
     await page.getByRole("button", { name: "Confirmar pagamento de teste" }).click();
     await expect(page.getByText("Reserva confirmada.")).toBeVisible();
     await expect(page.getByText(/Voucher REV-/)).toBeVisible();
     await expect(page.getByRole("link", { name: "Compartilhar no WhatsApp" })).toBeVisible();
+    await page.getByRole("button", { name: "Cancelar reserva" }).click();
+    await expect(page.getByText(/reembolso é integral/)).toBeVisible();
+    await page.getByRole("button", { name: "Confirmar cancelamento" }).click();
+    await expect(page.getByText("Reserva cancelada.")).toBeVisible();
+  });
+
+  test("a ficha mostra piscina e varanda e deixa reduzir os quartos", async ({ page }) => {
+    let checkIn = "";
+    let checkOut = "";
+    for (let offset = 8; offset <= 34; offset += 1) {
+      const start = iso(offset);
+      const end = iso(offset + 2);
+      const response = await fetch(
+        `http://127.0.0.1:3002/guest/hotels/pousada-atlantico?city=Fortaleza&checkIn=${start}&checkOut=${end}&adults=2&children=0&rooms=2`,
+      );
+      if (!response.ok) continue;
+      const detail = (await response.json()) as {
+        hotel: { amenities?: string[] };
+        rooms: { amenities?: string[]; rates: { bookingMode: string; maxQuantity: number }[] }[];
+      };
+      const pool = detail.hotel?.amenities?.includes("POOL");
+      const balcony = detail.rooms?.some((room) => room.amenities?.includes("BALCONY"));
+      const pair = detail.rooms?.some((room) => room.rates.some((rate) => rate.bookingMode === "INSTANT" && rate.maxQuantity >= 2));
+      if (pool && balcony && pair) {
+        checkIn = start;
+        checkOut = end;
+        break;
+      }
+    }
+    if (!checkIn) throw new Error("Nenhuma data com piscina, varanda e dois quartos");
+
+    await page.goto(
+      `${GUEST}/hoteis/pousada-atlantico?city=Fortaleza&checkIn=${checkIn}&checkOut=${checkOut}&adults=2&children=0&rooms=2`,
+    );
+    await expect(page.getByText("Piscina", { exact: true })).toBeVisible();
+    await expect(page.getByText("Varanda", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /Flexível com café/ }).click();
+    await expect(page.getByText("2 quartos", { exact: true })).toBeVisible();
+    const price = page.locator("p.text-base.font-bold");
+    const full = (await price.textContent()) ?? "";
+    await page.getByRole("button", { name: "Menos um quarto" }).click();
+    await expect(page.getByText("1 quarto", { exact: true })).toBeVisible();
+    await expect(price).not.toHaveText(full);
+    await expect(page.getByRole("button", { name: "Mais um quarto" })).toBeEnabled();
   });
 
 test("pedido sob consulta só cobra depois que o parceiro aceita", async ({ page }) => {

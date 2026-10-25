@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BottomBar } from "@/components/bottom-bar";
 import { apiFetch, ApiError } from "@/lib/api";
-import { brl, searchQuery, SearchValues } from "@/lib/format";
+import { brl, searchQuery, SearchValues, stayTotal } from "@/lib/format";
 import { rememberTrip } from "@/lib/trips";
 
 type Rate = {
@@ -13,7 +13,8 @@ type Rate = {
   name: string;
   cancellationLabel: string;
   mealLabel: string;
-  totalCents: number;
+  nightlyCents: number[];
+  maxQuantity: number;
   bookingMode: "INSTANT" | "REQUEST";
 };
 
@@ -39,6 +40,7 @@ function CheckoutStay() {
     children: searchParams.get("children") ?? "0",
     rooms: searchParams.get("rooms") ?? "1",
   };
+  const requestedQuantity = Number(searchParams.get("quantity") ?? search.rooms);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [rate, setRate] = useState<Rate | null>(null);
   const [roomName, setRoomName] = useState("");
@@ -74,7 +76,7 @@ function CheckoutStay() {
       checkOut: search.checkOut,
       adults: Number(search.adults),
       children,
-      quantity: Number(search.rooms),
+      quantity: Math.min(rate.maxQuantity, Math.max(1, requestedQuantity)),
       firstName: String(form.get("firstName")),
       lastName: String(form.get("lastName")),
       email: String(form.get("email")),
@@ -84,7 +86,7 @@ function CheckoutStay() {
       additionalGuests: extraFirst && extraLast ? [{ firstName: extraFirst, lastName: extraLast }] : [],
       guestMessage: String(form.get("guestMessage") || "") || undefined,
       idempotencyKey: crypto.randomUUID(),
-      expectedTotalCents: rate.totalCents,
+      expectedTotalCents: stayTotal(rate.nightlyCents, Math.min(rate.maxQuantity, Math.max(1, requestedQuantity))),
     };
     try {
       const booking = await apiFetch<{ code: string; guestEmail: string }>("/guest/bookings", {
@@ -96,10 +98,11 @@ function CheckoutStay() {
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && typeof err.body.totalCents === "number") {
         const accepted = window.confirm(err.message);
+        const bookedQuantity = Math.min(rate.maxQuantity, Math.max(1, requestedQuantity));
         if (accepted) {
           const booking = await apiFetch<{ code: string; guestEmail: string }>("/guest/bookings", {
             method: "POST",
-            body: JSON.stringify({ ...body, idempotencyKey: crypto.randomUUID(), acceptPriceChange: true, expectedTotalCents: err.body.totalCents }),
+            body: JSON.stringify({ ...body, quantity: bookedQuantity, idempotencyKey: crypto.randomUUID(), acceptPriceChange: true, expectedTotalCents: err.body.totalCents }),
           });
           rememberTrip({ code: booking.code, email: booking.guestEmail, hotelName: detail.hotel.name });
           router.push(`/reservas/${booking.code}?email=${encodeURIComponent(booking.guestEmail)}`);
@@ -113,6 +116,8 @@ function CheckoutStay() {
   }
 
   const back = `/hoteis/${slug}?${searchQuery(search)}`;
+  const quantity = rate ? Math.min(rate.maxQuantity, Math.max(1, requestedQuantity || 1)) : Math.max(1, requestedQuantity || 1);
+  const totalCents = rate ? stayTotal(rate.nightlyCents, quantity) : 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 pb-40 lg:pb-10">
@@ -185,14 +190,14 @@ function CheckoutStay() {
                 {roomName} · {rate.name}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {search.checkIn} a {search.checkOut} · {search.rooms} quarto(s)
+                {search.checkIn} a {search.checkOut} · {quantity === 1 ? "1 quarto" : `${quantity} quartos`}
               </p>
               <p className="mt-3 text-sm">{rate.mealLabel}</p>
               <p className="text-sm text-muted-foreground">{rate.cancellationLabel}</p>
             </aside>
             <BottomBar
               eyebrow={`${detail.hotel.name} · ${roomName}`}
-              price={`${brl(rate.totalCents)} total`}
+              price={`${brl(totalCents)} total`}
               action={submitting ? "Enviando..." : rate.bookingMode === "INSTANT" ? "Continuar" : "Enviar pedido"}
               type="submit"
               form="guest-form"

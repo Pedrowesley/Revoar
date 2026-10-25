@@ -5,8 +5,9 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { BottomBar } from "@/components/bottom-bar";
 import { PhotoCover } from "@/components/photo-cover";
 import { SearchForm } from "@/components/search-form";
+import { hotelAmenityLabel, roomAmenityLabel } from "@/lib/amenities";
 import { apiFetch, ApiError } from "@/lib/api";
-import { brl, SearchValues } from "@/lib/format";
+import { brl, SearchValues, stayTotal } from "@/lib/format";
 import { StayPhoto } from "@/lib/media";
 
 type Rate = {
@@ -15,7 +16,9 @@ type Rate = {
   cancellationLabel: string;
   mealLabel: string;
   totalCents: number;
+  nightlyCents: number[];
   freeUnits: number;
+  maxQuantity: number;
   bookingMode: "INSTANT" | "REQUEST";
   payAtProperty: string | null;
 };
@@ -27,6 +30,7 @@ type Room = {
   bedConfiguration: string;
   sizeSqm: number | null;
   maxOccupancy: number;
+  amenities: string[];
   images: StayPhoto[];
   rates: Rate[];
 };
@@ -40,6 +44,7 @@ type Detail = {
     checkInTime: string;
     checkOutTime: string;
     houseRules: string | null;
+    amenities: string[];
     images: StayPhoto[];
   };
   rooms: Room[];
@@ -60,6 +65,12 @@ function HotelStay() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Rate | null>(null);
+  const [quantity, setQuantity] = useState(1);
+
+  function choose(rate: Rate) {
+    setSelected(rate);
+    setQuantity(rate.maxQuantity);
+  }
 
   useEffect(() => {
     if (!search.city || !search.checkIn) return;
@@ -76,6 +87,7 @@ function HotelStay() {
     const query = new URLSearchParams({
       slug: params.slug,
       ratePlanId: selected.id,
+      quantity: String(quantity),
       ...search,
     });
     router.push(`/checkout?${query.toString()}`);
@@ -99,6 +111,15 @@ function HotelStay() {
                 {detail.hotel.addressLine} · check-in {detail.hotel.checkInTime} · check-out {detail.hotel.checkOutTime}
               </p>
               <p className="mt-4 max-w-3xl leading-relaxed">{detail.hotel.description}</p>
+              {detail.hotel.amenities.length > 0 && (
+                <ul aria-label="Comodidades do hotel" className="mt-4 flex flex-wrap gap-2">
+                  {detail.hotel.amenities.map((code) => (
+                    <li key={code} className="rounded-full border border-border bg-muted px-3 py-1 text-sm">
+                      {hotelAmenityLabel(code)}
+                    </li>
+                  ))}
+                </ul>
+              )}
               {detail.hotel.houseRules && <p className="mt-3 text-sm text-muted-foreground">{detail.hotel.houseRules}</p>}
             </div>
             {detail.rooms.length === 0 && <p>Nenhum quarto livre nessas datas.</p>}
@@ -112,12 +133,23 @@ function HotelStay() {
                   {room.bedConfiguration} · até {room.maxOccupancy} hóspedes
                 </p>
                 <p className="mt-2 text-sm">{room.description}</p>
+                {room.amenities.length > 0 && (
+                  <ul aria-label={`Comodidades de ${room.name}`} className="mt-3 flex flex-wrap gap-2">
+                    {room.amenities.map((code) => (
+                      <li key={code} className="rounded-full border border-border bg-muted px-3 py-1 text-sm">
+                        {roomAmenityLabel(code)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div className="mt-4 grid gap-3">
-                  {room.rates.map((rate) => (
+                  {room.rates.map((rate) => {
+                    const shown = selected?.id === rate.id ? stayTotal(rate.nightlyCents, quantity) : rate.totalCents;
+                    return (
                     <button
                       key={rate.id}
                       type="button"
-                      onClick={() => setSelected(rate)}
+                      onClick={() => choose(rate)}
                       className={`min-h-12 rounded-xl border px-4 py-3 text-left ${selected?.id === rate.id ? "border-primary bg-primary-soft" : "border-border"}`}
                     >
                       <span className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -130,11 +162,37 @@ function HotelStay() {
                             {rate.bookingMode === "INSTANT" ? "Reserva imediata" : "Sob consulta · resposta em até 24 h"} · {rate.freeUnits} livre(s)
                           </span>
                         </span>
-                        <span className="font-bold">{brl(rate.totalCents)} total</span>
+                        <span className="font-bold">{brl(shown)} total</span>
                       </span>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
+                {selected && room.rates.some((rate) => rate.id === selected.id) && (
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold">{quantity === 1 ? "1 quarto" : `${quantity} quartos`}</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        aria-label="Menos um quarto"
+                        disabled={quantity <= 1}
+                        onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+                        className="h-12 w-12 rounded-xl border border-border text-lg font-semibold disabled:opacity-40"
+                      >
+                        −
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Mais um quarto"
+                        disabled={quantity >= selected.maxQuantity}
+                        onClick={() => setQuantity((current) => Math.min(selected.maxQuantity, current + 1))}
+                        className="h-12 w-12 rounded-xl border border-border text-lg font-semibold disabled:opacity-40"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                )}
                 </div>
               </section>
             ))}
@@ -143,7 +201,7 @@ function HotelStay() {
             <div className="lg:sticky lg:top-24">
               <BottomBar
                 eyebrow={selected.bookingMode === "INSTANT" ? "Reserva imediata" : "Você só paga se o hotel aceitar"}
-                price={`${brl(selected.totalCents)} total`}
+                price={`${brl(stayTotal(selected.nightlyCents, quantity))} total`}
                 action={selected.bookingMode === "INSTANT" ? "Reservar" : "Solicitar reserva"}
                 onAction={continueToCheckout}
               />

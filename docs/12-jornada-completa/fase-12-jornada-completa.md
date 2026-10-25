@@ -4,7 +4,7 @@
 **Versão:** 1.0
 **Data:** Outubro/2026
 **Dependências:** Fase 11 (área do cliente), Release 0.0 (extranet e admin)
-**Status:** Plano. A reserva já chega ao voucher na tela, em ambiente de teste. Nenhuma fatia desta fase está em código.
+**Status:** Plano em execução. A fatia 1, ficha honesta, está em código. As fatias 2 a 8 ainda não. A reserva chega ao voucher na tela, em ambiente de teste.
 
 Este documento continua a [Fase 11](../11-area-do-cliente/fase-11-area-do-cliente.md). As decisões AD-015 a AD-021 continuam valendo. Onde a Fase 11 descreve o desenho da reserva e este documento descreve o que ainda falta para operá-la, vale este documento.
 
@@ -54,12 +54,12 @@ Em `apps/guest`, porta 3003:
 - Minhas viagens guarda os códigos deste navegador e abre pelo código e pelo e-mail.
 - Cancelar chama a API. A política e o arrependimento de 7 dias já estão em `apps/api/src/booking/guest-booking.service.ts`.
 
-Ainda não aparece na tela, embora a API já tenha o dado ou a rota:
+A ficha honesta, fatia 1, já mostra na tela o que a API devolvia:
 
 - Comodidades do hotel e do quarto.
-- Quantidade do mesmo tipo menor do que a busca pediu.
+- Quantidade do mesmo tipo, de 1 até o menor valor entre a busca e a vaga livre.
 - Valor do reembolso antes de confirmar o cancelamento.
-- Extensão única de 10 minutos (`POST /guest/bookings/:code/extend`).
+- Extensão única de 10 minutos (`POST /guest/bookings/:code/extend`). O segundo pedido é recusado.
 - Novo código PIX de teste enquanto o prazo de pagar ainda vale.
 
 ### 3.2 Parceiro
@@ -96,6 +96,8 @@ Trocar modo, tarifa ou calendário continua sem devolver o hotel para análise. 
 Cada fatia entra quando a anterior fecha. Hotelbeds não entra em nenhuma delas.
 
 ### Fatia 1 — Ficha honesta
+
+**Estado:** em código.
 
 Mostrar as comodidades que a API já devolve. Na ficha, a quantidade do mesmo tipo pode baixar até 1, nunca acima da busca nem da vaga livre. Na reserva, o cancelamento mostra o reembolso antes do sim. O botão de mais 10 minutos aparece uma vez, enquanto o quarto imediato está segurado. Enquanto o prazo de pagar vale, dá para gerar outro código PIX de teste.
 
