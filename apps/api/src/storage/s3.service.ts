@@ -45,11 +45,15 @@ export class S3Service implements OnModuleInit {
 
   async createPresignedUpload(params: {
     hotelId: string;
+    roomId?: string;
     contentType: AllowedImageType;
     fileName?: string;
   }) {
     const extension = this.extensionFromContentType(params.contentType, params.fileName);
-    const key = `hotels/${params.hotelId}/${randomUUID()}${extension}`;
+    const folder = params.roomId
+      ? `hotels/${params.hotelId}/rooms/${params.roomId}`
+      : `hotels/${params.hotelId}`;
+    const key = `${folder}/${randomUUID()}${extension}`;
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,

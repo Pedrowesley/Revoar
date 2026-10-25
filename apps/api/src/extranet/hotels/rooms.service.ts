@@ -21,6 +21,13 @@ export class RoomsService {
     const rooms = await this.prisma.roomType.findMany({
       where: { hotelId },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      include: {
+        images: {
+          orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+          take: 1,
+          select: { url: true },
+        },
+      },
     });
 
     return rooms.map((room) => this.toResponse(room));
@@ -78,7 +85,7 @@ export class RoomsService {
     return { deleted: true };
   }
 
-  private async getOwnedRoom(hotelId: string, roomId: string) {
+  async getOwnedRoom(hotelId: string, roomId: string) {
     const room = await this.prisma.roomType.findUnique({ where: { id: roomId } });
 
     if (!room || room.hotelId !== hotelId) {
@@ -102,6 +109,7 @@ export class RoomsService {
     sortOrder: number;
     createdAt: Date;
     updatedAt: Date;
+    images?: { url: string }[];
   }) {
     return {
       id: room.id,
@@ -115,6 +123,7 @@ export class RoomsService {
       amenities: room.amenities as string[],
       sizeSqm: room.sizeSqm,
       sortOrder: room.sortOrder,
+      coverImageUrl: room.images?.[0]?.url ?? null,
       createdAt: room.createdAt.toISOString(),
       updatedAt: room.updatedAt.toISOString(),
     };

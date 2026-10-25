@@ -21,6 +21,13 @@ const EDITABLE_STATUSES: HotelStatus[] = [HotelStatus.DRAFT, HotelStatus.REJECTE
 const hotelReadInclude = {
   _count: { select: { roomTypes: true, images: true } },
   images: { where: { isPrimary: true }, select: { id: true }, take: 1 },
+  roomTypes: {
+    orderBy: [{ sortOrder: "asc" as const }, { createdAt: "asc" as const }],
+    select: {
+      name: true,
+      images: { select: { id: true }, take: 1 },
+    },
+  },
 };
 
 @Injectable()
@@ -214,6 +221,18 @@ export class HotelsService {
       );
     }
 
+    const rooms = await this.prisma.roomType.findMany({
+      where: { hotelId },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      include: { _count: { select: { images: true } } },
+    });
+    const roomsMissingPhotos = rooms.filter((room) => room._count.images < 1);
+    if (roomsMissingPhotos.length > 0) {
+      throw new UnprocessableEntityException(
+        `Cadastre ao menos 1 foto em: ${roomsMissingPhotos.map((room) => room.name).join(", ")}`,
+      );
+    }
+
     if (!hotel.name.trim() || hotel.description.trim().length < 20) {
       throw new UnprocessableEntityException(
         "Preencha nome e descrição completos antes de enviar.",
@@ -350,6 +369,7 @@ export class HotelsService {
       updatedAt: Date;
       _count: { roomTypes: number; images: number };
       images?: { id: string }[];
+      roomTypes?: { name: string; images: { id: string }[] }[];
     },
   ) {
     return {
@@ -373,6 +393,9 @@ export class HotelsService {
       roomCount: hotel._count.roomTypes,
       imageCount: hotel._count.images,
       hasPrimaryImage: (hotel.images?.length ?? 0) > 0,
+      roomsMissingPhotoNames: (hotel.roomTypes ?? [])
+        .filter((room) => room.images.length === 0)
+        .map((room) => room.name),
       createdAt: hotel.createdAt.toISOString(),
       updatedAt: hotel.updatedAt.toISOString(),
     };

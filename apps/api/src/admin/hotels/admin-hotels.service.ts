@@ -48,7 +48,12 @@ export class AdminHotelsService {
       where: { id: hotelId },
       include: {
         partner: true,
-        roomTypes: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+        roomTypes: {
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          include: {
+            images: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }] },
+          },
+        },
         images: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }] },
         statusHistory: { orderBy: { createdAt: "desc" }, take: 10 },
       },
@@ -91,6 +96,12 @@ export class AdminHotelsService {
         bedConfiguration: room.bedConfiguration,
         amenities: room.amenities as string[],
         sizeSqm: room.sizeSqm,
+        images: room.images.map((image) => ({
+          id: image.id,
+          url: image.url,
+          isPrimary: image.isPrimary,
+          altText: image.altText,
+        })),
       })),
       images: hotel.images.map((image) => ({
         id: image.id,
