@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch, UseGuards } from "@nestjs/common";
+import { Controller, Get, Param, Patch, Query, UseGuards } from "@nestjs/common";
 import { AdminJwtAuthGuard, AdminRequestUser } from "../auth/admin-jwt.guard";
 import { CurrentAdmin } from "../auth/current-admin.decorator";
 import { AdminPartnersService } from "./admin-partners.service";
@@ -7,6 +7,11 @@ import { AdminPartnersService } from "./admin-partners.service";
 @UseGuards(AdminJwtAuthGuard)
 export class AdminPartnersController {
   constructor(private readonly adminPartnersService: AdminPartnersService) {}
+
+  @Get()
+  list(@Query("status") status?: string) {
+    return this.adminPartnersService.list(status);
+  }
 
   @Get("pending")
   listPending() {

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -18,6 +19,34 @@ export class AdminHotelsService {
     private readonly notifications: NotificationsService,
     private readonly eventBus: EventBusService,
   ) {}
+
+  async list(status?: string) {
+    const allowed = Object.values(HotelStatus);
+    if (status && !allowed.includes(status as HotelStatus)) {
+      throw new BadRequestException("Status inválido");
+    }
+
+    const hotels = await this.prisma.hotel.findMany({
+      where: status ? { status: status as HotelStatus } : undefined,
+      orderBy: { updatedAt: "desc" },
+      include: {
+        partner: { select: { id: true, legalName: true, tradeName: true } },
+        _count: { select: { roomTypes: true, images: true } },
+      },
+    });
+
+    return hotels.map((hotel) => ({
+      id: hotel.id,
+      name: hotel.name,
+      city: hotel.city,
+      state: hotel.state,
+      status: hotel.status,
+      partner: hotel.partner,
+      roomCount: hotel._count.roomTypes,
+      imageCount: hotel._count.images,
+      updatedAt: hotel.updatedAt.toISOString(),
+    }));
+  }
 
   async listPending() {
     const hotels = await this.prisma.hotel.findMany({

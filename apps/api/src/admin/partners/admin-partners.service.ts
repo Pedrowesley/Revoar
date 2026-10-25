@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -15,6 +16,33 @@ export class AdminPartnersService {
     private readonly notifications: NotificationsService,
     private readonly eventBus: EventBusService,
   ) {}
+
+  async list(status?: string) {
+    const allowed = ["PENDING", "ACTIVE", "SUSPENDED"] as const;
+    if (status && !allowed.includes(status as (typeof allowed)[number])) {
+      throw new BadRequestException("Status inválido");
+    }
+
+    const partners = await this.prisma.partner.findMany({
+      where: status ? { status: status as (typeof allowed)[number] } : undefined,
+      orderBy: { createdAt: "asc" },
+      include: { _count: { select: { hotels: true } } },
+    });
+
+    return partners.map((partner) => ({
+      id: partner.id,
+      legalName: partner.legalName,
+      tradeName: partner.tradeName,
+      cnpj: partner.cnpj,
+      email: partner.email,
+      phone: partner.phone,
+      contactName: partner.contactName,
+      status: partner.status,
+      detailsConfirmed: partner.detailsConfirmedAt !== null,
+      hotelCount: partner._count.hotels,
+      createdAt: partner.createdAt.toISOString(),
+    }));
+  }
 
   async listPending() {
     const partners = await this.prisma.partner.findMany({

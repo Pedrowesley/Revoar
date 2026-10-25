@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Query, UseGuards } from "@nestjs/common";
 import { rejectHotelSchema, RejectHotelInput } from "@revoar/shared";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { AdminJwtAuthGuard, AdminRequestUser } from "../auth/admin-jwt.guard";
@@ -9,6 +9,11 @@ import { AdminHotelsService } from "./admin-hotels.service";
 @UseGuards(AdminJwtAuthGuard)
 export class AdminHotelsController {
   constructor(private readonly adminHotelsService: AdminHotelsService) {}
+
+  @Get()
+  list(@Query("status") status?: string) {
+    return this.adminHotelsService.list(status);
+  }
 
   @Get("pending")
   listPending() {

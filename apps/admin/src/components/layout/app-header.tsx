@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 
 const AUTH_LINKS = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
-  { href: "/partners/pending", label: "Parceiros", icon: Users },
-  { href: "/hotels/pending", label: "Hotéis", icon: Building2 },
+  { href: "/partners", label: "Parceiros", icon: Users },
+  { href: "/hotels", label: "Hotéis", icon: Building2 },
 ];
 
 export function AppHeader() {
