@@ -125,11 +125,26 @@ model RoomType {
   amenities        Json   @default("[]")
   sizeSqm          Int?   @map("size_sqm")
   sortOrder        Int    @default(0) @map("sort_order")
+  images           RoomImage[]
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@index([hotelId])
   @@map("room_types")
+}
+
+model RoomImage {
+  id         String   @id @default(uuid())
+  roomTypeId String   @map("room_type_id")
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  url        String
+  sortOrder  Int      @default(0) @map("sort_order")
+  isPrimary  Boolean  @default(false) @map("is_primary")
+  altText    String?  @map("alt_text")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([roomTypeId])
+  @@map("room_images")
 }
 
 model HotelImage {
