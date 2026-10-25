@@ -1,4 +1,7 @@
 export * from "./amenities";
+export * from "./cpf";
+export * from "./schemas/availability.schema";
+export * from "./schemas/booking.schema";
 export * from "./schemas/partner.schema";
 export * from "./schemas/auth.schema";
 export * from "./schemas/admin.schema";

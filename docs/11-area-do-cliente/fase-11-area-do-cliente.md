@@ -4,7 +4,7 @@
 **Versão:** 1.0
 **Data:** Outubro/2026
 **Dependências:** Fases 0–10, Release 0.0 (extranet + admin)
-**Status:** Plano aprovado para execução. Código da área do cliente ainda não existe.
+**Status:** Fluxo do hóspede em código para inventário DIRECT. Pagamento de PIX e cartão confirma em ambiente de teste, sem gateway real.
 
 Este documento é o master plan da jornada do hóspede. Ele estende as Fases 3 (requisitos), 4 (UX) e 6 (dados). Onde esta fase e aquelas divergem, vale o que está escrito aqui.
 
@@ -34,7 +34,7 @@ A Release 0.0 entrega o lado da oferta.
 |---------------|------------------|
 | Parceiro PJ, hotel, tipo de quarto, fotos, moderação até `ACTIVE` | App do hóspede |
 | Endereço, horários de check-in e check-out, ocupação, camas, comodidades do quarto | Preço, calendário, tarifa, política de cancelamento |
-| Landing da extranet com prévia fictícia e botão "Área do hóspede" desligado | Conta do hóspede, reserva, pagamento, voucher, Minhas viagens |
+| Landing da extranet com prévia e link para a área do hóspede | Conta obrigatória do hóspede. O checkout de convidado já funciona, e o pagamento real de PIX e cartão ainda é o ambiente de teste |
 | | Caixa de pedidos na extranet |
 
 Sem calendário de diárias, a busca não tem preço verdadeiro e o hóspede não escolhe um quarto de verdade. A extranet ganha tarifa e calendário **antes** da busca pública mostrar preço.

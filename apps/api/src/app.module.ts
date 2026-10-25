@@ -9,6 +9,7 @@ import { PartnerProfileModule } from "./extranet/profile/partner-profile.module"
 import { S3Module } from "./storage/s3.module";
 import { AdminModule } from "./admin/admin.module";
 import { NotificationsModule } from "./notifications/notifications.module";
+import { BookingModule } from "./booking/booking.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NotificationsModule } from "./notifications/notifications.module";
     PartnerAuthModule,
     PartnerProfileModule,
     HotelsModule,
+    BookingModule,
     AdminModule,
   ],
 })

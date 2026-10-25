@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 type HotelDetailNavProps = {
   hotelId: string;
-  activeTab: "dados" | "quartos" | "fotos";
+  activeTab: "dados" | "quartos" | "fotos" | "disponibilidade";
   roomCount: number;
   imageCount: number;
   hasPrimaryImage: boolean;
@@ -46,10 +46,17 @@ export function HotelDetailNav({
       done: imageCount > 0 && hasPrimaryImage,
       count: imageCount,
     },
+    {
+      id: "disponibilidade" as const,
+      href: `/hotels/${hotelId}/availability`,
+      label: "Disponibilidade",
+      hint: "Tarifas, noites abertas e bloqueios",
+      done: false,
+    },
   ];
 
   return (
-    <nav className="mb-8 grid gap-2 sm:grid-cols-3">
+    <nav className="mb-8 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
       {tabs.map((tab, index) => {
         const active = activeTab === tab.id;
         return (

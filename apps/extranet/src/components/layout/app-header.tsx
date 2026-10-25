@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Hotel, LayoutDashboard, LogOut } from "lucide-react";
+import { CalendarDays, Hotel, LayoutDashboard, LogOut } from "lucide-react";
 import { apiFetch, PartnerProfile } from "@/lib/api";
 import { AUTH_CHANGE_EVENT, expireSession, getToken } from "@/lib/auth";
 import { extranetKeys } from "@/lib/query-keys";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 const AUTH_LINKS = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
   { href: "/hotels", label: "Hotéis", icon: Hotel },
+  { href: "/reservations", label: "Reservas", icon: CalendarDays },
 ];
 
 export function AppHeader() {

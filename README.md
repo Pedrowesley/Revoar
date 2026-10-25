@@ -55,6 +55,7 @@ npm run dev
 |-----|-----|------------|
 | Extranet | http://localhost:3000 | parceiro@revoar.com.br / revoar123 |
 | Admin | http://localhost:3001 | admin@revoar.com.br / revoar123 |
+| Hóspede | http://127.0.0.1:3003 | sem login. A pousada de exemplo fica em Fortaleza |
 | API | http://localhost:3002/health | — |
 
 **Release 0.0** implementada: extranet (cadastro parceiro/hotel/quartos/fotos) + admin (moderação).  

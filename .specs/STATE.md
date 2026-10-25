@@ -38,7 +38,7 @@
 
 - Deploy staging em URL pública para sócios
 - ≥ 10 hotéis piloto (operação manual)
-- Release 0.1 em diante — plano em `docs/11-area-do-cliente/fase-11-area-do-cliente.md` (tarifa, vitrine, reserva imediata, sob consulta). Código ainda não começou
+- Gateway real de PIX e cartão. O fluxo do hóspede confirma o pagamento em ambiente de teste
 - Perfil do parceiro na extranet e ficha somente leitura no admin (`extranet-perfil-parceiro`)
 - Reset de senha, fotos de quarto, multi-usuário por parceiro
 - E2E do sync duas origens (T7.19)

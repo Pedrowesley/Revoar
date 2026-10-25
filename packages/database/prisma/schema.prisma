@@ -35,6 +35,61 @@ enum SupplierType {
 enum ActorType {
   PARTNER
   ADMIN
+  GUEST
+  SYSTEM
+}
+
+enum BookingMode {
+  INSTANT
+  REQUEST
+}
+
+enum RoomBookingMode {
+  INHERIT
+  INSTANT
+  REQUEST
+}
+
+enum CancellationPolicy {
+  FLEXIBLE
+  MODERATE
+  STRICT
+  NON_REFUNDABLE
+}
+
+enum MealPlan {
+  ROOM_ONLY
+  BREAKFAST
+  HALF_BOARD
+}
+
+enum BlockReason {
+  UNAVAILABLE
+  RENTED_OFFLINE
+}
+
+enum BookingStatus {
+  HELD
+  PAYMENT_PENDING
+  CONFIRMED
+  REQUESTED
+  AWAITING_PAYMENT
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  CAPTURED
+  REFUNDED
+  PARTIAL_REFUND
+  FAILED
 }
 
 model AdminUser {
@@ -116,9 +171,14 @@ model Hotel {
   supplierType    SupplierType         @default(DIRECT) @map("supplier_type")
   status          HotelStatus          @default(DRAFT)
   rejectionReason String?              @map("rejection_reason")
+  bookingMode     BookingMode          @default(INSTANT) @map("booking_mode")
+  amenities       Json                 @default("[]")
+  houseRules      String?              @map("house_rules")
   roomTypes       RoomType[]
   images          HotelImage[]
   statusHistory   HotelStatusHistory[]
+  ratePlans       RatePlan[]
+  bookings        Booking[]
   createdAt       DateTime             @default(now()) @map("created_at")
   updatedAt       DateTime             @updatedAt @map("updated_at")
 
@@ -141,7 +201,12 @@ model RoomType {
   amenities        Json   @default("[]")
   sizeSqm          Int?   @map("size_sqm")
   sortOrder        Int    @default(0) @map("sort_order")
+  bookingMode      RoomBookingMode @default(INHERIT) @map("booking_mode")
   images           RoomImage[]
+  ratePlans        RatePlan[]
+  inventory        RoomInventory[]
+  locks            InventoryLock[]
+  bookings         Booking[]
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
@@ -190,4 +255,159 @@ model HotelStatusHistory {
 
   @@index([hotelId])
   @@map("hotel_status_history")
+}
+
+model RatePlan {
+  id                     String             @id @default(uuid())
+  hotelId                String             @map("hotel_id")
+  hotel                  Hotel              @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  roomTypeId             String             @map("room_type_id")
+  roomType               RoomType           @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  name                   String
+  cancellationPolicy     CancellationPolicy @map("cancellation_policy")
+  mealPlan               MealPlan           @default(ROOM_ONLY) @map("meal_plan")
+  minNights              Int                @default(1) @map("min_nights")
+  payAtProperty          String?            @map("pay_at_property")
+  active                 Boolean            @default(true)
+  dailyRates             DailyRate[]
+  bookings               Booking[]
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+
+  @@index([roomTypeId])
+  @@index([hotelId])
+  @@map("rate_plans")
+}
+
+model DailyRate {
+  id         String   @id @default(uuid())
+  ratePlanId String   @map("rate_plan_id")
+  ratePlan   RatePlan @relation(fields: [ratePlanId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  priceCents Int      @map("price_cents")
+
+  @@unique([ratePlanId, date])
+  @@index([date])
+  @@map("daily_rates")
+}
+
+model RoomInventory {
+  id           String       @id @default(uuid())
+  roomTypeId   String       @map("room_type_id")
+  roomType     RoomType     @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  date         DateTime     @db.Date
+  unitsForSale Int          @default(0) @map("units_for_sale")
+  blockedUnits Int          @default(0) @map("blocked_units")
+  blockReason  BlockReason? @map("block_reason")
+
+  @@unique([roomTypeId, date])
+  @@index([date])
+  @@map("room_inventory")
+}
+
+model InventoryLock {
+  id         String   @id @default(uuid())
+  bookingId  String   @map("booking_id")
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  roomTypeId String   @map("room_type_id")
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  quantity   Int
+  expiresAt  DateTime @map("expires_at")
+
+  @@index([roomTypeId, date])
+  @@index([bookingId])
+  @@map("inventory_locks")
+}
+
+model Booking {
+  id                String        @id @default(uuid())
+  bookingCode       String        @unique @map("booking_code")
+  status            BookingStatus
+  bookingMode       BookingMode   @map("booking_mode")
+  hotelId           String        @map("hotel_id")
+  hotel             Hotel         @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  roomTypeId        String        @map("room_type_id")
+  roomType          RoomType      @relation(fields: [roomTypeId], references: [id], onDelete: Restrict)
+  ratePlanId        String        @map("rate_plan_id")
+  ratePlan          RatePlan      @relation(fields: [ratePlanId], references: [id], onDelete: Restrict)
+  checkIn           DateTime      @map("check_in") @db.Date
+  checkOut          DateTime      @map("check_out") @db.Date
+  nights            Int
+  adults            Int
+  children          Int
+  quantity          Int
+  totalCents        Int           @map("total_cents")
+  guestEmail        String        @map("guest_email")
+  guestPhone        String        @map("guest_phone")
+  guestCpfHash      String        @map("guest_cpf_hash")
+  guestMessage      String?       @map("guest_message")
+  declineReason     String?       @map("decline_reason")
+  cancelReason      String?       @map("cancel_reason")
+  snapshot          Json
+  idempotencyKey    String        @unique @map("idempotency_key")
+  accessTokenHash   String        @unique @map("access_token_hash")
+  holdExpiresAt     DateTime?     @map("hold_expires_at")
+  respondBy         DateTime?     @map("respond_by")
+  payBy             DateTime?     @map("pay_by")
+  holdExtended      Boolean       @default(false) @map("hold_extended")
+  confirmedAt       DateTime?     @map("confirmed_at")
+  cancelledAt       DateTime?     @map("cancelled_at")
+  guests            BookingGuest[]
+  payments          Payment[]
+  locks             InventoryLock[]
+  statusHistory     BookingStatusHistory[]
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@index([guestEmail])
+  @@index([hotelId, status])
+  @@index([roomTypeId, status, checkIn, checkOut])
+  @@map("bookings")
+}
+
+model BookingGuest {
+  id        String  @id @default(uuid())
+  bookingId String  @map("booking_id")
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  kind      String
+  firstName String  @map("first_name")
+  lastName  String  @map("last_name")
+  age       Int?
+
+  @@index([bookingId])
+  @@map("booking_guests")
+}
+
+model BookingStatusHistory {
+  id         String         @id @default(uuid())
+  bookingId  String         @map("booking_id")
+  booking    Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromStatus BookingStatus? @map("from_status")
+  toStatus   BookingStatus  @map("to_status")
+  reason     String?
+  actorType  ActorType      @map("actor_type")
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  @@index([bookingId])
+  @@map("booking_status_history")
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  bookingId      String        @map("booking_id")
+  booking        Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amountCents    Int           @map("amount_cents")
+  method         PaymentMethod
+  status         PaymentStatus
+  installments   Int           @default(1)
+  pixCopyPaste   String?       @map("pix_copy_paste")
+  sandbox        Boolean       @default(true)
+  capturedAt     DateTime?     @map("captured_at")
+  refundedCents  Int           @default(0) @map("refunded_cents")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@index([bookingId])
+  @@map("payments")
 }
