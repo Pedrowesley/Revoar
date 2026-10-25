@@ -7,12 +7,14 @@ import { SearchForm } from "@/components/search-form";
 import { Sheet } from "@/components/sheet";
 import { apiFetch, ApiError } from "@/lib/api";
 import { brl, SearchValues } from "@/lib/format";
+import { mediaUrl } from "@/lib/media";
 
 type HotelCard = {
   slug: string;
   name: string;
   city: string;
   addressLine: string;
+  imageUrl: string | null;
   starRating: number | null;
   nights: number;
   totalCents: number;
@@ -70,8 +72,10 @@ function Results() {
           <Link
             key={hotel.slug}
             href={`/hoteis/${hotel.slug}?${params.toString()}`}
-            className="block min-w-0 rounded-2xl border border-border bg-surface p-4 shadow-soft"
+            className="block min-w-0 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft"
           >
+            {hotel.imageUrl && <img src={mediaUrl(hotel.imageUrl)} alt="" className="aspect-[16/10] w-full object-cover" />}
+            <div className="p-4">
             <h2 className="text-xl font-semibold">{hotel.name}</h2>
             <p className="text-sm text-muted-foreground">
               {hotel.addressLine} · {hotel.city}
@@ -82,6 +86,7 @@ function Results() {
               <span className="block text-lg font-bold">{brl(hotel.totalCents)} total</span>
               <span className="text-sm text-muted-foreground">{hotel.nights} noites · impostos inclusos</span>
             </p>
+            </div>
           </Link>
         ))}
         {visible && visible.length === 0 && <p className="text-sm text-muted-foreground">Nada livre nessas datas. Tente outro período.</p>}

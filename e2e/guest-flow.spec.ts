@@ -20,6 +20,27 @@ async function expectMobileShell(page: import("@playwright/test").Page, buttonNa
   expect(box!.y).toBeGreaterThan(600);
 }
 
+async function freeStay(altText: string, mode: "INSTANT" | "REQUEST") {
+  for (let offset = 8; offset <= 34; offset += 1) {
+    const checkIn = iso(offset);
+    const checkOut = iso(offset + 2);
+    const response = await fetch(
+      `http://127.0.0.1:3002/guest/hotels/pousada-atlantico?city=Fortaleza&checkIn=${checkIn}&checkOut=${checkOut}&adults=2&children=0&rooms=1`,
+    );
+    if (!response.ok) continue;
+    const detail = (await response.json()) as {
+      rooms: { images?: { altText: string | null }[]; rates: { bookingMode: string; freeUnits: number }[] }[];
+    };
+    const open = detail.rooms?.some(
+      (room) =>
+        room.images?.some((image) => image.altText === altText) &&
+        room.rates.some((rate) => rate.bookingMode === mode && rate.freeUnits >= 1),
+    );
+    if (open) return { checkIn, checkOut };
+  }
+  throw new Error(`Nenhuma data livre para ${altText}`);
+}
+
 async function fillGuest(page: import("@playwright/test").Page, email: string, phone: string) {
   await page.getByRole("textbox", { name: "Nome", exact: true }).fill("Camila");
   await page.getByRole("textbox", { name: "Sobrenome", exact: true }).fill("Nunes");
@@ -33,8 +54,7 @@ test.describe("área do hóspede no celular", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test("hóspede escolhe o quarto imediato e confirma o pagamento de teste", async ({ page }) => {
-    const checkIn = iso(20);
-    const checkOut = iso(23);
+    const { checkIn, checkOut } = await freeStay("Quarto duplo com cama queen", "INSTANT");
     const email = `hospede-${Date.now()}@example.com`;
 
     await page.goto(GUEST);
@@ -48,6 +68,9 @@ test.describe("área do hóspede no celular", () => {
 
     await expect(page.getByRole("heading", { name: "Pousada Atlântico" })).toBeVisible();
     await page.getByRole("link", { name: /Pousada Atlântico/ }).click();
+    const roomPhoto = page.getByRole("img", { name: "Quarto duplo com cama queen" });
+    await expect(roomPhoto).toBeVisible();
+    await expect.poll(async () => roomPhoto.evaluate((node: HTMLImageElement) => node.complete && node.naturalWidth > 0)).toBe(true);
     await page.getByRole("button", { name: /Flexível com café/ }).click();
     await expectMobileShell(page, "Reservar");
     await page.getByRole("button", { name: "Reservar", exact: true }).click();

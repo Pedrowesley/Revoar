@@ -107,7 +107,7 @@ export class GuestBookingService {
         checkOutTime: hotel.checkOutTime,
         houseRules: hotel.houseRules,
         amenities: hotel.amenities,
-        images: hotel.images,
+        images: quoted.images,
         latitude: hotel.latitude ? Number(hotel.latitude) : null,
         longitude: hotel.longitude ? Number(hotel.longitude) : null,
       },
@@ -729,6 +729,7 @@ export class GuestBookingService {
         amenities: room.amenities,
         sizeSqm: room.sizeSqm,
         imageUrl: room.images[0]?.url ?? null,
+        images: room.images.map((image) => ({ url: image.url, altText: image.altText })),
         bookingMode: mode,
         rates,
       };

@@ -150,12 +150,12 @@ async function seedGuestHotel(partnerId: string) {
     });
   }
 
-  const existingPlans = await prisma.ratePlan.count({ where: { hotelId: hotel.id } });
-  if (existingPlans > 0) return;
-
   const standard = hotel.roomTypes.find((room) => room.name === "Quarto duplo");
   const suite = hotel.roomTypes.find((room) => room.name === "Suíte com varanda");
-  if (!standard || !suite) return;
+  if (standard && suite) await seedStayPhotos(hotel.id, standard.id, suite.id);
+
+  const existingPlans = await prisma.ratePlan.count({ where: { hotelId: hotel.id } });
+  if (existingPlans > 0 || !standard || !suite) return;
 
   const flexible = await prisma.ratePlan.create({
     data: {
@@ -198,6 +198,38 @@ async function seedGuestHotel(partnerId: string) {
       data: { roomTypeId: suite.id, date, unitsForSale: 2, blockedUnits: 0 },
     });
     await prisma.dailyRate.create({ data: { ratePlanId: requestPlan.id, date, priceCents: 42000 } });
+  }
+}
+
+async function seedStayPhotos(hotelId: string, standardId: string, suiteId: string) {
+  const hotelPhotos = await prisma.hotelImage.count({ where: { hotelId } });
+  if (hotelPhotos === 0) {
+    await prisma.hotelImage.createMany({
+      data: [
+        { hotelId, url: "/media/seed/fachada.jpg", altText: "Fachada da Pousada Atlântico", isPrimary: true, sortOrder: 0 },
+        { hotelId, url: "/media/seed/cafe.jpg", altText: "Café da manhã da Pousada Atlântico", isPrimary: false, sortOrder: 1 },
+      ],
+    });
+  }
+
+  const standardPhotos = await prisma.roomImage.count({ where: { roomTypeId: standardId } });
+  if (standardPhotos === 0) {
+    await prisma.roomImage.createMany({
+      data: [
+        { roomTypeId: standardId, url: "/media/seed/quarto-duplo.jpg", altText: "Quarto duplo com cama queen", isPrimary: true, sortOrder: 0 },
+        { roomTypeId: standardId, url: "/media/seed/quarto-duplo-banho.jpg", altText: "Banheiro do quarto duplo", isPrimary: false, sortOrder: 1 },
+      ],
+    });
+  }
+
+  const suitePhotos = await prisma.roomImage.count({ where: { roomTypeId: suiteId } });
+  if (suitePhotos === 0) {
+    await prisma.roomImage.createMany({
+      data: [
+        { roomTypeId: suiteId, url: "/media/seed/suite-varanda.jpg", altText: "Suíte com varanda e cama king", isPrimary: true, sortOrder: 0 },
+        { roomTypeId: suiteId, url: "/media/seed/suite-vista.jpg", altText: "Vista da varanda da suíte", isPrimary: false, sortOrder: 1 },
+      ],
+    });
   }
 }
 
