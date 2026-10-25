@@ -3,8 +3,10 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import {
   ActorType,
   BookingMode,
@@ -20,6 +22,7 @@ import {
   PartnerBookingDecisionInput,
   PayBookingInput,
 } from "@revoar/shared";
+import { NotificationsService, StayNotice } from "../notifications/notifications.service";
 import { PrismaService } from "../prisma/prisma.service";
 import {
   checkInInstant,
@@ -33,6 +36,7 @@ import {
   policyLabel,
   refundPercent,
   stayNights,
+  todayInBrazil,
   utcDate,
 } from "./stay";
 
@@ -42,7 +46,13 @@ const ACTIVE_LOCK = { expiresAt: { gt: new Date() } };
 
 @Injectable()
 export class GuestBookingService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(GuestBookingService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+    private readonly config: ConfigService,
+  ) {}
 
   async search(query: GuestSearchQuery) {
     await this.expireDue(this.prisma);
@@ -256,6 +266,7 @@ export class GuestBookingService {
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
     const view = await this.present(created.id, email);
+    if (view.status === "REQUESTED") await this.notify("requested", view);
     return { ...view, accessToken: created.accessToken };
   }
 
@@ -369,7 +380,9 @@ export class GuestBookingService {
         },
       });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
-    return this.present(booking.id, normalizeEmail(email));
+    const view = await this.present(booking.id, normalizeEmail(email));
+    await this.notify("voucher", view);
+    return view;
   }
 
   async cancel(code: string, email: string) {
@@ -452,7 +465,9 @@ export class GuestBookingService {
     }
     if (input.decision === "decline") {
       await this.release(booking.id, "REQUESTED", "DECLINED", "PARTNER", input.reason?.trim() || "Parceiro recusou");
-      return this.toView(await this.prisma.booking.findUniqueOrThrow({ where: { id: booking.id }, include: { guests: true, hotel: { select: { name: true } } } }));
+      const view = this.toView(await this.prisma.booking.findUniqueOrThrow({ where: { id: booking.id }, include: { guests: true, hotel: { select: { name: true } } } }));
+      await this.notify("declined", view);
+      return view;
     }
     const payBy = new Date(Date.now() + 2 * 60 * 60_000);
     await this.prisma.$transaction(async (tx) => {
@@ -465,12 +480,50 @@ export class GuestBookingService {
         data: { bookingId: booking.id, fromStatus: "REQUESTED", toStatus: "AWAITING_PAYMENT", actorType: "PARTNER" },
       });
     });
-    return this.toView(
+    const view = this.toView(
       await this.prisma.booking.findUniqueOrThrow({
         where: { id: booking.id },
         include: { guests: true, hotel: { select: { name: true } } },
       }),
     );
+    await this.notify("accepted", view);
+    return view;
+  }
+
+  async listForGuest(code: string, email: string) {
+    if (!email?.includes("@")) throw new BadRequestException("Informe o e-mail da reserva");
+    await this.expireDue(this.prisma);
+    const known = await this.byCode(code, email);
+    const bookings = await this.prisma.booking.findMany({
+      where: { guestEmail: known.guestEmail },
+      orderBy: { checkIn: "asc" },
+      include: { hotel: { select: { name: true } } },
+      take: 50,
+    });
+    const today = todayInBrazil();
+    const groups: Record<"upcoming" | "past" | "cancelled", { code: string; status: string; hotelName: string; checkIn: string; checkOut: string; totalCents: number }[]> = {
+      upcoming: [],
+      past: [],
+      cancelled: [],
+    };
+    const closed = new Set(["CANCELLED", "DECLINED", "EXPIRED"]);
+    for (const booking of bookings) {
+      const snapshot = (booking.snapshot ?? {}) as { hotelName?: string };
+      const item = {
+        code: booking.bookingCode,
+        status: booking.status,
+        hotelName: booking.hotel?.name ?? snapshot.hotelName ?? "Reserva",
+        checkIn: isoDate(booking.checkIn),
+        checkOut: isoDate(booking.checkOut),
+        totalCents: booking.totalCents,
+      };
+      if (closed.has(booking.status)) groups.cancelled.push(item);
+      else if (booking.status === "CONFIRMED" && item.checkOut <= today) groups.past.push(item);
+      else groups.upcoming.push(item);
+    }
+    groups.past.reverse();
+    groups.cancelled.sort((a, b) => (a.checkIn < b.checkIn ? 1 : -1));
+    return groups;
   }
 
   async committedByRoom(roomIds: string[], from: Date, to: Date, db: Db = this.prisma) {
@@ -563,6 +616,37 @@ export class GuestBookingService {
         data: { bookingId, fromStatus: from, toStatus: to, actorType: actor, reason },
       });
     });
+  }
+
+  private tripLink(email: string, code: string) {
+    const base = (this.config.get<string>("GUEST_APP_URL") ?? "http://127.0.0.1:3003").replace(/\/$/, "");
+    const params = new URLSearchParams({ email, code });
+    return `${base}/conta/viagens?${params.toString()}`;
+  }
+
+  private async notify(
+    kind: "requested" | "accepted" | "declined" | "voucher",
+    view: { code: string; guestEmail: string; checkIn: string; checkOut: string; totalCents: number; snapshot: Prisma.JsonValue },
+  ) {
+    const snapshot = (view.snapshot ?? {}) as { hotelName?: string; roomName?: string };
+    const stay: StayNotice = {
+      to: view.guestEmail,
+      code: view.code,
+      hotelName: snapshot.hotelName ?? "Revoar",
+      roomName: snapshot.roomName ?? "Quarto",
+      checkIn: view.checkIn,
+      checkOut: view.checkOut,
+      totalLabel: formatBrl(view.totalCents),
+      link: this.tripLink(view.guestEmail, view.code),
+    };
+    try {
+      if (kind === "requested") await this.notifications.sendBookingRequested(stay);
+      if (kind === "accepted") await this.notifications.sendBookingAccepted(stay);
+      if (kind === "declined") await this.notifications.sendBookingDeclined(stay);
+      if (kind === "voucher") await this.notifications.sendBookingVoucher(stay);
+    } catch (error) {
+      this.logger.error(`Falha ao registrar e-mail da reserva ${view.code}: ${error instanceof Error ? error.message : "erro"}`);
+    }
   }
 
   private async transition(bookingId: string, from: BookingStatus, to: BookingStatus, actor: ActorType, reason: string) {

@@ -48,6 +48,11 @@ export class GuestController {
     return this.bookings.create(body);
   }
 
+  @Get("trips")
+  trips(@Query("email") email: string, @Query("code") code: string) {
+    return this.bookings.listForGuest(code ?? "", email ?? "");
+  }
+
   @Get("bookings/:code")
   find(@Param("code") code: string, @Query("email") email: string) {
     return this.bookings.findForGuest(code, email ?? "");

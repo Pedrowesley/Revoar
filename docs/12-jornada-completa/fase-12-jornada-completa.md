@@ -4,7 +4,7 @@
 **Versão:** 1.0
 **Data:** Outubro/2026
 **Dependências:** Fase 11 (área do cliente), Release 0.0 (extranet e admin)
-**Status:** Plano em execução. A fatia 1, ficha honesta, está em código. As fatias 2 a 8 ainda não. A reserva chega ao voucher na tela, em ambiente de teste.
+**Status:** Plano em execução. As fatias 1 a 3 estão em código. As fatias 4 a 8 ainda não. A reserva chega ao voucher na tela e no e-mail registrado, em ambiente de teste.
 
 Este documento continua a [Fase 11](../11-area-do-cliente/fase-11-area-do-cliente.md). As decisões AD-015 a AD-021 continuam valendo. Onde a Fase 11 descreve o desenho da reserva e este documento descreve o que ainda falta para operá-la, vale este documento.
 
@@ -51,7 +51,7 @@ Em `apps/guest`, porta 3003:
 - Dados do hóspede, acompanhante opcional, idade das crianças e consentimento.
 - Reserva imediata com relógio, PIX ou cartão, confirmação de teste, voucher, WhatsApp e calendário.
 - Pedido sob consulta, pagamento só depois do aceite.
-- Minhas viagens guarda os códigos deste navegador e abre pelo código e pelo e-mail.
+- Minhas viagens abre próximas, anteriores e canceladas pelo código e pelo e-mail. O navegador pode guardar os códigos, e a lista vem da reserva.
 - Cancelar chama a API. A política e o arrependimento de 7 dias já estão em `apps/api/src/booking/guest-booking.service.ts`.
 
 A ficha honesta, fatia 1, já mostra na tela o que a API devolvia:
@@ -87,7 +87,7 @@ Trocar modo, tarifa ou calendário continua sem devolver o hotel para análise. 
 
 ### 3.4 E-mail
 
-`apps/api/src/notifications/notifications.service.ts` envia cadastro, aprovação, rejeição e reset do parceiro. Sem `RESEND_API_KEY`, o serviço registra a mensagem e não chama o provedor. Nenhum e-mail de reserva, aceite, recusa ou voucher existe.
+`apps/api/src/notifications/notifications.service.ts` envia cadastro, aprovação, rejeição e reset do parceiro, e também o pedido, o aceite, a recusa e o voucher da reserva. Sem `RESEND_API_KEY`, o serviço registra a mensagem e não chama o provedor. O link da mensagem abre Minhas viagens.
 
 ---
 
@@ -105,11 +105,15 @@ Pronto quando: a ficha da Pousada Atlântico mostra piscina e varanda. Cancelar 
 
 ### Fatia 2 — E-mail da reserva
 
+**Estado:** em código.
+
 Mensagens: pedido enviado, aceite, recusa, voucher confirmado e link para abrir a viagem. Reusa o serviço de notificação. Sem chave, o teste lê a mensagem registrada. Com chave, o mesmo texto sai pelo provedor.
 
 Pronto quando: uma reserva imediata confirmada no teste deixa um voucher endereçado ao e-mail do hóspede. Uma recusa deixa a mensagem de que nada foi cobrado.
 
 ### Fatia 3 — Minhas viagens
+
+**Estado:** em código.
 
 Três listas: próximas, anteriores e canceladas. A origem é o código com o e-mail, e o link da fatia 2. O navegador pode continuar lembrando os códigos, mas a lista não depende só dele.
 

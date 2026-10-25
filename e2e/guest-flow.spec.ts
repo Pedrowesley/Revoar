@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { apiPost } from "./helpers/api";
+import { adminLogin, apiPost } from "./helpers/api";
 
 const GUEST = "http://127.0.0.1:3003";
 
@@ -39,6 +39,16 @@ async function freeStay(altText: string, mode: "INSTANT" | "REQUEST") {
     if (open) return { checkIn, checkOut };
   }
   throw new Error(`Nenhuma data livre para ${altText}`);
+}
+
+async function messagesFor(email: string) {
+  const token = await adminLogin();
+  const response = await fetch("http://127.0.0.1:3002/admin/notifications/outbox", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error(await response.text());
+  const messages = (await response.json()) as { to: string; subject: string; html: string }[];
+  return messages.filter((message) => message.to === email);
 }
 
 async function fillGuest(page: import("@playwright/test").Page, email: string, phone: string) {
@@ -181,7 +191,8 @@ test("pedido sob consulta só cobra depois que o parceiro aceita", async ({ page
     await page.getByRole("checkbox", { name: /meus dados/ }).check();
     await page.getByRole("button", { name: "Enviar pedido" }).click();
 
-    await expect(page.getByText("Pedido enviado")).toBeVisible();
+    await expect(page.getByText("Pedido enviado. O hotel tem até 24 horas.")).toBeVisible();
+    await expect.poll(async () => (await messagesFor(email)).some((message) => message.subject.startsWith("Pedido enviado"))).toBe(true);
     await expect(page.getByRole("button", { name: "Pagar com PIX" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Confirmar reserva/ })).toHaveCount(0);
 
@@ -205,11 +216,106 @@ test("pedido sob consulta só cobra depois que o parceiro aceita", async ({ page
       body: JSON.stringify({ decision: "accept" }),
     });
     if (!decision.ok) throw new Error(await decision.text());
+    await expect.poll(async () => (await messagesFor(email)).some((message) => message.subject.startsWith("O hotel aceitou"))).toBe(true);
 
     await expect(page.getByText("O hotel aceitou")).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /Confirmar reserva/ }).click();
     await page.getByRole("button", { name: "Confirmar pagamento de teste" }).click();
     await expect(page.getByText("Reserva confirmada.")).toBeVisible();
+    await expect.poll(async () => (await messagesFor(email)).some((message) => message.subject.startsWith("Voucher"))).toBe(true);
+  });
+
+  test("o link do e-mail abre a confirmada em próximas e a recusa em canceladas", async ({ page }) => {
+    let stay: { checkIn: string; checkOut: string; instant: { id: string; totalCents: number }; request: { id: string; totalCents: number } } | null = null;
+    for (let offset = 8; offset <= 34; offset += 1) {
+      const checkIn = iso(offset);
+      const checkOut = iso(offset + 2);
+      const response = await fetch(
+        `http://127.0.0.1:3002/guest/hotels/pousada-atlantico?city=Fortaleza&checkIn=${checkIn}&checkOut=${checkOut}&adults=2&children=0&rooms=1`,
+      );
+      if (!response.ok) continue;
+      const detail = (await response.json()) as { rooms: { rates: { id: string; bookingMode: string; freeUnits: number; totalCents: number }[] }[] };
+      const rates = detail.rooms.flatMap((room) => room.rates);
+      const instant = rates.find((rate) => rate.bookingMode === "INSTANT" && rate.freeUnits >= 1);
+      const request = rates.find((rate) => rate.bookingMode === "REQUEST" && rate.freeUnits >= 1);
+      if (instant && request) {
+        stay = { checkIn, checkOut, instant, request };
+        break;
+      }
+    }
+    if (!stay) throw new Error("Nenhuma data com reserva imediata e sob consulta");
+    const email = `viagem-${Date.now()}@example.com`;
+
+    async function book(ratePlanId: string, totalCents: number) {
+      const response = await fetch("http://127.0.0.1:3002/guest/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ratePlanId,
+          checkIn: stay!.checkIn,
+          checkOut: stay!.checkOut,
+          adults: 2,
+          children: 0,
+          quantity: 1,
+          firstName: "Lia",
+          lastName: "Costa",
+          email,
+          phone: "85933334444",
+          cpf: "10000000019",
+          idempotencyKey: crypto.randomUUID(),
+          expectedTotalCents: totalCents,
+        }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return (await response.json()) as { code: string };
+    }
+
+    const instantBooking = await book(stay.instant.id, stay.instant.totalCents);
+    const payment = await fetch(`http://127.0.0.1:3002/guest/bookings/${instantBooking.code}/pay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, method: "PIX", installments: 1 }),
+    });
+    if (!payment.ok) throw new Error(await payment.text());
+    const paid = (await payment.json()) as { payment: { id: string } };
+    const confirmed = await fetch(`http://127.0.0.1:3002/guest/bookings/${instantBooking.code}/pay/${paid.payment.id}/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    if (!confirmed.ok) throw new Error(await confirmed.text());
+
+    const requestBooking = await book(stay.request.id, stay.request.totalCents);
+    await expect.poll(async () => (await messagesFor(email)).some((message) => message.html.includes(requestBooking.code) && message.subject.startsWith("Pedido enviado"))).toBe(true);
+    const login = await apiPost<{ accessToken: string }>("/extranet/auth/login", {
+      email: "parceiro@revoar.com.br",
+      password: "revoar123",
+    });
+    if (!login.ok) throw new Error(login.message);
+    const list = await fetch("http://127.0.0.1:3002/extranet/bookings", {
+      headers: { Authorization: `Bearer ${login.data.accessToken}` },
+    });
+    const bookings = (await list.json()) as { id: string; code: string; status: string }[];
+    const pending = bookings.find((item) => item.code === requestBooking.code && item.status === "REQUESTED");
+    if (!pending) throw new Error("Pedido não apareceu para o parceiro");
+    const decision = await fetch(`http://127.0.0.1:3002/extranet/bookings/${pending.id}/decision`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${login.data.accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ decision: "decline" }),
+    });
+    if (!decision.ok) throw new Error(await decision.text());
+
+    const voucher = (await messagesFor(email)).find((message) => message.to === email && message.subject.startsWith(`Voucher ${instantBooking.code}`));
+    const declined = (await messagesFor(email)).find((message) => message.html.includes("Nada foi cobrado") && message.html.includes(requestBooking.code));
+    expect(voucher?.to).toBe(email);
+    expect(declined).toBeTruthy();
+    const href = voucher?.html.match(/href="([^"]+)"/)?.[1]?.replaceAll("&amp;", "&");
+    if (!href) throw new Error("O voucher não trouxe o link da viagem");
+
+    await page.goto(href);
+    await expect(page.getByRole("region", { name: "Próximas" }).getByText(instantBooking.code)).toBeVisible();
+    await expect(page.getByRole("region", { name: "Canceladas" }).getByText(requestBooking.code)).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem("revoar.guest.trips"))).toBeNull();
   });
 });
 
