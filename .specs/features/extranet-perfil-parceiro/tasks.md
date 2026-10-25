@@ -101,8 +101,8 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] As três colunas existem com os `@map` do design
-- [ ] `npm run db:generate` passa
+- [x] As três colunas existem com os `@map` do design
+- [x] `npm run db:generate` passa
 
 **Tests**: none
 **Gate**: build

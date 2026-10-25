@@ -56,8 +56,10 @@ model Partner {
   cnpj        String        @unique
   email       String
   phone       String
-  contactName String        @map("contact_name")
-  status      PartnerStatus @default(PENDING)
+  contactName        String        @map("contact_name")
+  logoUrl            String?       @map("logo_url")
+  detailsConfirmedAt DateTime?     @map("details_confirmed_at")
+  status             PartnerStatus @default(PENDING)
   users       PartnerUser[]
   hotels      Hotel[]
   createdAt   DateTime      @default(now()) @map("created_at")
@@ -73,6 +75,7 @@ model PartnerUser {
   email        String   @unique
   passwordHash String   @map("password_hash")
   name         String
+  avatarUrl    String?  @map("avatar_url")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
