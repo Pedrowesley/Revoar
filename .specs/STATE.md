@@ -10,7 +10,7 @@
 |-------|-------|
 | **Feature ativa** | Fase 12 — jornada completa. E-mail da reserva e minhas viagens estão em código |
 | **Fase atual** | Fase 12. Release 0.0 e as fatias 1 a 4 da área do cliente já estão em código |
-| **Próximo passo** | Fatia 4 da fase 12: extranet com grade do mês, motivo na recusa, prazo das 24 horas e aviso de pedido novo |
+| **Próximo passo** | Fatia 4.1: motivo na recusa e prazo das 24 horas. Só a 4.2 depois que o teste da 4.1 passar, com a suíte do hóspede verde |
 | **Última atualização** | 2026-10-25 |
 | **Git** | `cursor/area-do-cliente-1644` em `github.com/Pedrowesley/Revoar` |
 

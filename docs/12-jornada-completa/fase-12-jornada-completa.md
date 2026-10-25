@@ -175,4 +175,19 @@ Pronto quando: uma reserva com check-out no passado aceita uma avaliação, e a 
 
 ---
 
+## 7. Portão de execução
+
+Uma etapa só começa quando a anterior está no código e o teste dela passou. Em toda etapa, `e2e/guest-flow.spec.ts` passa em 390×844: busca, foto, reserva imediata, pagamento de teste, voucher, e-mail e link das viagens. A etapa nova ganha um teste que falha se o comportamento sumir. Hóspede, extranet e admin abrem, e a API responde em `/health`. A confirmação de teste continua explícita até a etapa 7 ter webhook.
+
+A fatia 4 anda nesta ordem, e a fatia só fecha quando as quatro passaram:
+
+1. Motivo opcional na recusa e prazo das 24 horas visível. O hóspede lê o motivo. O e-mail de recusa continua dizendo que nada foi cobrado.
+2. Confirmadas em leitura, separadas do pedido: código, hóspede, quarto, datas, total e status, sem aceitar nem recusar.
+3. Pedido novo no canal de eventos que a extranet já usa, sem atualizar a página.
+4. Grade do mês: noite sem configuração, aberta ou bloqueada, e as unidades já confirmadas. Bloquear a noite ocupada não cancela a reserva. O hóspede não reserva essa noite.
+
+A fatia 5 só abre com a 4 fechada. A 6 só abre com a 5 fechada. A 7 só abre com a chave do Mercado Pago; sem a chave, ela permanece parada e a 8 não começa no lugar dela. Dentro da 8, a ordem é avaliação, mapa na listagem, coleções, e então lembrete de check-in com as cinco cidades piloto.
+
+---
+
 *Este documento faz parte do Master Plan Revoar. O desenho da reserva, dos estados e do preço continua na Fase 11.*
