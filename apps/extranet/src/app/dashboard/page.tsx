@@ -113,7 +113,8 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <Surface className="mt-8 p-5 text-sm">
+      <Link href="/profile" aria-label="Dados da empresa" className="mt-8 block">
+      <Surface className="p-5 text-sm">
         <p className="mb-3 font-semibold text-foreground">Dados da empresa</p>
         <dl className="grid gap-2 text-muted-foreground sm:grid-cols-2">
           <div>
@@ -135,6 +136,7 @@ export default function DashboardPage() {
           </div>
         </dl>
       </Surface>
+      </Link>
     </PageShell>
   );
 }

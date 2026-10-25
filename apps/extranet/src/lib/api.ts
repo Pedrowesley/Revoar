@@ -75,6 +75,7 @@ export type PartnerProfile = {
   id: string;
   name: string;
   email: string;
+  avatarUrl: string | null;
   partner: {
     id: string;
     legalName: string;
@@ -84,5 +85,7 @@ export type PartnerProfile = {
     email: string;
     phone: string;
     contactName: string;
+    logoUrl: string | null;
+    detailsConfirmedAt: string | null;
   };
 };

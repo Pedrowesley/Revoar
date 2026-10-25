@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Hotel, LayoutDashboard, LogOut } from "lucide-react";
+import { apiFetch, PartnerProfile } from "@/lib/api";
 import { AUTH_CHANGE_EVENT, expireSession, getToken } from "@/lib/auth";
+import { extranetKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -16,7 +19,16 @@ const AUTH_LINKS = [
 export function AppHeader() {
   const pathname = usePathname();
   const [authed, setAuthed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const showApp = authed && pathname !== "/login" && pathname !== "/signup";
+  const profileQuery = useQuery({
+    queryKey: extranetKeys.me,
+    enabled: showApp,
+    queryFn: () => apiFetch<PartnerProfile>("/extranet/auth/me", { token: getToken()! }),
+    retry: false,
+  });
+  const profile = profileQuery.data;
+  const initial = profile?.name.slice(0, 1) ?? "P";
 
   useEffect(() => {
     const sync = () => setAuthed(Boolean(getToken()));
@@ -75,10 +87,35 @@ export function AppHeader() {
 
         <div className="flex items-center gap-2">
           {showApp ? (
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-1.5 h-4 w-4" />
-              Sair
-            </Button>
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Conta"
+                className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-sm font-semibold text-primary"
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                {profile?.avatarUrl ? (
+                  <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  initial
+                )}
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-44 rounded-lg border border-border bg-surface p-1 shadow-soft">
+                  <Link
+                    href="/profile"
+                    className="block rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Meu perfil
+                  </Link>
+                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleLogout}>
+                    <LogOut className="mr-1.5 h-4 w-4" />
+                    Sair
+                  </Button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <Link
