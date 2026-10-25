@@ -68,11 +68,15 @@ const SOON = [
 export function LandingSections() {
   return (
     <>
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Como funciona</p>
+      <section className="bg-surface">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary">Para quem tem um hotel</p>
         <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-balance text-foreground sm:text-4xl">
-          Três passos até o hotel no ar
+          Três passos até publicar
         </h2>
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
+          Cadastre o hotel, os quartos e as fotos. A equipe Revoar revisa e coloca no ar.
+        </p>
         <ol className="mt-8 grid gap-4 md:grid-cols-3">
           {STEPS.map((step, index) => (
             <li key={step.title}>
@@ -86,6 +90,7 @@ export function LandingSections() {
             </li>
           ))}
         </ol>
+        </div>
       </section>
 
       <section aria-labelledby="capabilities-title" className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
@@ -167,18 +172,18 @@ export function LandingSections() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pt-6 pb-16 sm:pb-24">
-        <Surface className="flex flex-col items-start gap-6 p-6 sm:p-10 md:flex-row md:items-center md:justify-between">
+      <section className="bg-primary">
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 sm:py-24 md:flex-row md:items-center md:justify-between">
           <div className="max-w-xl">
-            <h2 className="text-2xl font-extrabold tracking-tight text-balance text-foreground sm:text-3xl">
+            <h2 className="text-2xl font-extrabold tracking-tight text-balance text-primary-foreground sm:text-3xl">
               Deixe o hotel pronto antes do hóspede chegar
             </h2>
-            <p className="mt-2 text-muted-foreground">
+            <p className="mt-2 text-primary-foreground/85">
               Hotel, quartos e fotos no mesmo painel. A equipe Revoar revisa e publica.
             </p>
           </div>
-          <HeroCta />
-        </Surface>
+          <HeroCta tone="onPrimary" />
+        </div>
       </section>
     </>
   );

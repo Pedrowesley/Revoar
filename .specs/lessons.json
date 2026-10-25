@@ -1,0 +1,244 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 14,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "surviving_mutant::when asserting a link must be absent match every host and port form of the target localhost 127 0 0 1 env url not one literal prefix or label",
+      "text": "When asserting a link must be absent, match every host and port form of the target (localhost, 127.0.0.1, env URL), not one literal prefix or label",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "landing-publica"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "e2e/landing.spec.ts:123 (M7) (e2e)"
+      ],
+      "created": "2026-10-24T23:32:30Z",
+      "last_seen": "2026-10-24T23:32:30Z"
+    },
+    {
+      "id": "L-002",
+      "key": "surviving_mutant::when a spec states relative placement above below assert it with bounding boxes not just visibility",
+      "text": "When a spec states relative placement (above/below), assert it with bounding boxes, not just visibility",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "landing-publica"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "e2e/landing.spec.ts:35 (M8) (e2e)"
+      ],
+      "created": "2026-10-24T23:32:30Z",
+      "last_seen": "2026-10-24T23:32:30Z"
+    },
+    {
+      "id": "L-003",
+      "key": "surviving_mutant::assert the toast title and the body string the spec names not the title alone",
+      "text": "Assert the toast title and the body string the spec names, not the title alone.",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "e2e/room-photos.spec.ts:152 (M5) (e2e)"
+      ],
+      "created": "2026-10-25T03:59:17Z",
+      "last_seen": "2026-10-25T03:59:17Z"
+    },
+    {
+      "id": "L-004",
+      "key": "surviving_mutant::after deleting the cover assert which photo is primary not only the delete toast or that some image remains",
+      "text": "After deleting the cover, assert which photo is primary, not only the delete toast or that some image remains.",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "apps/api/src/extranet/hotels/room-images.service.ts:111 (M6) (e2e)"
+      ],
+      "created": "2026-10-25T03:59:17Z",
+      "last_seen": "2026-10-25T03:59:17Z"
+    },
+    {
+      "id": "L-005",
+      "key": "ac_gap::assert the on screen limit refusal as well as the api status and message",
+      "text": "Assert the on-screen limit refusal as well as the API status and message.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "FOTO-03 (e2e)"
+      ],
+      "created": "2026-10-25T03:59:17Z",
+      "last_seen": "2026-10-25T03:59:17Z"
+    },
+    {
+      "id": "L-006",
+      "key": "ac_gap::assert file type and size refusals with the spec exact toast text not only the happy path upload",
+      "text": "Assert file type and size refusals with the spec exact toast text, not only the happy-path upload.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "FOTO-04 (e2e)"
+      ],
+      "created": "2026-10-25T03:59:17Z",
+      "last_seen": "2026-10-25T03:59:17Z"
+    },
+    {
+      "id": "L-007",
+      "key": "ac_gap::assert upload cover change and delete are refused when the parent is not editable not only the draft path",
+      "text": "Assert upload, cover change, and delete are refused when the parent is not editable, not only the draft path.",
+      "signal": "ac_gap",
+      "scope": "api",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "FOTO-06 (api)"
+      ],
+      "created": "2026-10-25T03:59:17Z",
+      "last_seen": "2026-10-25T03:59:17Z"
+    },
+    {
+      "id": "L-008",
+      "key": "ac_gap::assert the success status transition not only the error that blocks it",
+      "text": "Assert the success status transition, not only the error that blocks it.",
+      "signal": "ac_gap",
+      "scope": "api",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "FOTO-07 (api)"
+      ],
+      "created": "2026-10-25T03:59:17Z",
+      "last_seen": "2026-10-25T03:59:17Z"
+    },
+    {
+      "id": "L-009",
+      "key": "ac_gap::assert the title and the body of a compound toast on the action that should show that pair",
+      "text": "Assert the title and the body of a compound toast on the action that should show that pair.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "e2e/room-photos.spec.ts:334 (e2e)"
+      ],
+      "created": "2026-10-25T04:24:44Z",
+      "last_seen": "2026-10-25T04:24:44Z"
+    },
+    {
+      "id": "L-010",
+      "key": "ac_gap::assert the named placeholder icon and that the placeholder itself contains no text",
+      "text": "Assert the named placeholder icon and that the placeholder itself contains no text.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "e2e/room-photos.spec.ts:300 (e2e)",
+        "e2e/room-photos.spec.ts:295 (e2e)"
+      ],
+      "created": "2026-10-25T04:24:44Z",
+      "last_seen": "2026-10-25T04:24:44Z"
+    },
+    {
+      "id": "L-011",
+      "key": "surviving_mutant::when a spec lists every item with one ordered first assert the full set and that order not only the first item",
+      "text": "When a spec lists every item with one ordered first, assert the full set and that order, not only the first item.",
+      "signal": "surviving_mutant",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "apps/admin/src/app/hotels/[id]/page.tsx:349 (e2e)"
+      ],
+      "created": "2026-10-25T13:26:36Z",
+      "last_seen": "2026-10-25T13:26:36Z"
+    },
+    {
+      "id": "L-012",
+      "key": "ac_gap::when a spec lists every item with one ordered first assert the full set and that order not only the first item",
+      "text": "When a spec lists every item with one ordered first, assert the full set and that order, not only the first item.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "fotos-do-quarto"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "e2e/room-photos.spec.ts:286 (e2e)"
+      ],
+      "created": "2026-10-25T13:26:36Z",
+      "last_seen": "2026-10-25T13:26:36Z"
+    },
+    {
+      "id": "L-013",
+      "key": "ac_gap::when a spec allows editing several surfaces assert each surface not only the first form that becomes enabled",
+      "text": "When a spec allows editing several surfaces, assert each surface, not only the first form that becomes enabled.",
+      "signal": "ac_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "ajuste-hotel-ativo"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "AJUS-02 (e2e)"
+      ],
+      "created": "2026-10-25T16:01:49Z",
+      "last_seen": "2026-10-25T16:01:49Z"
+    }
+  ]
+}

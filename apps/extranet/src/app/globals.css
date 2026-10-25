@@ -52,8 +52,43 @@ body {
   }
 }
 
-.animate-fade-up {
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-up {
   animation: fade-up 0.35s ease-out both;
+}
+
+@utility animate-rise {
+  animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-rise-2 {
+  animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) 70ms both;
+}
+
+@utility animate-rise-3 {
+  animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) 140ms both;
+}
+
+@utility animate-rise-4 {
+  animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) 210ms both;
+}
+
+@utility animate-rise-5 {
+  animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) 280ms both;
+}
+
+@utility animate-rise-6 {
+  animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) 350ms both;
 }
 
 .skeleton {

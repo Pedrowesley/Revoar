@@ -2,8 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 import { apiPost } from "./helpers/api";
 
 const EXTRANET = "http://localhost:3000";
-const ADMIN = "http://localhost:3001";
-
 function hero(page: Page) {
   return page.locator("section").filter({ has: page.getByRole("heading", { level: 1 }) });
 }
@@ -30,9 +28,14 @@ test.describe("Landing pública da extranet", () => {
     await page.goto(`${EXTRANET}/`);
 
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Publique seu hotel. O hóspede vai reservar aqui.",
+      "Encontre um lugar para ficar e reserve.",
     );
-    await expect(hero(page).getByText("Cadastro, revisão da equipe Revoar e hotel no ar.")).toBeVisible();
+    const processLine = hero(page).getByText("Cadastro, revisão da equipe Revoar e hotel no ar.");
+    await expect(processLine).toBeVisible();
+
+    const cta = await hero(page).getByRole("link", { name: "Cadastrar hotel" }).boundingBox();
+    const line = await processLine.boundingBox();
+    expect(cta && line && line.y >= cta.y + cta.height).toBe(true);
   });
 
   test("LAND-02: Cadastrar hotel leva a /signup", async ({ page }) => {
@@ -120,7 +123,14 @@ test.describe("Landing pública da extranet", () => {
       await expect(card).toContainText("Em breve");
     }
 
-    await expect(page.locator(`a[href^="${ADMIN}"]`)).toHaveCount(0);
+    const hrefs = await page.locator("a[href]").evaluateAll((links) =>
+      links.map((link) => (link as HTMLAnchorElement).href),
+    );
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) {
+      expect(new URL(href).origin).toBe(EXTRANET);
+      expect(href).not.toContain(":3001");
+    }
     await expect(page.getByRole("link", { name: /admin/i })).toHaveCount(0);
   });
 
