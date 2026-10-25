@@ -81,13 +81,13 @@ T1 → T2 → T3
 
 **Done when**:
 
-- [ ] O clique confirmado mostra o selo Rascunho e o formulário do quarto editável
-- [ ] A confirmação diz "A ficha sai do ar até a equipe Revoar aprovar de novo."
-- [ ] Cancelar a confirmação mantém Ativo
-- [ ] Rascunho, em análise, rejeitado e inativo não mostram o botão
-- [ ] A ficha mostra "Ativo → Rascunho (PARTNER)"
-- [ ] Full gate passa
-- [ ] Test count: 5 tests pass
+- [x] O clique confirmado mostra o selo Rascunho e o formulário do quarto editável
+- [x] A confirmação diz "A ficha sai do ar até a equipe Revoar aprovar de novo."
+- [x] Cancelar a confirmação mantém Ativo
+- [x] Rascunho, em análise, rejeitado e inativo não mostram o botão
+- [x] A ficha mostra "Ativo → Rascunho (PARTNER)"
+- [x] Full gate passa
+- [x] Test count: 5 tests pass
 
 **Tests**: e2e
 **Gate**: full

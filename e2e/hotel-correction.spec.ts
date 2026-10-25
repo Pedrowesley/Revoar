@@ -1,7 +1,9 @@
+import { execFileSync } from "node:child_process";
 import { expect, test } from "@playwright/test";
 import { adminLogin, apiPatch, apiPost, registerTestImage } from "./helpers/api";
 
 const API = "http://localhost:3002";
+const EXTRANET = "http://localhost:3000";
 
 type HotelDetail = {
   id: string;
@@ -147,5 +149,81 @@ test.describe("Ajuste de hotel ativo", () => {
       expect(approve.message).toBe("Hotel não está em revisão.");
     }
     expect((await apiGet<HotelDetail>(`/extranet/hotels/${hotelId}`, token)).status).toBe("DRAFT");
+  });
+
+  test("AJUS-01 e AJUS-02: Corrigir ficha reabre o quarto e mostra o histórico", async ({ page }) => {
+    const { token, adminToken, uniqueId } = await approvedPartner();
+    const { hotelId } = await publishHotel(token, adminToken, `Hotel Tela ${uniqueId}`);
+
+    await page.addInitScript((value) => {
+      localStorage.setItem("revoar_partner_token", value);
+    }, token);
+    await page.goto(`${EXTRANET}/hotels/${hotelId}`);
+    await expect(page.getByRole("button", { name: "Corrigir ficha" })).toBeVisible();
+
+    page.once("dialog", async (dialog) => {
+      expect(dialog.message()).toBe("A ficha sai do ar até a equipe Revoar aprovar de novo.");
+      await dialog.dismiss();
+    });
+    await page.getByRole("button", { name: "Corrigir ficha" }).click();
+    await expect(page.getByText("Ativo", { exact: true })).toBeVisible();
+
+    page.once("dialog", async (dialog) => {
+      expect(dialog.message()).toBe("A ficha sai do ar até a equipe Revoar aprovar de novo.");
+      await dialog.accept();
+    });
+    await page.getByRole("button", { name: "Corrigir ficha" }).click();
+
+    await expect(page.getByText("Rascunho", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Nome do hotel")).toBeEnabled();
+    await expect(page.getByText("Ativo → Rascunho (PARTNER)")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Corrigir ficha" })).toHaveCount(0);
+
+    await page.goto(`${EXTRANET}/hotels/${hotelId}/rooms`);
+    await page.getByRole("link", { name: "Standard" }).click();
+    await expect(page.getByLabel("Nome do quarto")).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Salvar alterações" })).toBeEnabled();
+  });
+
+  test("o botão fica oculto em rascunho, análise, rejeitado e inativo", async ({ page }) => {
+    const { token, adminToken, uniqueId } = await approvedPartner();
+    const { hotelId } = await createReadyHotel(token, `Hotel Sem Botão ${uniqueId}`);
+
+    await page.addInitScript((value) => {
+      localStorage.setItem("revoar_partner_token", value);
+    }, token);
+    await page.goto(`${EXTRANET}/hotels/${hotelId}`);
+    await expect(page.getByRole("button", { name: "Corrigir ficha" })).toHaveCount(0);
+
+    const submit = await apiPost(`/extranet/hotels/${hotelId}/submit`, {}, token);
+    expect(submit.ok).toBe(true);
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Corrigir ficha" })).toHaveCount(0);
+
+    const rejected = await apiPatch(
+      `/admin/hotels/${hotelId}/reject`,
+      { reason: "Endereço incompleto na ficha." },
+      adminToken,
+    );
+    expect(rejected.ok).toBe(true);
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Corrigir ficha" })).toHaveCount(0);
+
+    const published = await publishHotel(token, adminToken, `Hotel Inativo ${uniqueId}`);
+    await page.goto(`${EXTRANET}/hotels/${published.hotelId}`);
+    await expect(page.getByRole("button", { name: "Corrigir ficha" })).toBeVisible();
+    execFileSync("docker", [
+      "exec",
+      "revoar-postgres",
+      "psql",
+      "-U",
+      "revoar",
+      "-d",
+      "revoar",
+      "-c",
+      `UPDATE hotels SET status = 'INACTIVE' WHERE id = '${published.hotelId}';`,
+    ]);
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Corrigir ficha" })).toHaveCount(0);
   });
 });

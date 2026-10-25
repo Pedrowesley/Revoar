@@ -100,13 +100,13 @@ Depois que a equipe Revoar aprova um hotel, a ficha trava. Se o endereço está 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
 | AJUS-01 | P1: Corrigir ficha leva a DRAFT | Execute | Verified |
-| AJUS-02 | P1: Edição completa no rascunho | Design | Pending |
+| AJUS-02 | P1: Edição completa no rascunho | Execute | Verified |
 | AJUS-03 | P1: Só hotel ativo entra em correção | Execute | Verified |
 | AJUS-04 | P1: Reenvio usa as regras atuais | Design | Pending |
 | AJUS-05 | P1: Aprovação e rejeição reusam o admin | Design | Pending |
-| AJUS-06 | P1: Histórico mostra o pedido | Design | Pending |
+| AJUS-06 | P1: Histórico mostra o pedido | Execute | Verified |
 
-**Coverage:** 6 total, 2 mapped to tasks, 4 mapped to design.
+**Coverage:** 6 total, 4 mapped to tasks, 2 mapped to design.
 
 ---
 
