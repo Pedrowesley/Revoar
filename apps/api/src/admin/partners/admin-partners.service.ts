@@ -34,9 +34,38 @@ export class AdminPartnersService {
       phone: partner.phone,
       contactName: partner.contactName,
       status: partner.status,
+      detailsConfirmed: partner.detailsConfirmedAt !== null,
       hotelCount: partner._count.hotels,
       createdAt: partner.createdAt.toISOString(),
     }));
+  }
+
+  async getById(partnerId: string) {
+    const partner = await this.prisma.partner.findUnique({
+      where: { id: partnerId },
+      include: { users: { orderBy: { createdAt: "asc" }, take: 1 } },
+    });
+
+    if (!partner) {
+      throw new NotFoundException("Parceiro não encontrado");
+    }
+
+    const user = partner.users[0];
+
+    return {
+      id: partner.id,
+      name: user?.name ?? null,
+      email: user?.email ?? partner.email,
+      avatarUrl: user?.avatarUrl ?? null,
+      legalName: partner.legalName,
+      cnpj: partner.cnpj,
+      tradeName: partner.tradeName,
+      logoUrl: partner.logoUrl,
+      phone: partner.phone,
+      contactName: partner.contactName,
+      status: partner.status,
+      detailsConfirmedAt: partner.detailsConfirmedAt?.toISOString() ?? null,
+    };
   }
 
   async approve(adminId: string, partnerId: string) {

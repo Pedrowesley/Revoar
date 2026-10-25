@@ -124,6 +124,7 @@ export class PartnerAuthService {
       id: user.id,
       name: user.name,
       email: user.email,
+      avatarUrl: user.avatarUrl,
       partner: {
         id: user.partner.id,
         legalName: user.partner.legalName,
@@ -133,6 +134,8 @@ export class PartnerAuthService {
         email: user.partner.email,
         phone: user.partner.phone,
         contactName: user.partner.contactName,
+        logoUrl: user.partner.logoUrl,
+        detailsConfirmedAt: user.partner.detailsConfirmedAt?.toISOString() ?? null,
       },
     };
   }

@@ -13,6 +13,11 @@ export class AdminPartnersController {
     return this.adminPartnersService.listPending();
   }
 
+  @Get(":id")
+  getById(@Param("id") id: string) {
+    return this.adminPartnersService.getById(id);
+  }
+
   @Patch(":id/approve")
   approve(@CurrentAdmin() admin: AdminRequestUser, @Param("id") id: string) {
     return this.adminPartnersService.approve(admin.adminId, id);
