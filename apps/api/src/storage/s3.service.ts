@@ -67,6 +67,27 @@ export class S3Service implements OnModuleInit {
     return { uploadUrl, publicUrl, key };
   }
 
+  async createPartnerAssetUpload(params: {
+    partnerId: string;
+    kind: "avatar" | "logo";
+    contentType: AllowedImageType;
+    fileName?: string;
+  }) {
+    const extension = this.extensionFromContentType(params.contentType, params.fileName);
+    const key = `partners/${params.partnerId}/${params.kind}/${randomUUID()}${extension}`;
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ContentType: params.contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(this.client, command, { expiresIn: 900 });
+    const publicUrl = `${this.publicBaseUrl}/${key}`;
+
+    return { uploadUrl, publicUrl, key };
+  }
+
   private extensionFromContentType(contentType: AllowedImageType, fileName?: string) {
     if (fileName) {
       const match = fileName.match(/\.(jpe?g|png|webp)$/i);

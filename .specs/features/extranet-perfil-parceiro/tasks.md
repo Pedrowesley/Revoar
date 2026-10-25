@@ -169,8 +169,8 @@ T16 -> T17
 
 **Done when**:
 
-- [ ] A chave não cai em `hotels/`
-- [ ] JPG, PNG e WebP seguem o mapa de extensão já existente
+- [x] A chave não cai em `hotels/`
+- [x] JPG, PNG e WebP seguem o mapa de extensão já existente
 
 **Tests**: none
 **Gate**: build
