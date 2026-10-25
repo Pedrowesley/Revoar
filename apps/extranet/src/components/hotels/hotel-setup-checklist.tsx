@@ -27,6 +27,11 @@ export function HotelSetupChecklist({ hotel }: HotelSetupChecklistProps) {
       done: hotel.imageCount > 0 && hotel.hasPrimaryImage,
       href: `/hotels/${hotel.id}/photos`,
     },
+    {
+      label: "Foto em cada quarto",
+      done: hotel.roomsMissingPhotoNames.length === 0,
+      href: `/hotels/${hotel.id}/rooms`,
+    },
   ];
 
   const completed = steps.filter((step) => step.done).length;
@@ -53,7 +58,7 @@ export function HotelSetupChecklist({ hotel }: HotelSetupChecklistProps) {
           />
         </div>
       </div>
-      <ul className="grid gap-2 sm:grid-cols-3">
+      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((step) => (
           <li key={step.label}>
             <Link

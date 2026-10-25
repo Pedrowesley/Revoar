@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Building2, Plus, Trash2 } from "lucide-react";
 import { ROOM_AMENITY_LABELS, RoomAmenity } from "@revoar/shared";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { HotelStatus } from "@/lib/hotel.const";
+import { resolveMediaUrl } from "@/lib/image";
 import { RoomTypeDetail } from "@/lib/room";
 import { extranetKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
@@ -25,6 +26,28 @@ import { Surface } from "@/components/ui/surface";
 import { useToast } from "@/components/ui/toaster";
 
 const EDITABLE_STATUSES: HotelStatus[] = ["DRAFT", "REJECTED"];
+
+function RoomCover({ url, name }: { url: string | null; name: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!url || failed) {
+    return (
+      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-muted" aria-hidden>
+        <Building2 className="h-6 w-6 text-muted-foreground/60" />
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={resolveMediaUrl(url)}
+      alt={`Capa de ${name}`}
+      className="h-16 w-16 shrink-0 rounded-xl object-cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 export default function HotelRoomsPage() {
   const toast = useToast();
@@ -143,6 +166,7 @@ export default function HotelRoomsPage() {
           {rooms.map((room) => (
             <Surface as="li" key={room.id} className="p-4">
               <div className="flex items-start justify-between gap-4">
+                <RoomCover url={room.coverImageUrl} name={room.name} />
                 <div className="flex-1">
                   <Link
                     href={`/hotels/${hotel.id}/rooms/${room.id}`}

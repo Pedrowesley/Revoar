@@ -21,6 +21,7 @@ type RoomFormProps = {
   onSubmit: (data: RoomTypeInput) => Promise<void>;
   submitLabel: string;
   readOnly?: boolean;
+  children?: React.ReactNode;
 };
 
 export function RoomForm({
@@ -28,6 +29,7 @@ export function RoomForm({
   onSubmit,
   submitLabel,
   readOnly = false,
+  children,
 }: RoomFormProps) {
   const toast = useToast();
   const {
@@ -173,6 +175,8 @@ export function RoomForm({
         </div>
         <FieldError message={errors.amenities?.message} />
       </div>
+
+      {children}
 
       {!readOnly && (
         <Button type="submit" disabled={isSubmitting}>

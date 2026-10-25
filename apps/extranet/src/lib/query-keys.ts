@@ -7,4 +7,6 @@ export const extranetKeys = {
   hotel: (id: string) => ["extranet", "hotels", id] as const,
   rooms: (hotelId: string) => ["extranet", "hotels", hotelId, "rooms"] as const,
   images: (hotelId: string) => ["extranet", "hotels", hotelId, "images"] as const,
+  roomImages: (hotelId: string, roomId: string) =>
+    ["extranet", "hotels", hotelId, "rooms", roomId, "images"] as const,
 };

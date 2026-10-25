@@ -12,6 +12,7 @@ export type RoomTypeDetail = {
   amenities: RoomAmenity[];
   sizeSqm: number | null;
   sortOrder: number;
+  coverImageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 };

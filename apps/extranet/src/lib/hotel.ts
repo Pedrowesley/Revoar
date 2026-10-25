@@ -26,6 +26,7 @@ export type HotelDetail = HotelSummary & {
   checkInTime: string;
   checkOutTime: string;
   createdAt: string;
+  roomsMissingPhotoNames: string[];
 };
 
 export type ViaCepResponse = {

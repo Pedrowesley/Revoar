@@ -14,6 +14,7 @@ import { extranetKeys } from "@/lib/query-keys";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useHotel } from "@/hooks/use-hotel";
 import { RoomForm } from "@/components/rooms/room-form";
+import { RoomPhotoGallery } from "@/components/rooms/room-photo-gallery";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageShell } from "@/components/layout/page-shell";
 import { Alert } from "@/components/ui/alert";
@@ -127,6 +128,10 @@ export default function EditRoomPage() {
             sizeSqm: room.sizeSqm ?? undefined,
           }}
         />
+      </Surface>
+
+      <Surface className="mt-6 p-6">
+        <RoomPhotoGallery hotelId={params.id} roomId={room.id} readOnly={readOnly} />
       </Surface>
     </PageShell>
   );
