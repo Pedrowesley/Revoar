@@ -7,11 +7,18 @@ type EmailPayload = {
   html: string;
 };
 
+export type OutboxMessage = EmailPayload;
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
+  private readonly outbox: OutboxMessage[] = [];
 
   constructor(private readonly config: ConfigService) {}
+
+  recentMessages() {
+    return this.outbox.slice(-20);
+  }
 
   async sendPartnerSignupPending(email: string, legalName: string) {
     await this.send({
@@ -45,7 +52,16 @@ export class NotificationsService {
     });
   }
 
+  async sendPartnerSuspended(email: string, legalName: string) {
+    await this.send({
+      to: email,
+      subject: "Conta suspensa — Revoar",
+      html: `<p>Olá, ${legalName}!</p><p>Sua conta de parceiro foi suspensa. Entre em contato com a equipe Revoar.</p>`,
+    });
+  }
+
   private async send(payload: EmailPayload) {
+    this.outbox.push(payload);
     const apiKey = this.config.get<string>("RESEND_API_KEY");
 
     if (!apiKey) {

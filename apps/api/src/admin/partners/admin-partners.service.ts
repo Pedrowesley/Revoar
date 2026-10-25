@@ -134,6 +134,8 @@ export class AdminPartnersService {
       data: { status: PartnerStatus.SUSPENDED },
     });
 
+    await this.notifications.sendPartnerSuspended(updated.email, updated.legalName);
+
     return {
       id: updated.id,
       legalName: updated.legalName,
