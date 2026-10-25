@@ -12,6 +12,7 @@ type Me = {
   partner: {
     id: string;
     legalName: string;
+    tradeName: string | null;
     cnpj: string;
     phone: string;
     contactName: string;
@@ -20,6 +21,27 @@ type Me = {
     status: string;
   };
 };
+
+type Sheet = {
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  legalName: string;
+  cnpj: string;
+  tradeName: string | null;
+  logoUrl: string | null;
+  phone: string;
+  contactName: string;
+  detailsConfirmedAt: string | null;
+};
+
+function formatCnpj(value: string) {
+  return value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+}
+
+function formatPhone(value: string) {
+  return value.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+}
 
 function cnpjDigits() {
   const base = `${String(Date.now()).slice(-8)}0001`.slice(0, 12);
@@ -100,9 +122,66 @@ test.describe("Perfil do parceiro", () => {
     const partnerId = me.body.partner.id;
     const avatarUrl = `http://localhost:4566/revoar-hotel-images/partners/${partnerId}/avatar/foto.jpg`;
     const logoUrl = `http://localhost:4566/revoar-hotel-images/partners/${partnerId}/logo/marca.jpg`;
-    const saved = await apiPatch<Me>("/extranet/profile", { phone: "11988887777", avatarUrl, logoUrl }, token);
+    const nextName = `Nome ${unique}`;
+    const nextTrade = `Fantasia ${unique}`;
+    const nextPhone = "11988887777";
+    const nextContact = `Resp ${unique}`;
+    const saved = await apiPatch<Sheet>(
+      "/extranet/profile",
+      {
+        name: nextName,
+        tradeName: nextTrade,
+        phone: nextPhone,
+        contactName: nextContact,
+        avatarUrl,
+        logoUrl,
+      },
+      token,
+    );
     expect(saved.ok).toBe(true);
-    if (saved.ok) expect(saved.data.detailsConfirmedAt).toBeNull();
+    if (saved.ok) {
+      expect(saved.data.name).toBe(nextName);
+      expect(saved.data.tradeName).toBe(nextTrade);
+      expect(saved.data.phone).toBe(nextPhone);
+      expect(saved.data.contactName).toBe(nextContact);
+      expect(saved.data.detailsConfirmedAt).toBeNull();
+      expect(saved.data.legalName).toBe(me.body.partner.legalName);
+      expect(saved.data.email).toBe(me.body.email);
+      expect(saved.data.cnpj).toBe(me.body.partner.cnpj);
+    }
+    const reread = await apiGet<Me>("/extranet/auth/me", token);
+    expect(reread.body.name).toBe(nextName);
+    expect(reread.body.partner.tradeName).toBe(nextTrade);
+    expect(reread.body.partner.phone).toBe(nextPhone);
+    expect(reread.body.partner.contactName).toBe(nextContact);
+    expect(reread.body.avatarUrl).toBe(avatarUrl);
+    expect(reread.body.partner.logoUrl).toBe(logoUrl);
+    expect(reread.body.partner.detailsConfirmedAt).toBeNull();
+    expect(reread.body.partner.legalName).toBe(me.body.partner.legalName);
+
+    const gif = await apiPost("/extranet/profile/avatar/presign", {
+      contentType: "image/gif",
+      fileSize: 1200,
+      fileName: "foto.gif",
+    }, token);
+    expect(gif.ok).toBe(false);
+    if (!gif.ok) {
+      expect(gif.status).toBe(400);
+      expect(gif.message).toBe("Formato inválido. Use JPG, PNG ou WebP.");
+    }
+    const huge = await apiPost("/extranet/profile/avatar/presign", {
+      contentType: "image/png",
+      fileSize: 5 * 1024 * 1024 + 1,
+      fileName: "grande.png",
+    }, token);
+    expect(huge.ok).toBe(false);
+    if (!huge.ok) {
+      expect(huge.status).toBe(400);
+      expect(huge.message).toBe("Arquivo deve ter no máximo 5MB");
+    }
+    const kept = await apiGet<Me>("/extranet/auth/me", token);
+    expect(kept.body.avatarUrl).toBe(avatarUrl);
+    expect(kept.body.partner.logoUrl).toBe(logoUrl);
 
     const presign = await apiPost<{ key: string }>("/extranet/profile/avatar/presign", {
       contentType: "image/png",
@@ -176,6 +255,11 @@ test.describe("Perfil do parceiro", () => {
     await expect(page.getByRole("button", { name: "Confirmar" })).toBeEnabled();
     await page.getByRole("button", { name: "Confirmar" }).click();
     await expect(page.getByText(/Confirmou em/).first()).toBeVisible();
+    await page.getByRole("button", { name: "Conta" }).click();
+    await expect(page.getByRole("button", { name: "Sair" })).toBeVisible();
+    await page.getByRole("button", { name: "Sair" }).click();
+    await expect(page).toHaveURL(/\/login/);
+    await expect(page.getByRole("link", { name: "Entrar" })).toBeVisible();
 
     const dossier = await apiGet<{
       legalName: string;
@@ -210,6 +294,30 @@ test.describe("Perfil do parceiro", () => {
     expect(signup.ok).toBe(true);
     if (!signup.ok) return;
     const pendingId = signup.data.partner.id;
+    const pendingToken = signup.data.accessToken;
+    const pendingAvatar = `http://localhost:4566/revoar-hotel-images/partners/${pendingId}/avatar/fila.jpg`;
+    const pendingLogo = `http://localhost:4566/revoar-hotel-images/partners/${pendingId}/logo/fila.jpg`;
+    expect((await apiPatch("/extranet/profile", { avatarUrl: pendingAvatar, logoUrl: pendingLogo }, pendingToken)).ok).toBe(
+      true,
+    );
+
+    const partnerPage = await page.context().newPage();
+    await partnerPage.addInitScript((value) => {
+      localStorage.setItem("revoar_partner_token", value);
+    }, pendingToken);
+    await partnerPage.goto(`${EXTRANET}/profile`);
+    await expect(partnerPage.getByText("Fila E2E", { exact: true })).toBeVisible();
+    await expect(partnerPage.getByText(`pendente-${unique}@test.revoar.com.br`).first()).toBeVisible();
+    await expect(partnerPage.getByRole("img", { name: "Avatar" })).toHaveAttribute("src", pendingAvatar);
+    await expect(partnerPage.getByText(`Pendente ${unique} Ltda`).first()).toBeVisible();
+    const pendingMe = await apiGet<Me>("/extranet/auth/me", pendingToken);
+    await expect(partnerPage.getByText(`CNPJ ${formatCnpj(pendingMe.body.partner.cnpj)}`)).toBeVisible();
+    await expect(partnerPage.getByText(`Pendente ${unique}`, { exact: true })).toBeVisible();
+    await expect(partnerPage.getByRole("img", { name: "Logo" })).toHaveAttribute("src", pendingLogo);
+    await expect(partnerPage.getByText(`Telefone: ${formatPhone("11999990000")}`).first()).toBeVisible();
+    await expect(partnerPage.getByText("Responsável: Fila E2E").first()).toBeVisible();
+    await expect(partnerPage.getByText("Ainda não confirmou").first()).toBeVisible();
+    await partnerPage.close();
 
     const adminPage = await page.context().newPage();
     await adminPage.addInitScript((value) => {
@@ -225,6 +333,20 @@ test.describe("Perfil do parceiro", () => {
     await expect(row.getByRole("button", { name: "Aprovar" })).toBeVisible();
     await row.getByRole("link", { name: `Pendente ${unique} Ltda` }).click();
     await expect(adminPage.getByText("Ainda não confirmou")).toBeVisible();
+    await expect(adminPage.getByRole("img", { name: "Avatar" })).toHaveAttribute("src", pendingAvatar);
+    await expect(adminPage.getByRole("img", { name: "Logo" })).toHaveAttribute("src", pendingLogo);
+    await expect(adminPage.getByText("Fila E2E", { exact: true })).toBeVisible();
+    await expect(adminPage.getByText(`pendente-${unique}@test.revoar.com.br`)).toBeVisible();
+    await expect(adminPage.getByText(`Pendente ${unique} Ltda`)).toBeVisible();
+    await expect(adminPage.getByText(`CNPJ: ${formatCnpj(pendingMe.body.partner.cnpj)}`)).toBeVisible();
+    await expect(adminPage.getByText(`Nome fantasia: Pendente ${unique}`)).toBeVisible();
+    await expect(adminPage.getByText(`Telefone: ${formatPhone("11999990000")}`)).toBeVisible();
+    await expect(adminPage.getByText("Responsável: Fila E2E")).toBeVisible();
+    await expect(adminPage.getByText("Status: PENDING")).toBeVisible();
+    expect(
+      (await apiPatch("/extranet/profile", { contactName: "Resp Ao Vivo" }, pendingToken)).ok,
+    ).toBe(true);
+    await expect(adminPage.getByText("Responsável: Resp Ao Vivo")).toBeVisible();
     await expect(adminPage.locator("input")).toHaveCount(0);
     await expect(adminPage.getByRole("button", { name: "Confirmar" })).toHaveCount(0);
     await adminPage.getByRole("button", { name: "Aprovar" }).click();

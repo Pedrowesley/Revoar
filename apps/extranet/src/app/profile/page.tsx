@@ -159,18 +159,23 @@ function ProfileSheet() {
     <PageShell>
       <Surface className="mb-6 flex items-center gap-4 p-5">
         {profile.avatarUrl ? (
-          <img src={profile.avatarUrl} alt="" className="h-24 w-24 rounded-full object-cover" />
+          <img src={profile.avatarUrl} alt="Avatar" className="h-24 w-24 rounded-full object-cover" />
         ) : (
           <span className="flex h-24 w-24 items-center justify-center rounded-full bg-primary-soft text-2xl font-bold text-primary">
             {profile.name.slice(0, 1)}
           </span>
         )}
+        {profile.partner.logoUrl ? (
+          <img src={profile.partner.logoUrl} alt="Logo" className="h-16 w-16 rounded-lg object-cover" />
+        ) : null}
         <div>
           <p className="text-lg font-semibold">{profile.name}</p>
           <p className="text-sm text-muted-foreground">{profile.email}</p>
           <p>{profile.partner.legalName}</p>
           <p className="text-sm text-muted-foreground">CNPJ {formatCnpj(profile.partner.cnpj)}</p>
           <p className="text-sm text-muted-foreground">{profile.partner.tradeName ?? "—"}</p>
+          <p className="text-sm">Telefone: {formatPhone(profile.partner.phone)}</p>
+          <p className="text-sm">Responsável: {profile.partner.contactName}</p>
           <p className="text-sm">{confirmationLabel(profile.partner.detailsConfirmedAt)}</p>
           <p className="mt-2 inline-flex rounded-full bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">
             {STATUS_LABELS[profile.partner.status]}
