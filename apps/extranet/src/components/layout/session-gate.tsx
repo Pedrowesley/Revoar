@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AUTH_CHANGE_EVENT, getToken } from "@/lib/auth";
 
-const PUBLIC_PATHS = new Set(["/", "/login", "/signup"]);
+const PUBLIC_PATHS = new Set(["/", "/login", "/signup", "/forgot-password", "/reset-password"]);
 
 export function SessionGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

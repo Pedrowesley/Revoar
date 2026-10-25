@@ -52,6 +52,14 @@ export class NotificationsService {
     });
   }
 
+  async sendPasswordReset(email: string, link: string) {
+    await this.send({
+      to: email,
+      subject: "Redefinir senha — Revoar",
+      html: `<p>Para escolher uma senha nova, abra este link:</p><p><a href="${link}">${link}</a></p><p>O link vale por 30 minutos e só pode ser usado uma vez.</p>`,
+    });
+  }
+
   async sendPartnerSuspended(email: string, legalName: string) {
     await this.send({
       to: email,

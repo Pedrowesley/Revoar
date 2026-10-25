@@ -78,8 +78,21 @@ model PartnerUser {
   avatarUrl    String?  @map("avatar_url")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  passwordResets PasswordResetToken[]
 
   @@map("partner_users")
+}
+
+model PasswordResetToken {
+  id        String      @id @default(uuid())
+  userId    String      @map("user_id")
+  user      PartnerUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String      @unique @map("token_hash")
+  expiresAt DateTime    @map("expires_at")
+  usedAt    DateTime?   @map("used_at")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  @@map("password_reset_tokens")
 }
 
 model Hotel {

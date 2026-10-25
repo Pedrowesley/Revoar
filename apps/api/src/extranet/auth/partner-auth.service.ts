@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
+import { createHash, randomBytes } from "crypto";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import { PartnerStatus } from "@revoar/database";
@@ -108,6 +110,42 @@ export class PartnerAuthService {
         status: user.partner.status,
       },
     };
+  }
+
+  async forgotPassword(emailRaw: string) {
+    const email = emailRaw.toLowerCase().trim();
+    const user = await this.prisma.partnerUser.findUnique({ where: { email } });
+    if (!user) return { sent: true };
+
+    const token = randomBytes(32).toString("hex");
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    await this.prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+      },
+    });
+
+    const extranetUrl = process.env.EXTRANET_URL ?? "http://localhost:3000";
+    const link = `${extranetUrl}/reset-password?token=${token}`;
+    await this.notifications.sendPasswordReset(user.email, link);
+    return { sent: true };
+  }
+
+  async resetPassword(token: string, password: string) {
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const row = await this.prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+    if (!row || row.usedAt || row.expiresAt.getTime() < Date.now()) {
+      throw new BadRequestException("Link inválido ou expirado.");
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await this.prisma.$transaction([
+      this.prisma.partnerUser.update({ where: { id: row.userId }, data: { passwordHash } }),
+      this.prisma.passwordResetToken.update({ where: { id: row.id }, data: { usedAt: new Date() } }),
+    ]);
+    return { reset: true };
   }
 
   async getProfile(userId: string) {
