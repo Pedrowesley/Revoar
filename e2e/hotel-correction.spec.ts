@@ -1,0 +1,151 @@
+import { expect, test } from "@playwright/test";
+import { adminLogin, apiPatch, apiPost, registerTestImage } from "./helpers/api";
+
+const API = "http://localhost:3002";
+
+type HotelDetail = {
+  id: string;
+  status: string;
+  rejectionReason: string | null;
+  statusHistory: { fromStatus: string | null; toStatus: string; actorType: string }[];
+};
+
+async function apiGet<T>(path: string, token: string): Promise<T> {
+  const response = await fetch(`${API}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<T>;
+}
+
+async function approvedPartner() {
+  const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const login = await apiPost<{ accessToken: string }>("/extranet/auth/login", {
+    email: "parceiro@revoar.com.br",
+    password: "revoar123",
+  });
+  if (!login.ok) throw new Error(login.message);
+  const adminToken = await adminLogin();
+  return { token: login.data.accessToken, adminToken, uniqueId };
+}
+
+async function createReadyHotel(token: string, name: string) {
+  const hotel = await apiPost<{ id: string }>(
+    "/extranet/hotels",
+    {
+      name,
+      description: "Hotel de teste E2E com descrição completa para validação.",
+      addressLine: "Rua Teste, 100",
+      city: "São Paulo",
+      state: "SP",
+      zipCode: "01310-100",
+      phone: "(11) 3333-4444",
+      checkInTime: "14:00",
+      checkOutTime: "12:00",
+    },
+    token,
+  );
+  if (!hotel.ok) throw new Error(hotel.message);
+
+  const room = await apiPost<{ id: string }>(
+    `/extranet/hotels/${hotel.data.id}/rooms`,
+    {
+      name: "Standard",
+      description: "Quarto padrão para teste automatizado.",
+      maxAdults: 2,
+      maxChildren: 0,
+      maxOccupancy: 2,
+      bedConfiguration: "1 cama queen",
+      amenities: ["WIFI", "AC"],
+    },
+    token,
+  );
+  if (!room.ok) throw new Error(room.message);
+
+  const image = await registerTestImage(hotel.data.id, token);
+  if (!image.ok) throw new Error(image.message);
+
+  const roomImage = await apiPost(
+    `/extranet/hotels/${hotel.data.id}/rooms/${room.data.id}/images`,
+    {
+      url: `http://localhost:4566/revoar-hotel-images/hotels/${hotel.data.id}/rooms/${room.data.id}/e2e.jpg`,
+    },
+    token,
+  );
+  if (!roomImage.ok) throw new Error(roomImage.message);
+
+  return { hotelId: hotel.data.id, roomId: room.data.id };
+}
+
+async function publishHotel(token: string, adminToken: string, name: string) {
+  const created = await createReadyHotel(token, name);
+  const submit = await apiPost(`/extranet/hotels/${created.hotelId}/submit`, {}, token);
+  if (!submit.ok) throw new Error(submit.message);
+  const approved = await apiPatch(`/admin/hotels/${created.hotelId}/approve`, undefined, adminToken);
+  if (!approved.ok) throw new Error(approved.message);
+  return created;
+}
+
+test.describe("Ajuste de hotel ativo", () => {
+  test("AJUS-01: correção leva o hotel ativo a rascunho e registra o histórico", async () => {
+    const { token, adminToken, uniqueId } = await approvedPartner();
+    const { hotelId } = await publishHotel(token, adminToken, `Hotel Ajuste ${uniqueId}`);
+
+    const correction = await apiPost<HotelDetail>(`/extranet/hotels/${hotelId}/correction`, {}, token);
+    expect(correction.ok).toBe(true);
+    if (!correction.ok) return;
+
+    expect(correction.data.status).toBe("DRAFT");
+    expect(correction.data.statusHistory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          fromStatus: "ACTIVE",
+          toStatus: "DRAFT",
+          actorType: "PARTNER",
+        }),
+      ]),
+    );
+
+    const stayed = await apiGet<HotelDetail>(`/extranet/hotels/${hotelId}`, token);
+    expect(stayed.status).toBe("DRAFT");
+  });
+
+  test("AJUS-03: rascunho e em análise recusam a correção sem mudar o status", async () => {
+    const { token, uniqueId } = await approvedPartner();
+    const { hotelId } = await createReadyHotel(token, `Hotel Travado ${uniqueId}`);
+
+    const draft = await apiPost(`/extranet/hotels/${hotelId}/correction`, {}, token);
+    expect(draft.ok).toBe(false);
+    if (!draft.ok) {
+      expect(draft.status).toBe(422);
+      expect(draft.message).toBe("Só um hotel ativo pode entrar em correção.");
+    }
+    expect((await apiGet<HotelDetail>(`/extranet/hotels/${hotelId}`, token)).status).toBe("DRAFT");
+
+    const submit = await apiPost(`/extranet/hotels/${hotelId}/submit`, {}, token);
+    expect(submit.ok).toBe(true);
+
+    const inReview = await apiPost(`/extranet/hotels/${hotelId}/correction`, {}, token);
+    expect(inReview.ok).toBe(false);
+    if (!inReview.ok) {
+      expect(inReview.status).toBe(422);
+      expect(inReview.message).toBe("Só um hotel ativo pode entrar em correção.");
+    }
+    expect((await apiGet<HotelDetail>(`/extranet/hotels/${hotelId}`, token)).status).toBe("IN_REVIEW");
+  });
+
+  test("admin não aprova um hotel que saiu de análise para correção", async () => {
+    const { token, adminToken, uniqueId } = await approvedPartner();
+    const { hotelId } = await publishHotel(token, adminToken, `Hotel Fora ${uniqueId}`);
+    const correction = await apiPost(`/extranet/hotels/${hotelId}/correction`, {}, token);
+    expect(correction.ok).toBe(true);
+
+    const approve = await apiPatch(`/admin/hotels/${hotelId}/approve`, undefined, adminToken);
+    expect(approve.ok).toBe(false);
+    if (!approve.ok) {
+      expect(approve.status).toBe(422);
+      expect(approve.message).toBe("Hotel não está em revisão.");
+    }
+    expect((await apiGet<HotelDetail>(`/extranet/hotels/${hotelId}`, token)).status).toBe("DRAFT");
+  });
+});

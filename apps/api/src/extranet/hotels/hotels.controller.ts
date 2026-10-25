@@ -66,4 +66,9 @@ export class HotelsController {
   submit(@CurrentPartner() partner: PartnerRequestUser, @Param("id") id: string) {
     return this.hotelsService.submitForReview(partner.partnerId, partner.userId, id);
   }
+
+  @Post(":id/correction")
+  correction(@CurrentPartner() partner: PartnerRequestUser, @Param("id") id: string) {
+    return this.hotelsService.requestCorrection(partner.partnerId, partner.userId, id);
+  }
 }

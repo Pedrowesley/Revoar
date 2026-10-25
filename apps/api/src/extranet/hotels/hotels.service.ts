@@ -28,6 +28,11 @@ const hotelReadInclude = {
       images: { select: { id: true }, take: 1 },
     },
   },
+  statusHistory: {
+    orderBy: { createdAt: "desc" as const },
+    take: 10,
+    select: { fromStatus: true, toStatus: true, actorType: true },
+  },
 };
 
 @Injectable()
@@ -268,6 +273,30 @@ export class HotelsService {
     return this.toDetail(updated);
   }
 
+  async requestCorrection(partnerId: string, partnerUserId: string, hotelId: string) {
+    const hotel = await this.getOwnedHotel(partnerId, hotelId);
+
+    if (hotel.status !== HotelStatus.ACTIVE) {
+      throw new UnprocessableEntityException("Só um hotel ativo pode entrar em correção.");
+    }
+
+    await this.prisma.hotel.update({
+      where: { id: hotelId },
+      data: { status: HotelStatus.DRAFT, rejectionReason: null },
+    });
+
+    await this.statusHistory.record({
+      hotelId,
+      fromStatus: HotelStatus.ACTIVE,
+      toStatus: HotelStatus.DRAFT,
+      actorType: ActorType.PARTNER,
+      actorId: partnerUserId,
+    });
+
+    const fresh = await this.getOwnedHotel(partnerId, hotelId);
+    return this.toDetail(fresh);
+  }
+
   async assertHotelAccess(partnerId: string, hotelId: string) {
     return this.getOwnedHotel(partnerId, hotelId);
   }
@@ -370,6 +399,11 @@ export class HotelsService {
       _count: { roomTypes: number; images: number };
       images?: { id: string }[];
       roomTypes?: { name: string; images: { id: string }[] }[];
+      statusHistory?: {
+        fromStatus: HotelStatus | null;
+        toStatus: HotelStatus;
+        actorType: ActorType;
+      }[];
     },
   ) {
     return {
@@ -396,6 +430,11 @@ export class HotelsService {
       roomsMissingPhotoNames: (hotel.roomTypes ?? [])
         .filter((room) => room.images.length === 0)
         .map((room) => room.name),
+      statusHistory: (hotel.statusHistory ?? []).map((entry) => ({
+        fromStatus: entry.fromStatus,
+        toStatus: entry.toStatus,
+        actorType: entry.actorType,
+      })),
       createdAt: hotel.createdAt.toISOString(),
       updatedAt: hotel.updatedAt.toISOString(),
     };
