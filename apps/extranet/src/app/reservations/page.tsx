@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { extranetKeys } from "@/lib/query-keys";
 import { PageShell } from "@/components/layout/page-shell";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ export default function ReservationsPage() {
     return () => window.clearInterval(timer);
   }, []);
   const query = useQuery({
-    queryKey: ["extranet", "bookings"],
+    queryKey: extranetKeys.bookings,
     enabled: Boolean(token),
     queryFn: () => apiFetch<PartnerBooking[]>("/extranet/bookings", { token: token! }),
   });
@@ -85,7 +86,7 @@ export default function ReservationsPage() {
         token: getToken()!,
         body: JSON.stringify({ decision, reason: reason?.trim() || undefined }),
       });
-      await queryClient.invalidateQueries({ queryKey: ["extranet", "bookings"] });
+      await queryClient.invalidateQueries({ queryKey: extranetKeys.bookings });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Não foi possível responder o pedido");
     }

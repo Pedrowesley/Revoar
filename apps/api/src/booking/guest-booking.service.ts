@@ -22,6 +22,7 @@ import {
   PartnerBookingDecisionInput,
   PayBookingInput,
 } from "@revoar/shared";
+import { EventBusService } from "../events/event-bus.service";
 import { NotificationsService, StayNotice } from "../notifications/notifications.service";
 import { PrismaService } from "../prisma/prisma.service";
 import {
@@ -52,6 +53,7 @@ export class GuestBookingService {
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
     private readonly config: ConfigService,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async search(query: GuestSearchQuery) {
@@ -262,11 +264,19 @@ export class GuestBookingService {
           },
         },
       });
-      return { id: booking.id, accessToken };
+      return { id: booking.id, accessToken, partnerId: plan.hotel.partnerId };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
     const view = await this.present(created.id, email);
-    if (view.status === "REQUESTED") await this.notify("requested", view);
+    if (view.status === "REQUESTED") {
+      await this.notify("requested", view);
+      this.eventBus.emitToPartner(created.partnerId, {
+        type: "booking.requested",
+        partnerId: created.partnerId,
+        bookingId: view.id,
+        code: view.code,
+      });
+    }
     return { ...view, accessToken: created.accessToken };
   }
 

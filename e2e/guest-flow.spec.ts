@@ -483,6 +483,76 @@ test("parceiro lê a confirmada sem aceitar nem recusar e o pedido continua com 
   await expect(requestCard.getByRole("button", { name: "Recusar" })).toBeVisible();
 });
 
+test("pedido novo aparece na extranet sem atualizar a página", async ({ page }) => {
+  let stay: { checkIn: string; checkOut: string; rate: { id: string; totalCents: number } } | null = null;
+  for (let offset = 8; offset <= 36; offset += 1) {
+    const checkIn = iso(offset);
+    const checkOut = iso(offset + 2);
+    const response = await fetch(
+      `http://127.0.0.1:3002/guest/hotels/pousada-atlantico?city=Fortaleza&checkIn=${checkIn}&checkOut=${checkOut}&adults=2&children=0&rooms=1`,
+    );
+    if (!response.ok) continue;
+    const detail = (await response.json()) as { rooms: { rates: { id: string; bookingMode: string; freeUnits: number; totalCents: number }[] }[] };
+    const rate = detail.rooms.flatMap((room) => room.rates).find((item) => item.bookingMode === "REQUEST" && item.freeUnits >= 1);
+    if (rate) {
+      stay = { checkIn, checkOut, rate };
+      break;
+    }
+  }
+  if (!stay) throw new Error("Nenhuma data sob consulta livre");
+
+  const login = await apiPost<{ accessToken: string }>("/extranet/auth/login", {
+    email: "parceiro@revoar.com.br",
+    password: "revoar123",
+  });
+  if (!login.ok) throw new Error(login.message);
+  await page.addInitScript((value) => {
+    localStorage.setItem("revoar_partner_token", value);
+  }, login.data.accessToken);
+
+  let navigations = 0;
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) navigations += 1;
+  });
+  const stream = page.waitForResponse(
+    (response) => response.url().includes("/extranet/notifications/stream") && response.ok(),
+    { timeout: 20_000 },
+  );
+  await page.goto("http://localhost:3000/reservations");
+  await expect(page.getByRole("heading", { name: "Reservas" })).toBeVisible();
+  await stream;
+
+  const email = `ao-vivo-${Date.now()}@example.com`;
+  const created = await fetch("http://127.0.0.1:3002/guest/bookings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ratePlanId: stay.rate.id,
+      checkIn: stay.checkIn,
+      checkOut: stay.checkOut,
+      adults: 2,
+      children: 0,
+      quantity: 1,
+      firstName: "Lia",
+      lastName: "Costa",
+      email,
+      phone: "85933334444",
+      cpf: "10000000019",
+      idempotencyKey: crypto.randomUUID(),
+      expectedTotalCents: stay.rate.totalCents,
+    }),
+  });
+  if (!created.ok) throw new Error(await created.text());
+  const booking = (await created.json()) as { code: string };
+
+  const card = page.getByRole("region", { name: "Pedidos" }).getByRole("article", { name: booking.code });
+  await expect(card).toBeVisible();
+  await expect(card.getByRole("button", { name: "Aceitar" })).toBeVisible();
+  await expect(card.getByRole("button", { name: "Recusar" })).toBeVisible();
+  expect(navigations).toBe(1);
+  expect(page.url()).toContain("/reservations");
+});
+
 test("parceiro abre o calendário com o aviso de bloqueio", async ({ page }) => {
   const login = await apiPost<{ accessToken: string }>("/extranet/auth/login", {
     email: "parceiro@revoar.com.br",

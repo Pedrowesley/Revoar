@@ -3,4 +3,5 @@ export type RevoarEvent =
   | { type: "partner.profile.updated"; partnerId: string }
   | { type: "hotel.submitted"; hotelId: string; partnerId: string }
   | { type: "hotel.approved"; hotelId: string; partnerId: string }
-  | { type: "hotel.rejected"; hotelId: string; partnerId: string; reason: string };
+  | { type: "hotel.rejected"; hotelId: string; partnerId: string; reason: string }
+  | { type: "booking.requested"; partnerId: string; bookingId: string; code: string };
