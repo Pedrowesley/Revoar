@@ -8,9 +8,9 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Feature ativa** | Fase 12 — jornada completa. A recusa com motivo, a leitura das confirmadas e o pedido ao vivo estão em código |
+| **Feature ativa** | Fase 12 — jornada completa. A fatia 4 da extranet está em código: motivo, confirmadas, pedido ao vivo e grade do mês |
 | **Fase atual** | Fase 12. Release 0.0 e as fatias 1 a 4 da área do cliente já estão em código |
-| **Próximo passo** | Fatia 4.4: grade do mês, com noite sem configuração, aberta ou bloqueada, e as unidades confirmadas. Só depois que o teste da 4.4 passar |
+| **Próximo passo** | Fatia 5: admin da reserva, com busca, reenvio do voucher e cancelamento com motivo. Só depois que o teste da fatia 5 passar |
 | **Última atualização** | 2026-10-25 |
 | **Git** | `cursor/area-do-cliente-1644` em `github.com/Pedrowesley/Revoar` |
 
@@ -26,7 +26,7 @@
 | Spec Fase 7 (sync) | `.specs/features/sync-tempo-real/` | ✅ |
 | Spec perfil do parceiro | `.specs/features/extranet-perfil-parceiro/` | ✅ spec/design/tasks e código na extranet e no admin |
 | Área do hóspede | `apps/guest`, `docs/11-area-do-cliente/` | ✅ em código; pagamento em ambiente de teste |
-| Jornada completa | `docs/12-jornada-completa/` | ✅ plano; fatias 1 a 3 e as etapas 4.1 a 4.3 em código |
+| Jornada completa | `docs/12-jornada-completa/` | ✅ plano; fatias 1 a 4 em código |
 | Entrega consolidada | `RELEASE-0.0.md` | ✅ |
 | UI moderna | AD-010 (`PageShell`, header autenticado) | ✅ |
 | Sync UI | TanStack Query + polling + SSE | ✅ |
@@ -41,7 +41,7 @@
 - Deploy staging em URL pública para sócios
 - ≥ 10 hotéis piloto (operação manual)
 - Gateway real de PIX e cartão (AD-022). O fluxo do hóspede confirma o pagamento em ambiente de teste
-- Fatias 4.4 e 5 a 8 da fase 12: grade mensal, admin da reserva, busca por estrelas, Mercado Pago, avaliações e mapa
+- Fatias 5 a 8 da fase 12: admin da reserva, busca por estrelas, Mercado Pago, avaliações e mapa
 - Vários usuários no mesmo parceiro
 - E2E do sync duas origens (T7.19)
 - EventBus Redis (só quando a API tiver >1 instância)
@@ -114,9 +114,9 @@ Fatia 1      Tarifa, calendário e modo de reserva na extranet → ✅ em códig
 Fatia 2      Vitrine do hóspede (busca, ficha, escolha do quarto) → ✅ em código
 Fatia 3      Reserva imediata + PIX/cartão de teste + voucher + cancelamento → ✅ em código (sandbox)
 Fatia 4      Sob consulta (pedido, aceite, pagamento em 2 h) → ✅ em código (sandbox)
-Fase 12      Jornada completa. Fatias 1 a 3 e etapas 4.1 a 4.3 → ✅ em código
-             Próximo: 4.4 grade do mês
-             5 admin da reserva · 6 busca por estrelas · 7 Mercado Pago · 8 avaliações e mapa
+Fase 12      Jornada completa. Fatias 1 a 4 → ✅ em código
+             Próximo: 5 admin da reserva
+             6 busca por estrelas · 7 Mercado Pago · 8 avaliações e mapa
 ```
 
 Desenho da reserva, estados e preço: `docs/11-area-do-cliente/fase-11-area-do-cliente.md`.

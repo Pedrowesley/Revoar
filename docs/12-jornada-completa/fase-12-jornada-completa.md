@@ -4,7 +4,7 @@
 **Versão:** 1.0
 **Data:** Outubro/2026
 **Dependências:** Fase 11 (área do cliente), Release 0.0 (extranet e admin)
-**Status:** Plano em execução. As fatias 1 a 3 e as etapas 4.1 a 4.3 estão em código. A grade do mês e as fatias 5 a 8 ainda não. A reserva chega ao voucher na tela e no e-mail registrado, em ambiente de teste.
+**Status:** Plano em execução. As fatias 1 a 4 estão em código. As fatias 5 a 8 ainda não. A reserva chega ao voucher na tela e no e-mail registrado, em ambiente de teste.
 
 Este documento continua a [Fase 11](../11-area-do-cliente/fase-11-area-do-cliente.md). As decisões AD-015 a AD-021 continuam valendo. Onde a Fase 11 descreve o desenho da reserva e este documento descreve o que ainda falta para operá-la, vale este documento.
 
@@ -74,7 +74,7 @@ Já está no código, e o estado antigo do repositório dizia o contrário:
 
 Ainda fino em relação à Fase 11, seções 4.3 e 4.4:
 
-- O calendário é um formulário de intervalo, não uma grade do mês com noite sem configuração, aberta ou bloqueada, e com a vaga já confirmada no Revoar.
+- O calendário é a grade do mês. Cada noite mostra sem configuração, aberta ou bloqueada, e as unidades já confirmadas. Bloquear o que ainda está livre não cancela a reserva.
 - A recusa pede um motivo opcional e mostra quanto falta das 24 horas. O hóspede lê o motivo.
 - Confirmadas ficam em leitura, separadas do pedido. Holds e reservas encerradas ficam fora dessas duas ações.
 - Um pedido novo entra no canal de eventos que a extranet já usa. Com a página aberta, o código aparece em Pedidos sem recarregar.
@@ -121,7 +121,9 @@ Pronto quando: abrir o link do e-mail mostra a reserva confirmada em próximas, 
 
 ### Fatia 4 — Extranet no mesmo ponto
 
-A recusa com motivo, o prazo das 24 horas, a leitura das confirmadas e o pedido ao vivo estão em código. A grade do mês ainda não.
+**Estado:** em código.
+
+A recusa com motivo, o prazo das 24 horas, a leitura das confirmadas, o pedido ao vivo e a grade do mês estão em código.
 
 Grade do mês por tipo de quarto. Cada noite mostra sem configuração, aberta ou bloqueada, e quantas unidades já estão confirmadas no Revoar. Recusa exige motivo opcional e mostra o prazo que falta das 24 horas. Confirmadas ficam em leitura: código, hóspede, quarto, datas, total e status. Pedido novo chega pelo canal de eventos que a extranet já usa.
 
@@ -186,7 +188,7 @@ A fatia 4 anda nesta ordem, e a fatia só fecha quando as quatro passaram:
 1. Motivo opcional na recusa e prazo das 24 horas visível. O hóspede lê o motivo. O e-mail de recusa continua dizendo que nada foi cobrado. **Em código e testado.**
 2. Confirmadas em leitura, separadas do pedido: código, hóspede, quarto, datas, total e status, sem aceitar nem recusar. **Em código e testado.**
 3. Pedido novo no canal de eventos que a extranet já usa, sem atualizar a página. **Em código e testado.**
-4. Grade do mês: noite sem configuração, aberta ou bloqueada, e as unidades já confirmadas. Bloquear a noite ocupada não cancela a reserva. O hóspede não reserva essa noite.
+4. Grade do mês: noite sem configuração, aberta ou bloqueada, e as unidades já confirmadas. Bloquear a noite ocupada não cancela a reserva. O hóspede não reserva essa noite. **Em código e testado.**
 
 A fatia 5 só abre com a 4 fechada. A 6 só abre com a 5 fechada. A 7 só abre com a chave do Mercado Pago; sem a chave, ela permanece parada e a 8 não começa no lugar dela. Dentro da 8, a ordem é avaliação, mapa na listagem, coleções, e então lembrete de check-in com as cinco cidades piloto.
 

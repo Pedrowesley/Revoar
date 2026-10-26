@@ -257,4 +257,4 @@ A área do cliente (outubro/2026) está decidida em `docs/11-area-do-cliente/fas
 
 A tabela de julho permanece como registro daquela data. Em 25 de outubro de 2026 o repositório já tem busca pública, ficha do quarto e reserva até o voucher, para inventário `DIRECT`, com PIX e cartão confirmados em ambiente de teste. O parceiro abre e bloqueia noites e aceita ou recusa o pedido. O admin segue na moderação de cadastro.
 
-A continuação, com e-mail da reserva, grade mensal, suporte no admin e o banco real, está em `docs/12-jornada-completa/fase-12-jornada-completa.md`. A ficha honesta, o e-mail da reserva, minhas viagens, a recusa com motivo, a leitura das confirmadas e o pedido ao vivo já estão em código. Na extranet ainda falta a grade do mês.
+A continuação, com e-mail da reserva, grade mensal, suporte no admin e o banco real, está em `docs/12-jornada-completa/fase-12-jornada-completa.md`. A ficha honesta, o e-mail da reserva, minhas viagens e a extranet no mesmo ponto da reserva já estão em código. A próxima fatia é o admin da reserva.
