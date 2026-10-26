@@ -22,17 +22,13 @@ export function LandingHero() {
           <p className="text-sm font-semibold text-foreground">Tem um hotel ou pousada? Publique na Revoar.</p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <HeroCta />
-            <button
-              type="button"
-              disabled
-              className="inline-flex h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-dashed border-border px-6 text-base font-semibold text-muted-foreground sm:w-auto"
+            <a
+              href={process.env.NEXT_PUBLIC_GUEST_URL ?? "http://127.0.0.1:3003"}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface px-6 text-base font-semibold text-foreground sm:w-auto"
             >
               <Luggage className="size-5" aria-hidden />
               Área do hóspede
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-foreground">
-                Em breve
-              </span>
-            </button>
+            </a>
           </div>
         </div>
 

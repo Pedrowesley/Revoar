@@ -41,5 +41,11 @@ export default defineConfig({
       reuseExistingServer,
       timeout: 120_000,
     },
+    {
+      command: "npm run dev -w @revoar/guest",
+      url: "http://127.0.0.1:3003",
+      reuseExistingServer,
+      timeout: 120_000,
+    },
   ],
 });

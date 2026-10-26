@@ -83,10 +83,154 @@ async function main() {
     },
   });
 
+  await seedGuestHotel(partner.id);
+
   console.log("Seed concluído:");
   console.log(`  Admin:   ${admin.email} / revoar123`);
   console.log(`  Parceiro: parceiro@revoar.com.br / revoar123`);
   console.log(`  Hotel:   ${hotel.name} (${hotel.slug})`);
+  console.log("  Hóspede: Pousada Atlântico (pousada-atlantico) ativa em Fortaleza");
+}
+
+async function seedGuestHotel(partnerId: string) {
+  const slug = "pousada-atlantico";
+  let hotel = await prisma.hotel.findUnique({
+    where: { slug },
+    include: { roomTypes: true },
+  });
+  if (!hotel) {
+    hotel = await prisma.hotel.create({
+      data: {
+        partnerId,
+        name: "Pousada Atlântico",
+        slug,
+        description:
+          "Pousada à beira-mar em Fortaleza, com café da manhã e quartos para casal. O hóspede escolhe o quarto e a tarifa.",
+        starRating: 3.0,
+        addressLine: "Rua dos Tabajaras, 200",
+        city: "Fortaleza",
+        state: "CE",
+        zipCode: "60060510",
+        phone: "8533334040",
+        supplierType: SupplierType.DIRECT,
+        status: HotelStatus.ACTIVE,
+        bookingMode: "INSTANT",
+        amenities: ["POOL", "BREAKFAST_AREA", "BEACH"],
+        houseRules: "Check-in a partir das 14:00. Silêncio depois das 22:00.",
+        roomTypes: {
+          create: [
+            {
+              name: "Quarto duplo",
+              description: "Quarto com cama queen, ar-condicionado e banheiro privativo.",
+              maxAdults: 2,
+              maxChildren: 1,
+              maxOccupancy: 3,
+              bedConfiguration: "1 cama queen",
+              amenities: ["WIFI", "AC", "TV", "PRIVATE_BATH"],
+              sizeSqm: 22,
+              sortOrder: 0,
+              bookingMode: "INHERIT",
+            },
+            {
+              name: "Suíte com varanda",
+              description: "Suíte com cama king e varanda. A reserva deste quarto fica sob consulta.",
+              maxAdults: 2,
+              maxChildren: 1,
+              maxOccupancy: 3,
+              bedConfiguration: "1 cama king",
+              amenities: ["WIFI", "AC", "TV", "BALCONY", "PRIVATE_BATH"],
+              sizeSqm: 32,
+              sortOrder: 1,
+              bookingMode: "REQUEST",
+            },
+          ],
+        },
+      },
+      include: { roomTypes: true },
+    });
+  }
+
+  const standard = hotel.roomTypes.find((room) => room.name === "Quarto duplo");
+  const suite = hotel.roomTypes.find((room) => room.name === "Suíte com varanda");
+  if (standard && suite) await seedStayPhotos(hotel.id, standard.id, suite.id);
+
+  const existingPlans = await prisma.ratePlan.count({ where: { hotelId: hotel.id } });
+  if (existingPlans > 0 || !standard || !suite) return;
+
+  const flexible = await prisma.ratePlan.create({
+    data: {
+      hotelId: hotel.id,
+      roomTypeId: standard.id,
+      name: "Flexível com café",
+      cancellationPolicy: "FLEXIBLE",
+      mealPlan: "BREAKFAST",
+      minNights: 1,
+    },
+  });
+  const requestPlan = await prisma.ratePlan.create({
+    data: {
+      hotelId: hotel.id,
+      roomTypeId: suite.id,
+      name: "Sob consulta",
+      cancellationPolicy: "MODERATE",
+      mealPlan: "BREAKFAST",
+      minNights: 1,
+    },
+  });
+
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0);
+  for (let offset = 1; offset <= 40; offset += 1) {
+    const date = new Date(start);
+    date.setUTCDate(start.getUTCDate() + offset);
+    const rentedOffline = offset === 12;
+    await prisma.roomInventory.create({
+      data: {
+        roomTypeId: standard.id,
+        date,
+        unitsForSale: 4,
+        blockedUnits: rentedOffline ? 4 : 0,
+        blockReason: rentedOffline ? "RENTED_OFFLINE" : null,
+      },
+    });
+    await prisma.dailyRate.create({ data: { ratePlanId: flexible.id, date, priceCents: 28000 } });
+    await prisma.roomInventory.create({
+      data: { roomTypeId: suite.id, date, unitsForSale: 2, blockedUnits: 0 },
+    });
+    await prisma.dailyRate.create({ data: { ratePlanId: requestPlan.id, date, priceCents: 42000 } });
+  }
+}
+
+async function seedStayPhotos(hotelId: string, standardId: string, suiteId: string) {
+  const hotelPhotos = await prisma.hotelImage.count({ where: { hotelId } });
+  if (hotelPhotos === 0) {
+    await prisma.hotelImage.createMany({
+      data: [
+        { hotelId, url: "/media/seed/fachada.jpg", altText: "Fachada da Pousada Atlântico", isPrimary: true, sortOrder: 0 },
+        { hotelId, url: "/media/seed/cafe.jpg", altText: "Café da manhã da Pousada Atlântico", isPrimary: false, sortOrder: 1 },
+      ],
+    });
+  }
+
+  const standardPhotos = await prisma.roomImage.count({ where: { roomTypeId: standardId } });
+  if (standardPhotos === 0) {
+    await prisma.roomImage.createMany({
+      data: [
+        { roomTypeId: standardId, url: "/media/seed/quarto-duplo.jpg", altText: "Quarto duplo com cama queen", isPrimary: true, sortOrder: 0 },
+        { roomTypeId: standardId, url: "/media/seed/quarto-duplo-banho.jpg", altText: "Banheiro do quarto duplo", isPrimary: false, sortOrder: 1 },
+      ],
+    });
+  }
+
+  const suitePhotos = await prisma.roomImage.count({ where: { roomTypeId: suiteId } });
+  if (suitePhotos === 0) {
+    await prisma.roomImage.createMany({
+      data: [
+        { roomTypeId: suiteId, url: "/media/seed/suite-varanda.jpg", altText: "Suíte com varanda e cama king", isPrimary: true, sortOrder: 0 },
+        { roomTypeId: suiteId, url: "/media/seed/suite-vista.jpg", altText: "Vista da varanda da suíte", isPrimary: false, sortOrder: 1 },
+      ],
+    });
+  }
 }
 
 main()

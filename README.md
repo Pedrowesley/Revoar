@@ -7,12 +7,14 @@ Plataforma digital de turismo focada em reserva de hotéis, com evolução para 
 Leia nesta ordem antes de implementar qualquer coisa:
 
 1. [`.specs/STATE.md`](./.specs/STATE.md) — decisões, handoff, próximo passo
-2. [`RELEASE-0.0.md`](./RELEASE-0.0.md) — o que foi entregue vs. gaps
-3. [`.specs/features/admin-cadastro-parceiros/spec.md`](./.specs/features/admin-cadastro-parceiros/spec.md) — requisitos do cadastro
-4. [`.specs/features/sync-tempo-real/spec.md`](./.specs/features/sync-tempo-real/spec.md) — sync sem F5
-5. [`DEVELOPMENT.md`](./DEVELOPMENT.md) — setup, API, testes, SSE
+2. [`docs/12-jornada-completa/fase-12-jornada-completa.md`](docs/12-jornada-completa/fase-12-jornada-completa.md) — o que falta para a reserva operar
+3. [`docs/11-area-do-cliente/fase-11-area-do-cliente.md`](docs/11-area-do-cliente/fase-11-area-do-cliente.md) — decisão da área do hóspede
+4. [`RELEASE-0.0.md`](./RELEASE-0.0.md) — o que foi entregue vs. gaps
+5. [`.specs/features/admin-cadastro-parceiros/spec.md`](./.specs/features/admin-cadastro-parceiros/spec.md) — requisitos do cadastro
+6. [`.specs/features/sync-tempo-real/spec.md`](./.specs/features/sync-tempo-real/spec.md) — sync sem F5
+7. [`DEVELOPMENT.md`](./DEVELOPMENT.md) — setup, API, testes, SSE
 
-**Release 0.0 está concluída no código.** Próximo milestone: Release 0.1 (busca pública).
+**Release 0.0 está concluída no código.** A área do hóspede já busca, escolhe o quarto e chega ao voucher em ambiente de teste. A decisão dessa área está em [`docs/11-area-do-cliente/fase-11-area-do-cliente.md`](docs/11-area-do-cliente/fase-11-area-do-cliente.md). O que falta para a reserva operar, no hóspede, na extranet e no admin, está em [`docs/12-jornada-completa/fase-12-jornada-completa.md`](docs/12-jornada-completa/fase-12-jornada-completa.md). A ficha honesta, o e-mail da reserva, minhas viagens e a extranet no mesmo ponto da reserva já estão em código. A próxima fatia é o admin da reserva.
 
 ## Estrutura de documentação
 
@@ -29,6 +31,8 @@ Leia nesta ordem antes de implementar qualquer coisa:
 | 8 — Análise de Riscos | `docs/08-analise-riscos/` | `fase-08-analise-riscos.md` |
 | 9 — Roadmap | `docs/09-roadmap/` | `fase-09-roadmap.md` |
 | 10 — Diagramas | `docs/10-diagramas/` | `fase-10-diagramas.md` |
+| 11 — Área do cliente | `docs/11-area-do-cliente/` | `fase-11-area-do-cliente.md` |
+| 12 — Jornada completa | `docs/12-jornada-completa/` | `fase-12-jornada-completa.md` |
 
 ## Regra de leitura
 
@@ -54,6 +58,7 @@ npm run dev
 |-----|-----|------------|
 | Extranet | http://localhost:3000 | parceiro@revoar.com.br / revoar123 |
 | Admin | http://localhost:3001 | admin@revoar.com.br / revoar123 |
+| Hóspede | http://127.0.0.1:3003 | sem login. A pousada de exemplo fica em Fortaleza |
 | API | http://localhost:3002/health | — |
 
 **Release 0.0** implementada: extranet (cadastro parceiro/hotel/quartos/fotos) + admin (moderação).  

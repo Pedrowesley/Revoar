@@ -72,14 +72,11 @@ test.describe("Landing pública da extranet", () => {
     await expect(hero(page).getByRole("link", { name: "Cadastrar hotel" })).toBeVisible();
   });
 
-  test("LAND-04: Área do hóspede está desabilitada e não navega", async ({ page }) => {
+  test("LAND-04: Área do hóspede abre o app do hóspede", async ({ page }) => {
     await page.goto(`${EXTRANET}/`);
-    const guest = page.getByRole("button", { name: /Área do hóspede/ });
+    const guest = page.getByRole("link", { name: "Área do hóspede" });
 
-    await expect(guest).toBeDisabled();
-    await expect(guest).toContainText("Em breve");
-    await guest.click({ force: true });
-    await expect(page).toHaveURL(`${EXTRANET}/`);
+    await expect(guest).toHaveAttribute("href", /3003/);
   });
 
   test("LAND-05: as abas da prévia trocam o painel e mantêm Em breve", async ({ page }) => {

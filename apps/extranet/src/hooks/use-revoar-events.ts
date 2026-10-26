@@ -80,6 +80,10 @@ export function usePartnerRevoarEvents(enabled: boolean) {
         queryClient.invalidateQueries({ queryKey: extranetKeys.hotel(event.hotelId) });
         queryClient.invalidateQueries({ queryKey: ["extranet", "hotels"] });
       }
+
+      if (event.type === "booking.requested") {
+        queryClient.invalidateQueries({ queryKey: extranetKeys.bookings });
+      }
     };
 
     void (async () => {

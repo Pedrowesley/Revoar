@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Hotel, LayoutDashboard, LogOut } from "lucide-react";
+import { CalendarDays, Hotel, LayoutDashboard, LogOut } from "lucide-react";
 import { apiFetch, PartnerProfile } from "@/lib/api";
 import { AUTH_CHANGE_EVENT, expireSession, getToken } from "@/lib/auth";
 import { extranetKeys } from "@/lib/query-keys";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 const AUTH_LINKS = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
   { href: "/hotels", label: "Hotéis", icon: Hotel },
+  { href: "/reservations", label: "Reservas", icon: CalendarDays },
 ];
 
 export function AppHeader() {
@@ -47,8 +48,8 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-surface/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-        <div className="flex items-center gap-8">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-8">
           <Link href={showApp ? "/dashboard" : "/"} className="group flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-soft transition-transform group-hover:scale-[1.03]">
               R
@@ -62,22 +63,23 @@ export function AppHeader() {
           </Link>
 
           {showApp && (
-            <nav className="flex items-center gap-1 overflow-x-auto">
+            <nav className="flex items-center gap-1">
               {AUTH_LINKS.map(({ href, label, icon: Icon }) => {
                 const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
                 return (
                   <Link
                     key={href}
                     href={href}
+                    aria-label={label}
                     className={cn(
-                      "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      "inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium transition-colors sm:px-3",
                       active
                         ? "bg-primary-soft text-primary"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
-                    <Icon className="h-4 w-4" />
-                    {label}
+                    <Icon className="h-4 w-4" aria-hidden />
+                    <span className="hidden sm:inline">{label}</span>
                   </Link>
                 );
               })}
