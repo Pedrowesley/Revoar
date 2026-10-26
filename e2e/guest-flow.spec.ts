@@ -552,6 +552,128 @@ test("pedido novo aparece na extranet sem atualizar a página", async ({ page })
   expect(page.url()).toContain("/reservations");
 });
 
+const MONTHS = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+
+test("bloquear a noite ocupada mantém a reserva e tira a vaga do hóspede", async ({ page }) => {
+  let stay: { checkIn: string; checkOut: string; rate: { id: string; totalCents: number } } | null = null;
+  for (let offset = 8; offset <= 36; offset += 1) {
+    const checkIn = iso(offset);
+    const checkOut = iso(offset + 2);
+    const response = await fetch(
+      `http://127.0.0.1:3002/guest/hotels/pousada-atlantico?city=Fortaleza&checkIn=${checkIn}&checkOut=${checkOut}&adults=2&children=0&rooms=1`,
+    );
+    if (!response.ok) continue;
+    const detail = (await response.json()) as { rooms: { rates: { id: string; bookingMode: string; freeUnits: number; totalCents: number }[] }[] };
+    const rate = detail.rooms.flatMap((room) => room.rates).find((item) => item.bookingMode === "INSTANT" && item.freeUnits >= 2);
+    if (rate) {
+      stay = { checkIn, checkOut, rate };
+      break;
+    }
+  }
+  if (!stay) throw new Error("Nenhuma data imediata com duas vagas");
+  const email = `grade-${Date.now()}@example.com`;
+  const created = await fetch("http://127.0.0.1:3002/guest/bookings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ratePlanId: stay.rate.id,
+      checkIn: stay.checkIn,
+      checkOut: stay.checkOut,
+      adults: 2,
+      children: 0,
+      quantity: 1,
+      firstName: "Lia",
+      lastName: "Costa",
+      email,
+      phone: "85933334444",
+      cpf: "10000000019",
+      idempotencyKey: crypto.randomUUID(),
+      expectedTotalCents: stay.rate.totalCents,
+    }),
+  });
+  if (!created.ok) throw new Error(await created.text());
+  const booking = (await created.json()) as { code: string };
+  const payment = await fetch(`http://127.0.0.1:3002/guest/bookings/${booking.code}/pay`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, method: "PIX", installments: 1 }),
+  });
+  if (!payment.ok) throw new Error(await payment.text());
+  const paid = (await payment.json()) as { payment: { id: string } };
+  const confirmed = await fetch(`http://127.0.0.1:3002/guest/bookings/${booking.code}/pay/${paid.payment.id}/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!confirmed.ok) throw new Error(await confirmed.text());
+
+  const login = await apiPost<{ accessToken: string }>("/extranet/auth/login", {
+    email: "parceiro@revoar.com.br",
+    password: "revoar123",
+  });
+  if (!login.ok) throw new Error(login.message);
+  const hotelsResponse = await fetch("http://127.0.0.1:3002/extranet/hotels", {
+    headers: { Authorization: `Bearer ${login.data.accessToken}` },
+  });
+  const hotels = (await hotelsResponse.json()) as { id: string; name: string }[];
+  const hotel = hotels.find((item) => item.name === "Pousada Atlântico");
+  if (!hotel) throw new Error("Pousada de teste não encontrada");
+  const calendarResponse = await fetch(`http://127.0.0.1:3002/extranet/hotels/${hotel.id}/calendar?from=${stay.checkIn}&to=${stay.checkIn}`, {
+    headers: { Authorization: `Bearer ${login.data.accessToken}` },
+  });
+  if (!calendarResponse.ok) throw new Error(await calendarResponse.text());
+  const calendar = (await calendarResponse.json()) as { rooms: { name: string; days: { date: string; committedUnits: number }[] }[] };
+  const occupied = calendar.rooms.find((room) => room.name === "Quarto duplo")?.days.find((day) => day.date === stay.checkIn);
+  if (!occupied || occupied.committedUnits < 1) throw new Error("A noite confirmada não entrou na grade");
+  const confirmedText = occupied.committedUnits === 1 ? "1 confirmada" : `${occupied.committedUnits} confirmadas`;
+
+  await page.addInitScript((value) => {
+    localStorage.setItem("revoar_partner_token", value);
+  }, login.data.accessToken);
+  await page.goto(`http://127.0.0.1:3000/hotels/${hotel.id}/availability`);
+  await expect(page.getByRole("region", { name: "Grade do mês" })).toBeVisible();
+  await page.getByLabel("Quarto").selectOption({ label: "Quarto duplo" });
+  const now = new Date();
+  const [year, month] = stay.checkIn.split("-").map(Number);
+  const hops = (year - now.getUTCFullYear()) * 12 + (month - 1 - now.getUTCMonth());
+  for (let step = 0; step < hops; step += 1) {
+    await page.getByRole("button", { name: "Próximo mês" }).click();
+  }
+  await expect(page.getByRole("heading", { name: `${MONTHS[month - 1]} de ${year}` })).toBeVisible();
+  const night = page.getByRole("button", { name: new RegExp(`^${stay.checkIn},`) });
+  await expect(night).toContainText("Aberta");
+  await expect(night).toContainText(confirmedText);
+  await night.click();
+  await page.getByRole("button", { name: "Bloquear esta noite" }).click();
+  await expect(night).toContainText("Bloqueada");
+  await expect(night).toContainText(confirmedText);
+
+  const after = await fetch(
+    `http://127.0.0.1:3002/guest/hotels/pousada-atlantico?city=Fortaleza&checkIn=${stay.checkIn}&checkOut=${stay.checkOut}&adults=2&children=0&rooms=1`,
+  );
+  if (!after.ok) throw new Error(await after.text());
+  const detail = (await after.json()) as { hotel: { name: string }; rooms: { name: string; rates: { freeUnits: number }[] }[] };
+  expect(detail.hotel.name).toBe("Pousada Atlântico");
+  const room = detail.rooms.find((item) => item.name === "Quarto duplo");
+  expect(room?.rates.some((rate) => rate.freeUnits >= 1) ?? false).toBe(false);
+  const still = await fetch(`http://127.0.0.1:3002/guest/bookings/${booking.code}?email=${encodeURIComponent(email)}`);
+  if (!still.ok) throw new Error(await still.text());
+  expect(((await still.json()) as { status: string }).status).toBe("CONFIRMED");
+});
+
 test("parceiro abre o calendário com o aviso de bloqueio", async ({ page }) => {
   const login = await apiPost<{ accessToken: string }>("/extranet/auth/login", {
     email: "parceiro@revoar.com.br",

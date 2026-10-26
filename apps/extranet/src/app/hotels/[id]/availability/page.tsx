@@ -2,7 +2,8 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 import { HOTEL_AMENITIES } from "@revoar/shared";
 import { apiFetch, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
@@ -61,11 +62,40 @@ const AMENITY_LABELS: Record<(typeof HOTEL_AMENITIES)[number], string> = {
   FRONT_DESK_24H: "Recepção 24h",
 };
 
-function monthRange() {
-  const start = new Date();
-  const from = start.toISOString().slice(0, 10);
-  const end = new Date(start.getTime() + 45 * 86_400_000);
-  return { from, to: end.toISOString().slice(0, 10) };
+const MONTHS = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+function monthBounds(year: number, month: number) {
+  const last = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return {
+    from: `${year}-${pad(month + 1)}-01`,
+    to: `${year}-${pad(month + 1)}-${pad(last)}`,
+  };
+}
+
+function nightState(day: CalendarDay) {
+  if (!day.configured) return "Sem configuração";
+  if (day.blockedUnits > 0 && day.freeUnits === 0) return "Bloqueada";
+  return "Aberta";
+}
+
+function confirmedLabel(count: number) {
+  if (count === 1) return "1 confirmada";
+  return `${count} confirmadas`;
 }
 
 export default function HotelAvailabilityPage() {
@@ -73,13 +103,18 @@ export default function HotelAvailabilityPage() {
   const paramsId = useParams<{ id: string }>().id;
   useRequireAuth();
   const { hotel, loading, error } = useHotel(paramsId);
-  const range = useMemo(() => monthRange(), []);
+  const [monthCursor, setMonthCursor] = useState(() => {
+    const now = new Date();
+    return { year: now.getUTCFullYear(), month: now.getUTCMonth() };
+  });
+  const range = useMemo(() => monthBounds(monthCursor.year, monthCursor.month), [monthCursor]);
   const queryClient = useQueryClient();
   const token = getToken();
 
   const calendarQuery = useQuery({
     queryKey: ["extranet", "calendar", paramsId, range.from],
     enabled: Boolean(token && paramsId),
+    placeholderData: keepPreviousData,
     queryFn: () =>
       apiFetch<CalendarResponse>(
         `/extranet/hotels/${paramsId}/calendar?from=${range.from}&to=${range.to}`,
@@ -171,15 +206,22 @@ export default function HotelAvailabilityPage() {
                 await refresh();
               }}
             />
-            <CalendarForm
+            <MonthGrid
               hotelId={hotel.id}
               room={selectedRoom}
+              title={`${MONTHS[monthCursor.month]} de ${monthCursor.year}`}
+              monthFrom={range.from}
+              onShift={(delta) =>
+                setMonthCursor((current) => {
+                  const next = new Date(Date.UTC(current.year, current.month + delta, 1));
+                  return { year: next.getUTCFullYear(), month: next.getUTCMonth() };
+                })
+              }
               onSaved={async (message) => {
                 toast.success(message);
                 await refresh();
               }}
             />
-            <DayList days={selectedRoom.days} />
           </div>
         )}
       </Surface>
@@ -356,110 +398,130 @@ function RoomModeForm({
   );
 }
 
-function CalendarForm({
+function MonthGrid({
   hotelId,
   room,
+  title,
+  monthFrom,
+  onShift,
   onSaved,
 }: {
   hotelId: string;
   room: CalendarRoom;
+  title: string;
+  monthFrom: string;
+  onShift: (delta: number) => void;
   onSaved: (message: string) => Promise<void>;
 }) {
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [reason, setReason] = useState<"RENTED_OFFLINE" | "UNAVAILABLE">("RENTED_OFFLINE");
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const ready = room.days.some((day) => day.date === monthFrom);
+  const selected = room.days.find((day) => day.date === selectedDate) ?? null;
+  const leading = new Date(`${monthFrom}T00:00:00Z`).getUTCDay();
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const action = String(form.get("action"));
+  async function blockNight() {
+    if (!selected) return;
     setError(null);
-    const body =
-      action === "open"
-        ? {
-            action,
-            roomTypeId: room.id,
-            ratePlanId: String(form.get("ratePlanId")),
-            from: String(form.get("from")),
-            to: String(form.get("to")),
-            priceCents: Math.round(Number(form.get("price")) * 100),
-            unitsForSale: Number(form.get("unitsForSale")),
-          }
-        : {
-            action,
-            roomTypeId: room.id,
-            from: String(form.get("from")),
-            to: String(form.get("to")),
-            blockAll: form.get("blockAll") === "on",
-            blockedUnits: form.get("blockAll") === "on" ? undefined : Number(form.get("blockedUnits")),
-            blockReason: String(form.get("blockReason")),
-          };
+    setSaving(true);
     try {
       await apiFetch(`/extranet/hotels/${hotelId}/calendar`, {
         method: "POST",
         token: getToken()!,
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          action: "block",
+          roomTypeId: room.id,
+          from: selected.date,
+          to: selected.date,
+          blockAll: true,
+          blockReason: reason,
+        }),
       });
-      await onSaved(action === "open" ? "Noites abertas" : "Noites bloqueadas");
+      await onSaved("Noite bloqueada");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível atualizar o calendário");
+      setError(err instanceof ApiError ? err.message : "Não foi possível bloquear a noite");
+    } finally {
+      setSaving(false);
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-3 text-sm lg:col-span-2">
-      <h3 className="font-semibold">Abrir ou bloquear um intervalo</h3>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <input name="from" type="date" required className="h-10 rounded-lg border border-border px-3" />
-        <input name="to" type="date" required className="h-10 rounded-lg border border-border px-3" />
-        <select name="action" className="h-10 rounded-lg border border-border px-3">
-          <option value="open">Abrir para venda</option>
-          <option value="block">Bloquear</option>
-        </select>
-        <select name="ratePlanId" className="h-10 rounded-lg border border-border px-3">
-          {room.ratePlans.map((plan) => (
-            <option key={plan.id} value={plan.id}>
-              {plan.name}
-            </option>
-          ))}
-        </select>
-        <input name="price" type="number" min={10} step="0.01" placeholder="Diária em R$" className="h-10 rounded-lg border border-border px-3" />
-        <input name="unitsForSale" type="number" min={1} placeholder="Quartos à venda" className="h-10 rounded-lg border border-border px-3" />
-        <input name="blockedUnits" type="number" min={0} placeholder="Unidades bloqueadas" className="h-10 rounded-lg border border-border px-3" />
-        <select name="blockReason" className="h-10 rounded-lg border border-border px-3">
-          <option value="RENTED_OFFLINE">Alugado fora do Revoar</option>
-          <option value="UNAVAILABLE">Não posso receber</option>
-        </select>
-      </div>
-      <label className="flex items-center gap-2">
-        <input name="blockAll" type="checkbox" />
-        Bloquear o que ainda está livre no dia inteiro
-      </label>
-      {error && <Alert variant="danger">{error}</Alert>}
-      <Button type="submit" className="w-fit">
-        Aplicar no calendário
-      </Button>
-    </form>
-  );
-}
-
-function DayList({ days }: { days: CalendarDay[] }) {
-  return (
-    <div className="grid max-h-80 grid-cols-2 gap-2 overflow-auto text-xs sm:grid-cols-3 lg:col-span-2">
-      {days.map((day) => (
-        <div key={day.date} className="rounded-lg border border-border px-2 py-2">
-          <p className="font-semibold">{day.date.slice(8)}/{day.date.slice(5, 7)}</p>
-          <p className="text-muted-foreground">
-            {!day.configured
-              ? "Sem configuração"
-              : day.freeUnits > 0
-                ? `${day.freeUnits} livre(s)`
-                : day.blockedUnits > 0
-                  ? day.blockReason === "RENTED_OFFLINE"
-                    ? "Bloqueada · fora"
-                    : "Bloqueada"
-                  : "Ocupada"}
-          </p>
+    <section aria-label="Grade do mês" className="grid gap-3 lg:col-span-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-base font-semibold capitalize">{title}</h3>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={() => onShift(-1)}>
+            Mês anterior
+          </Button>
+          <Button type="button" variant="outline" onClick={() => onShift(1)}>
+            Próximo mês
+          </Button>
         </div>
-      ))}
-    </div>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Cada noite mostra sem configuração, aberta ou bloqueada, e as unidades já confirmadas. Bloquear o que ainda está livre não cancela a reserva.
+      </p>
+      <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground">
+        {WEEKDAYS.map((day) => (
+          <div key={day}>{day}</div>
+        ))}
+      </div>
+      {ready ? (
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: leading }, (_, index) => (
+            <div key={`empty-${index}`} />
+          ))}
+          {room.days.map((day) => {
+            const state = nightState(day);
+            const confirmed = confirmedLabel(day.committedUnits);
+            return (
+              <button
+                key={day.date}
+                type="button"
+                aria-pressed={day.date === selectedDate}
+                aria-label={`${day.date}, ${state}, ${confirmed}`}
+                onClick={() => setSelectedDate(day.date)}
+                className={cn(
+                  "flex min-h-16 flex-col items-start rounded-lg border px-1.5 py-1 text-left text-[11px] leading-tight",
+                  day.date === selectedDate && "border-primary ring-2 ring-primary/30",
+                  !day.configured && "border-dashed text-muted-foreground",
+                  state === "Bloqueada" && "bg-muted",
+                )}
+              >
+                <span className="font-semibold">{Number(day.date.slice(8))}</span>
+                <span>{state}</span>
+                <span>{confirmed}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Carregando a grade.</p>
+      )}
+      {selected && (
+        <div className="grid max-w-md gap-3 rounded-xl border border-border p-4 text-sm">
+          <h4 className="font-semibold">Noite {selected.date}</h4>
+          <p>
+            {nightState(selected)}. {confirmedLabel(selected.committedUnits)}.
+          </p>
+          <label className="grid gap-1 font-medium">
+            Motivo do bloqueio
+            <select
+              className="h-10 rounded-lg border border-border px-3"
+              value={reason}
+              onChange={(event) => setReason(event.target.value as "RENTED_OFFLINE" | "UNAVAILABLE")}
+            >
+              <option value="RENTED_OFFLINE">Alugado fora do Revoar</option>
+              <option value="UNAVAILABLE">Não posso receber</option>
+            </select>
+          </label>
+          {error && <Alert variant="danger">{error}</Alert>}
+          <Button type="button" className="w-fit" disabled={saving} onClick={() => void blockNight()}>
+            Bloquear esta noite
+          </Button>
+        </div>
+      )}
+    </section>
   );
 }
