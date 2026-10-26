@@ -21,7 +21,7 @@ async function expectMobileShell(page: import("@playwright/test").Page, buttonNa
 }
 
 async function freeStay(altText: string, mode: "INSTANT" | "REQUEST") {
-  for (let offset = 8; offset <= 34; offset += 1) {
+  for (let offset = 8; offset <= 70; offset += 1) {
     const checkIn = iso(offset);
     const checkOut = iso(offset + 2);
     const response = await fetch(
@@ -119,7 +119,7 @@ test.describe("área do hóspede no celular", () => {
   test("a ficha mostra piscina e varanda e deixa reduzir os quartos", async ({ page }) => {
     let checkIn = "";
     let checkOut = "";
-    for (let offset = 8; offset <= 34; offset += 1) {
+    for (let offset = 8; offset <= 70; offset += 1) {
       const start = iso(offset);
       const end = iso(offset + 2);
       const response = await fetch(
@@ -159,7 +159,7 @@ test.describe("área do hóspede no celular", () => {
 test("pedido sob consulta só cobra depois que o parceiro aceita", async ({ page }) => {
   let checkIn = "";
   let checkOut = "";
-  for (let offset = 27; offset <= 36; offset += 1) {
+  for (let offset = 8; offset <= 70; offset += 1) {
     const start = iso(offset);
     const end = iso(offset + 2);
     const response = await fetch(
@@ -227,7 +227,7 @@ test("pedido sob consulta só cobra depois que o parceiro aceita", async ({ page
 
   test("o link do e-mail abre a confirmada em próximas e a recusa em canceladas", async ({ page }) => {
     let stay: { checkIn: string; checkOut: string; instant: { id: string; totalCents: number }; request: { id: string; totalCents: number } } | null = null;
-    for (let offset = 8; offset <= 34; offset += 1) {
+    for (let offset = 8; offset <= 70; offset += 1) {
       const checkIn = iso(offset);
       const checkOut = iso(offset + 2);
       const response = await fetch(
@@ -323,7 +323,7 @@ test("parceiro recusa com motivo dentro das 24 horas e o hóspede lê", async ({
   let checkIn = "";
   let checkOut = "";
   let rate: { id: string; totalCents: number } | null = null;
-  for (let offset = 8; offset <= 36; offset += 1) {
+  for (let offset = 8; offset <= 70; offset += 1) {
     const start = iso(offset);
     const end = iso(offset + 2);
     const response = await fetch(
@@ -396,7 +396,7 @@ test("parceiro lê a confirmada sem aceitar nem recusar e o pedido continua com 
     instant: { id: string; totalCents: number; roomName: string };
     request: { id: string; totalCents: number };
   } | null = null;
-  for (let offset = 8; offset <= 36; offset += 1) {
+  for (let offset = 8; offset <= 70; offset += 1) {
     const checkIn = iso(offset);
     const checkOut = iso(offset + 2);
     const response = await fetch(
@@ -485,7 +485,7 @@ test("parceiro lê a confirmada sem aceitar nem recusar e o pedido continua com 
 
 test("pedido novo aparece na extranet sem atualizar a página", async ({ page }) => {
   let stay: { checkIn: string; checkOut: string; rate: { id: string; totalCents: number } } | null = null;
-  for (let offset = 8; offset <= 36; offset += 1) {
+  for (let offset = 8; offset <= 70; offset += 1) {
     const checkIn = iso(offset);
     const checkOut = iso(offset + 2);
     const response = await fetch(
@@ -569,7 +569,7 @@ const MONTHS = [
 
 test("bloquear a noite ocupada mantém a reserva e tira a vaga do hóspede", async ({ page }) => {
   let stay: { checkIn: string; checkOut: string; rate: { id: string; totalCents: number } } | null = null;
-  for (let offset = 8; offset <= 36; offset += 1) {
+  for (let offset = 8; offset <= 70; offset += 1) {
     const checkIn = iso(offset);
     const checkOut = iso(offset + 2);
     const response = await fetch(
@@ -672,6 +672,53 @@ test("bloquear a noite ocupada mantém a reserva e tira a vaga do hóspede", asy
   const still = await fetch(`http://127.0.0.1:3002/guest/bookings/${booking.code}?email=${encodeURIComponent(email)}`);
   if (!still.ok) throw new Error(await still.text());
   expect(((await still.json()) as { status: string }).status).toBe("CONFIRMED");
+});
+
+test.describe("grade do mês no celular", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("a grade cabe na tela e a noite se lê por extenso", async ({ page }) => {
+    const login = await apiPost<{ accessToken: string }>("/extranet/auth/login", {
+      email: "parceiro@revoar.com.br",
+      password: "revoar123",
+    });
+    if (!login.ok) throw new Error(login.message);
+    const response = await fetch("http://127.0.0.1:3002/extranet/hotels", {
+      headers: { Authorization: `Bearer ${login.data.accessToken}` },
+    });
+    const hotels = (await response.json()) as { id: string; name: string }[];
+    const hotel = hotels.find((item) => item.name === "Pousada Atlântico");
+    if (!hotel) throw new Error("Pousada de teste não encontrada");
+
+    await page.addInitScript((value) => {
+      localStorage.setItem("revoar_partner_token", value);
+    }, login.data.accessToken);
+    await page.goto(`http://127.0.0.1:3000/hotels/${hotel.id}/availability`);
+    await expect(page.getByRole("region", { name: "Grade do mês" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Reservas" })).toBeVisible();
+
+    const fit = await page.evaluate(() => ({
+      scroll: document.documentElement.scrollWidth,
+      client: document.documentElement.clientWidth,
+    }));
+    expect(fit.scroll).toBeLessThanOrEqual(fit.client + 1);
+    const reservas = await page.getByRole("link", { name: "Reservas" }).boundingBox();
+    expect(reservas).not.toBeNull();
+    expect(reservas!.x + reservas!.width).toBeLessThanOrEqual(390);
+
+    const legend = page.getByRole("list");
+    await expect(legend.getByText("Sem configuração")).toBeVisible();
+    await expect(legend.getByText("Aberta", { exact: true })).toBeVisible();
+    await expect(legend.getByText("Bloqueada", { exact: true })).toBeVisible();
+
+    await page.getByRole("button", { name: /, (Aberta|Bloqueada|Sem configuração),/ }).first().click();
+    const panel = page.locator("section").filter({ has: page.getByRole("heading", { name: /^Noite / }) });
+    await expect(panel).toContainText(/Aberta|Bloqueada|Sem configuração/);
+    await expect(panel).toContainText(/confirmada/);
+    const panelBox = await panel.boundingBox();
+    expect(panelBox).not.toBeNull();
+    expect(panelBox!.x + panelBox!.width).toBeLessThanOrEqual(391);
+  });
 });
 
 test("parceiro abre o calendário com o aviso de bloqueio", async ({ page }) => {

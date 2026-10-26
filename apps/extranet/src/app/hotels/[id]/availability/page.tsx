@@ -462,6 +462,21 @@ function MonthGrid({
       <p className="text-sm text-muted-foreground">
         Cada noite mostra sem configuração, aberta ou bloqueada, e as unidades já confirmadas. Bloquear o que ainda está livre não cancela a reserva.
       </p>
+      <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground sm:hidden">
+        <li className="inline-flex items-center gap-1">
+          <span className="h-3 w-3 rounded border border-dashed border-border" />
+          Sem configuração
+        </li>
+        <li className="inline-flex items-center gap-1">
+          <span className="h-3 w-3 rounded border border-border bg-surface" />
+          Aberta
+        </li>
+        <li className="inline-flex items-center gap-1">
+          <span className="h-3 w-3 rounded border border-border bg-muted" />
+          Bloqueada
+        </li>
+        <li>O número é de unidades confirmadas.</li>
+      </ul>
       <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground">
         {WEEKDAYS.map((day) => (
           <div key={day}>{day}</div>
@@ -483,15 +498,16 @@ function MonthGrid({
                 aria-label={`${day.date}, ${state}, ${confirmed}`}
                 onClick={() => setSelectedDate(day.date)}
                 className={cn(
-                  "flex min-h-16 flex-col items-start rounded-lg border px-1.5 py-1 text-left text-[11px] leading-tight",
+                  "flex min-h-12 min-w-0 flex-col items-center justify-center overflow-hidden rounded-lg border px-0.5 py-1 text-center text-[11px] leading-tight sm:min-h-16 sm:items-start sm:px-1.5 sm:text-left",
                   day.date === selectedDate && "border-primary ring-2 ring-primary/30",
                   !day.configured && "border-dashed text-muted-foreground",
                   state === "Bloqueada" && "bg-muted",
                 )}
               >
-                <span className="font-semibold">{Number(day.date.slice(8))}</span>
-                <span>{state}</span>
-                <span>{confirmed}</span>
+                <span className="text-sm font-semibold">{Number(day.date.slice(8))}</span>
+                <span className="hidden sm:block">{state}</span>
+                <span className="hidden sm:block">{confirmed}</span>
+                <span className="sm:hidden">{day.committedUnits > 0 ? day.committedUnits : ""}</span>
               </button>
             );
           })}
@@ -500,9 +516,9 @@ function MonthGrid({
         <p className="text-sm text-muted-foreground">Carregando a grade.</p>
       )}
       {selected && (
-        <div className="grid max-w-md gap-3 rounded-xl border border-border p-4 text-sm">
+        <div className="grid gap-3 rounded-xl border border-border p-4 text-sm">
           <h4 className="font-semibold">Noite {selected.date}</h4>
-          <p>
+          <p className="text-base">
             {nightState(selected)}. {confirmedLabel(selected.committedUnits)}.
           </p>
           <label className="grid gap-1 font-medium">
