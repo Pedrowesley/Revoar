@@ -510,10 +510,6 @@ test("pedido novo aparece na extranet sem atualizar a página", async ({ page })
     localStorage.setItem("revoar_partner_token", value);
   }, login.data.accessToken);
 
-  let navigations = 0;
-  page.on("framenavigated", (frame) => {
-    if (frame === page.mainFrame()) navigations += 1;
-  });
   const stream = page.waitForResponse(
     (response) => response.url().includes("/extranet/notifications/stream") && response.ok(),
     { timeout: 20_000 },
@@ -521,6 +517,9 @@ test("pedido novo aparece na extranet sem atualizar a página", async ({ page })
   await page.goto("http://localhost:3000/reservations");
   await expect(page.getByRole("heading", { name: "Reservas" })).toBeVisible();
   await stream;
+  await page.evaluate(() => {
+    (window as Window & { __revoarStay?: boolean }).__revoarStay = true;
+  });
 
   const email = `ao-vivo-${Date.now()}@example.com`;
   const created = await fetch("http://127.0.0.1:3002/guest/bookings", {
@@ -549,7 +548,7 @@ test("pedido novo aparece na extranet sem atualizar a página", async ({ page })
   await expect(card).toBeVisible();
   await expect(card.getByRole("button", { name: "Aceitar" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Recusar" })).toBeVisible();
-  expect(navigations).toBe(1);
+  expect(await page.evaluate(() => (window as Window & { __revoarStay?: boolean }).__revoarStay)).toBe(true);
   expect(page.url()).toContain("/reservations");
 });
 
