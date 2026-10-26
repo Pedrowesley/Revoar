@@ -26,7 +26,18 @@ type PartnerBooking = {
   guestMessage: string | null;
   respondBy: string | null;
   snapshot: { roomName?: string; rateName?: string };
+  guests?: { kind: string; firstName: string; lastName: string }[];
 };
+
+function guestName(booking: PartnerBooking) {
+  const primary = booking.guests?.find((guest) => guest.kind === "PRIMARY") ?? booking.guests?.[0];
+  if (!primary) return booking.guestEmail;
+  return `${primary.firstName} ${primary.lastName}`;
+}
+
+function money(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 
 function responseClock(iso: string | null, now: number) {
   if (!iso) return "Prazo de 24 horas";
@@ -80,11 +91,16 @@ export default function ReservationsPage() {
     }
   }
 
+  const bookings = query.data ?? [];
+  const requests = bookings.filter((booking) => booking.status === "REQUESTED");
+  const confirmed = bookings.filter((booking) => booking.status === "CONFIRMED");
+  const others = bookings.filter((booking) => booking.status !== "REQUESTED" && booking.status !== "CONFIRMED");
+
   return (
     <PageShell width="xl">
       <h1 className="text-2xl font-bold">Reservas</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Pedidos sob consulta esperam sua resposta por 24 horas. Reserva já confirmada na plataforma não precisa ser bloqueada.
+        Pedidos sob consulta esperam sua resposta por 24 horas. A reserva confirmada fica em leitura e não precisa ser bloqueada.
       </p>
       {error && (
         <div className="mt-4">
@@ -92,43 +108,85 @@ export default function ReservationsPage() {
         </div>
       )}
       {query.isLoading && <PageSkeleton />}
-      <div className="mt-6 grid gap-3">
-        {(query.data ?? []).map((booking) => (
-          <Surface key={booking.id} as="article" aria-label={booking.code} className="p-4">
-            <p className="font-semibold">
-              {booking.code} · {STATUS_LABEL[booking.status] ?? booking.status}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {booking.hotelName} · {booking.snapshot.roomName} · {booking.checkIn} a {booking.checkOut} · {booking.quantity} quarto(s) ·{" "}
-              {(booking.totalCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-            </p>
-            <p className="text-sm">{booking.guestEmail}</p>
-            {booking.guestMessage && <p className="mt-1 text-sm text-muted-foreground">“{booking.guestMessage}”</p>}
-            {booking.status === "REQUESTED" && (
-              <div className="mt-4 grid max-w-xl gap-3">
-                <p className="text-sm font-semibold">{responseClock(booking.respondBy, now)}</p>
-                <label className="grid gap-1 text-sm font-medium">
-                  Motivo da recusa (opcional)
-                  <Textarea
-                    value={reasons[booking.id] ?? ""}
-                    maxLength={300}
-                    onChange={(event) => setReasons((current) => ({ ...current, [booking.id]: event.target.value }))}
-                  />
-                </label>
-                <div className="flex gap-2">
-                  <Button type="button" onClick={() => decide(booking.id, "accept")}>
-                    Aceitar
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => decide(booking.id, "decline", reasons[booking.id])}>
-                    Recusar
-                  </Button>
+      {query.data && (
+        <div className="mt-6 grid gap-8">
+          <section aria-labelledby="pedidos" className="grid gap-3">
+            <h2 id="pedidos" className="text-lg font-semibold">
+              Pedidos
+            </h2>
+            {requests.length === 0 && <p className="text-sm text-muted-foreground">Nenhum pedido aguardando resposta.</p>}
+            {requests.map((booking) => (
+              <Surface key={booking.id} as="article" aria-label={booking.code} className="p-4">
+                <BookingFacts booking={booking} />
+                {booking.guestMessage && <p className="mt-2 text-sm text-muted-foreground">“{booking.guestMessage}”</p>}
+                <div className="mt-4 grid max-w-xl gap-3">
+                  <p className="text-sm font-semibold">{responseClock(booking.respondBy, now)}</p>
+                  <label className="grid gap-1 text-sm font-medium">
+                    Motivo da recusa (opcional)
+                    <Textarea
+                      value={reasons[booking.id] ?? ""}
+                      maxLength={300}
+                      onChange={(event) => setReasons((current) => ({ ...current, [booking.id]: event.target.value }))}
+                    />
+                  </label>
+                  <div className="flex gap-2">
+                    <Button type="button" onClick={() => decide(booking.id, "accept")}>
+                      Aceitar
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => decide(booking.id, "decline", reasons[booking.id])}>
+                      Recusar
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </Surface>
-        ))}
-        {query.data && query.data.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma reserva ainda.</p>}
-      </div>
+              </Surface>
+            ))}
+          </section>
+          <section aria-labelledby="confirmadas" className="grid gap-3">
+            <h2 id="confirmadas" className="text-lg font-semibold">
+              Confirmadas
+            </h2>
+            {confirmed.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma reserva confirmada.</p>}
+            {confirmed.map((booking) => (
+              <Surface key={booking.id} as="article" aria-label={booking.code} className="p-4">
+                <BookingFacts booking={booking} />
+              </Surface>
+            ))}
+          </section>
+          {others.length > 0 && (
+            <section aria-labelledby="demais" className="grid gap-3">
+              <h2 id="demais" className="text-lg font-semibold">
+                Encerradas
+              </h2>
+              {others.map((booking) => (
+                <Surface key={booking.id} as="article" aria-label={booking.code} className="p-4">
+                  <BookingFacts booking={booking} />
+                </Surface>
+              ))}
+            </section>
+          )}
+        </div>
+      )}
     </PageShell>
+  );
+}
+
+function BookingFacts({ booking }: { booking: PartnerBooking }) {
+  const rows = [
+    ["Código", booking.code],
+    ["Hóspede", `${guestName(booking)} · ${booking.guestEmail}`],
+    ["Quarto", booking.snapshot.roomName ?? "Quarto"],
+    ["Datas", `${booking.checkIn} a ${booking.checkOut}`],
+    ["Total", money(booking.totalCents)],
+    ["Status", STATUS_LABEL[booking.status] ?? booking.status],
+  ];
+  return (
+    <dl className="grid gap-1 text-sm">
+      {rows.map(([label, value]) => (
+        <div key={label} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-2">
+          <dt className="text-muted-foreground">{label}</dt>
+          <dd className={label === "Código" ? "font-semibold" : undefined}>{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
